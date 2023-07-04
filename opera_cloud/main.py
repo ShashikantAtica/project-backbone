@@ -207,15 +207,29 @@ def OperaCloud_Pms(row):
 
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
     attachment_format = "./reports"
+    messages_array = []
     for label_name in label_array:
         print("label_name :: ", label_name)
         response = service.users().messages().list(userId="me",
                                                    q=create_filter(label_name, "Saved")
                                                    ).execute()
-
         if 'messages' in response:
             messages = response['messages']
+            item = {
+                "label_name":label_name,
+                "messages":messages
+            }
+            messages_array.append(item)
 
+        else:
+            msg = f"No new messages for {label_name} label"
+            print(msg)
+            update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+            return 0
+    if len(label_array) == len(messages_array):
+        for item in messages_array:
+            messages = item["messages"]
+            label_name = item["label_name"]
             # get first message only
             message = messages[0]
             a_message = service.users().messages().get(userId="me",
@@ -280,11 +294,8 @@ def OperaCloud_Pms(row):
 
             else:
                 print("No messages to save")
-        else:
-            msg = f"No new messages for {label_name} label"
-            print(msg)
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg)
-            return 0
+
+
 
     # Modification of res report
     reservation_file_path = f'{attachment_format}/Reservation.xml'
