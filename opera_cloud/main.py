@@ -42,10 +42,15 @@ def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
     return LAST_PULL_DATE_ID
 
 
-def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE):
+def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
     # Update entry into pull date table
     print("ERROR_NOTE :: ", ERROR_NOTE)
-    DB_STATUS = "'FINISHED'"
+    DB_STATUS = ""
+    if IS_ERROR:
+        DB_STATUS = "'FAILED'"
+    else:
+        DB_STATUS = "'FINISHED'"
+
     DB_ERROR_NOTE = "'" + str(ERROR_NOTE) + "'"
     DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
     DB_LAST_PULL_DATE_ID = "'" + str(LAST_PULL_DATE_ID) + "'"
@@ -216,15 +221,15 @@ def OperaCloud_Pms(row):
         if 'messages' in response:
             messages = response['messages']
             item = {
-                "label_name":label_name,
-                "messages":messages
+                "label_name": label_name,
+                "messages": messages
             }
             messages_array.append(item)
 
         else:
             msg = f"No new messages for {label_name} label"
             print(msg)
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
             return 0
     if len(label_array) == len(messages_array):
         for item in messages_array:
@@ -294,8 +299,6 @@ def OperaCloud_Pms(row):
 
             else:
                 print("No messages to save")
-
-
 
     # Modification of res report
     reservation_file_path = f'{attachment_format}/Reservation.xml'
@@ -479,13 +482,13 @@ def OperaCloud_Pms(row):
             bulk_insert_opera_cloud_occ(occ_result, propertyCode=propertyCode)
             print("OCC DONE")
 
-            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished")
+            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
             print("File was blank!!!")
-            update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!")
+            update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
     else:
         msg = "File Not found!!!"
-        update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
 
 
 if __name__ == '__main__':

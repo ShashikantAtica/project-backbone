@@ -84,13 +84,13 @@ def Choice_Pms(row):
     except Exception:
         msg = f"[{atica_property_code}] secret fetch failed due to bad json"
         print(msg)
-        update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
         return 0
 
     if username is None or password is None:
         msg = f"[{atica_property_code}] username and password is wrong!!!"
         print(msg)
-        update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
     else:
         BASE_URL = ""
         if property_type == 'Skytouch':
@@ -120,7 +120,7 @@ def Choice_Pms(row):
             if not scr:
                 msg = f"{atica_property_code} login failed"
                 print(msg)
-                update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+                update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
                 return 0
             else:
                 try:
@@ -138,7 +138,7 @@ def Choice_Pms(row):
             else:
                 msg = f"{atica_property_code} failed to get the Server Key"
                 print(msg)
-                update_into_pulldate(pullDateId, ERROR_NOTE=msg)
+                update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
                 return 0
 
             print(f"The server key for {atica_property_code} is: {serverkey}")
@@ -303,7 +303,7 @@ def Choice_Pms(row):
                 print("OCC DONE")
 
             if serverkey is not None:
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished")
+                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
@@ -326,10 +326,15 @@ def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
     return LAST_PULL_DATE_ID
 
 
-def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE):
+def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
     # Update entry into pull date table
     print("ERROR_NOTE :: ", ERROR_NOTE)
-    DB_STATUS = "'FINISHED'"
+    DB_STATUS = ""
+    if IS_ERROR:
+        DB_STATUS = "'FAILED'"
+    else:
+        DB_STATUS = "'FINISHED'"
+
     DB_ERROR_NOTE = "'" + str(ERROR_NOTE) + "'"
     DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
     DB_LAST_PULL_DATE_ID = "'" + str(LAST_PULL_DATE_ID) + "'"
