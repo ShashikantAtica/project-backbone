@@ -18,7 +18,7 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def bulk_insert_choice_res(res_list, res_before, res_after):
+def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
     start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
     end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
@@ -30,13 +30,14 @@ def bulk_insert_choice_res(res_list, res_before, res_after):
     # start_date = current_date.shift(days=-90)
     # print("start_date :: ", start_date)
     reservation = '"ReserveDate"'
+    db_propertyCode = "'" + propertyCode + "'"
     # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE from choice_res where {reservation} between {start_date} and {end_date};')
+        f'DELETE from choice_res where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
 
     # Add new data of reservation (up to 90 Days)
@@ -45,22 +46,56 @@ def bulk_insert_choice_res(res_list, res_before, res_after):
     conn.close()
 
 
-def bulk_insert_choice_occ(occ_list, occ_before, occ_after):
+def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
     start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
 
     end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
     print("end_date :: ", end_date)
+    db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of occ (up to 90 Days)
     conn = db_config.get_db_connection()
-    conn.execute(f'DELETE FROM choice_occ where "IDS_DATE" between {start_date} and {end_date};')
+    conn.execute(
+        f'DELETE FROM choice_occ where "IDS_DATE" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
 
     # Add new data of occ (up to 90 Days)
     conn = db_config.get_db_connection()
     conn.execute(db_models.choice_occ_model.insert(), occ_list)
     conn.close()
+
+def bulk_insert_choice_cancel(cancel_list, cancel_before, cancel_after):
+    start_date = "'" + cancel_before.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+
+    end_date = "'" + cancel_after.format("YYYY-MM-DD") + "'"
+    print("end_date :: ", end_date)
+
+    # Delete existing data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(f'DELETE FROM choice_cancellation where "CxlDate" between {start_date} and {end_date};')
+    conn.close()
+
+    # Add new data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.choice_cancellation_model.insert(), cancel_list)
+    conn.close()
+
+def bulk_insert_choice_revenue(propertyCode, revenue_list):
+    property_code = "'" + propertyCode + "'"
+    print("property_code :: ", property_code)
+
+    # Delete existing data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(f'DELETE FROM choice_revenue where "propertyCode" = {property_code}')
+    conn.close()
+
+    # Add new data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.choice_revenue_model.insert(), revenue_list)
+    conn.close()
+
 
 
 def Choice_Pms(row):
@@ -72,6 +107,7 @@ def Choice_Pms(row):
     current_date = row['current_date']
     propertyCode = row['propertyCode']
     pullDateId = row['pullDateId']
+    folder_name = "./reports/"
 
     username = None
     password = None
@@ -198,7 +234,7 @@ def Choice_Pms(row):
                     print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending to the spider")
                 else:
                     print(f"[{atica_property_code}]{report_type} Uploading reservations")
-                    filename = f'Reservation.csv'
+                    filename = f'{folder_name}{propertyCode}_Reservation.csv'
                     with open(filename, 'wb') as f:
                         f.write(y.content)
                         f.close()
@@ -267,7 +303,7 @@ def Choice_Pms(row):
                     print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending to the spider")
                 else:
                     print(f"[{atica_property_code}]{report_type} Uploading occupancies")
-                    filename = f'Occupancy.csv'
+                    filename = f'{folder_name}{propertyCode}_Occupancy.csv'
                     with open(filename, 'wb') as f:
                         f.write(z.content)
                         f.close()
@@ -283,24 +319,151 @@ def Choice_Pms(row):
                         read['IDS_DATE'] = pd.to_datetime(read['IDS_DATE'])
                     read.to_csv(filename, index=False)
 
+                # End Occupancy Report
+
+                # Start Cancellation Report
+                cancellation_data_post = {
+                    "ie": "csv",
+                    "locale": "en_US",
+                    "JOD": "cancellation_summary_csv",
+                    "userId": username,
+                    "businessDate": current_date.format("M/DD/YYYY"),
+                    "property": external_property_code,
+                    "CSV": "true",
+                    "fileName": f"Cancellation Summary Report {external_property_code}",
+                    "reportId": "166",
+                    "startDate": row['res_before'].format("M/DD/YYYY"),
+                    "endDate": row['res_after'].format("M/DD/YYYY"),
+                    "cancelCodes": "*",
+                    "reportServerKey": serverkey,
+                    "reportServerUsername": username,
+                    "fullPageRequestTime": int(time.time())
+                }
+
+                if property_type == 'Skytouch':
+                    cancellation_data_post['commaSeparatedAccounts'] = ""
+                    cancellation_data_post['activityDateType'] = ""
+
+                cancel_page_get = s.post(f'{BASE_URL}/CancellationSummaryReport.go')
+
+                cancel_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=cancellation_data_post)
+                report_type = '[Cancellation]'
+                print(f"[{atica_property_code}]{report_type} Sent request!")
+
+                if not cancel_report_get.ok:
+                    print(
+                        f"[{atica_property_code}]{report_type} Something went wrong for the report: {cancel_report_get.status_code} {cancel_report_get.reason}")
+                elif not ignore_size_check and len(cancel_report_get.content) < 5000:
+                    print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending to the spider")
+                else:
+                    print(f"[{atica_property_code}]{report_type} Uploading Cancellation report")
+                    filename = f'{folder_name}{propertyCode}_Cancellation.csv'
+                    with open(filename, 'wb') as f:
+                        f.write(cancel_report_get.content)
+                        f.close()
+                    read = pd.read_csv(filename)
+                    read.drop(columns=['Unnamed: 0'], inplace=True)
+                    read.dropna(axis=0, inplace=True)
+                    read.insert(0, column="propertyCode", value=propertyCode)
+                    read.insert(1, column="pullDateId", value=pullDateId)
+                    read['Cxl Date'] = pd.to_datetime(read['Cxl Date'])
+                    headers_list = ["propertyCode", "pullDateId", "CancellationReason", "CxlDate", "Resv", "RoomNights",
+                                    "RoomRev"]
+                    read.to_csv(filename, index=False, header=headers_list)
+                # End Cancellation Report
+
+                # Start Revenue By Rate Code Report
+                revenue_data_post = {
+                    "OD": "apache_revenue_by_rate_code",
+                    "locale": "en_US",
+                    "ARG0": external_property_code,
+                    "ARG1": username,
+                    "ARG2": current_date.format("M/DD/YYYY"),
+                    "ARG3": "",
+                    "ARG4": "",
+                    "ARG5": "",
+                    "ARG6": "",
+                    "ARG7": "",
+                    "ARG8": "",
+                    "ARG9": "",
+                    "ARG10": "",
+                    "ARG11": "",
+                    "ARG12": "",
+                    "ARG13": "",
+                    "ARG14": "",
+                    "ARG15": "",
+                    "CSV": "true",
+                    "CSV_SUPPRESS_HEADERS": "false",
+                    "reportId": "76",
+                    "updateCounter": "Y",
+                    "includeCheckedOut": "",
+                    "includeInHouse": "",
+                    "altLocale": "",
+                    "reportName": "",
+                    "isGuestServiceEnabled": "",
+                    "sortorder": "",
+                    "showCurrencySymbol": "",
+                    "commaSeparatedAccounts": "",
+                    "activityDateType": "",
+                    "reportServerKey": serverkey,
+                    "reportServerUsername": username,
+                    "fullPageRequestTime": int(time.time())
+                }
+
+                if property_type == 'Skytouch':
+                    revenue_data_post['commaSeparatedAccounts'] = ""
+                    revenue_data_post['activityDateType'] = ""
+
+                revenue_page_get = s.post(f'{BASE_URL}/RevenueByRateCodeReport.go')
+
+                revenue_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=revenue_data_post)
+                report_type = '[Revenue]'
+                print(f"[{atica_property_code}]{report_type} Sent request!")
+
+                if not revenue_report_get.ok:
+                    print(
+                        f"[{atica_property_code}]{report_type} Something went wrong for the report: {revenue_report_get.status_code} {revenue_report_get.reason}")
+                else:
+                    print(f"[{atica_property_code}]{report_type} Uploading Revenue report")
+                    filename = f'{folder_name}{propertyCode}_Revenue.csv'
+                    with open(filename, 'wb') as f:
+                        f.write(revenue_report_get.content)
+                        f.close()
+                    read = pd.read_csv(filename)
+                    read.insert(0, column="propertyCode", value=propertyCode)
+                    read.insert(1, column="pullDateId", value=pullDateId)
+                    headers_list = ["propertyCode", "pullDateId", "IDS_RATE_CODE", "RoomNights", "RoomNightsPer",
+                                    "RoomRevenue", "RoomRevenuePer", "DailyAVG", "PTDRoomNights", "PTDRoomNightsPer",
+                                    "PTDRoomRevenue", "PTDRoomRevenuePer", "PTD_AVG", "YTDRoomNights", "YTDRoomNightsPer",
+                                    "YTDRoomRevenue", "YTDRoomRevenuePer", "YTD_AVG"]
+                    read.to_csv(filename, index=False, header=headers_list)
+                # End Revenue By Rate Code Report
+
             if serverkey is not None:
                 # Insert into Database
-                res_result = csv.DictReader(open("Reservation.csv"))
+                res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv"))
                 res_result = list(res_result)
                 print(len(res_result))
-                bulk_insert_choice_res(res_result, row['res_before'], row['res_after'])
-
-                # if os.path.exists("Reservation.csv"): #Not need to delete file
-                #     os.remove("Reservation.csv")
+                bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
                 print("RES DONE")
 
-                occ_result = csv.DictReader(open("Occupancy.csv"))
+                occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv"))
                 occ_result = list(occ_result)
                 print(len(occ_result))
-                bulk_insert_choice_occ(occ_result, row['occ_before'], row['occ_after'])
-                # if os.path.exists("Occupancy.csv"): #Not need to delete file
-                #     os.remove("Occupancy.csv")
+                bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
                 print("OCC DONE")
+
+                cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv"))
+                cancel_result = list(cancel_result)
+                print(len(cancel_result))
+                bulk_insert_choice_cancel(cancel_result, row['res_before'], row['res_after'])
+                print("CANCELLATION DONE")
+
+                revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv"))
+                revenue_result = list(revenue_result)
+                print(len(revenue_result))
+                bulk_insert_choice_revenue(propertyCode, revenue_result)
+                print("REVENUE DONE")
 
             if serverkey is not None:
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)

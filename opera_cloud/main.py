@@ -211,7 +211,7 @@ def OperaCloud_Pms(row):
     propertyCode = row['propertyCode']
 
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
-    attachment_format = "./reports"
+    folder_name = "./reports/"
     messages_array = []
     for label_name in label_array:
         print("label_name :: ", label_name)
@@ -262,7 +262,7 @@ def OperaCloud_Pms(row):
 
                         # Open file in binary write mode
                         file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{attachment_format}/{file_name}.xml", "wb")
+                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xml", "wb")
                         binary_file.write(file_data)
                         binary_file.close()
 
@@ -301,8 +301,8 @@ def OperaCloud_Pms(row):
                 print("No messages to save")
 
     # Modification of res report
-    reservation_file_path = f'{attachment_format}/Reservation.xml'
-    occupancy_file_path = f'{attachment_format}/Occupancy.xml'
+    reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xml'
+    occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.xml'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_occupancy_file = os.path.isfile(occupancy_file_path)
@@ -374,9 +374,9 @@ def OperaCloud_Pms(row):
         df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
         df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
         df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
-        df.to_csv(f"{attachment_format}/Reservations.csv", index=False)
+        df.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{attachment_format}/Reservations.csv"))
+        res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv"))
         res_result = list(res_result)
 
         # Occupancy Data Clean and Insert
@@ -465,9 +465,9 @@ def OperaCloud_Pms(row):
         df.insert(1, column="pullDateId", value=pullDateId)
         df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
         df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
-        df.to_csv(f"{attachment_format}/Occupancy.csv", index=False)
+        df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
 
-        occ_result = csv.DictReader(open(f"{attachment_format}/Occupancy.csv"))
+        occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv"))
         occ_result = list(occ_result)
 
         print("RES RESULT")

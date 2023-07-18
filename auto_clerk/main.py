@@ -24,7 +24,7 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def bulk_insert_auto_clerk_res(res_list, res_before, res_after):
+def bulk_insert_auto_clerk_res(propertyCode,res_list, res_before, res_after):
     start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
     end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
@@ -36,13 +36,14 @@ def bulk_insert_auto_clerk_res(res_list, res_before, res_after):
     # start_date = current_date.shift(days=-90)
     # print("start_date :: ", start_date)
     reservation = '"arrivaldate"'
+    db_propertyCode = "'" + propertyCode + "'"
     # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE from auto_clerk_res where {reservation} between {start_date} and {end_date};')
+        f'DELETE from auto_clerk_res where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
 
     # Add new data of reservation (up to 90 Days)
@@ -51,16 +52,17 @@ def bulk_insert_auto_clerk_res(res_list, res_before, res_after):
     conn.close()
 
 
-def bulk_insert_auto_clerk_occ(occ_list, occ_before, occ_after):
+def bulk_insert_auto_clerk_occ(propertyCode,occ_list, occ_before, occ_after):
     start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
 
     end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
     print("end_date :: ", end_date)
+    db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of occ (up to 90 Days)
     conn = db_config.get_db_connection()
-    conn.execute(f'DELETE FROM auto_clerk_occ where "Date" between {start_date} and {end_date};')
+    conn.execute(f'DELETE FROM auto_clerk_occ where "Date" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
 
     # Add new data of occ (up to 90 Days)
@@ -77,8 +79,10 @@ def AutoClerk_Pms(row):
 
     username = None
     password = None
-    attachment_format = "./reports"
-    save_dir = os.path.abspath('reports/')
+
+    folder_name = f"./reports/{propertyCode}/"
+    # save_dir = os.path.abspath('reports/')
+    save_dir = os.path.abspath(f'reports/{propertyCode}/')
     driver = None
     try:
         print("secret_name :: ", secret_name)
@@ -240,8 +244,8 @@ def AutoClerk_Pms(row):
         print(f"{report_type} report saved successfully")
         driver.quit()
 
-        reservation_file_path = f'{attachment_format}/Reservation.csv'
-        occupancy_file_path = f'{attachment_format}/Occupancy.csv'
+        reservation_file_path = f'{folder_name}Reservation.csv'
+        occupancy_file_path = f'{folder_name}Occupancy.csv'
 
         check_reservation_file = os.path.isfile(reservation_file_path)
         check_occupancy_file = os.path.isfile(occupancy_file_path)
@@ -329,13 +333,13 @@ def AutoClerk_Pms(row):
             res_result = csv.DictReader(open(reservation_file_path))
             res_result = list(res_result)
             print(len(res_result))
-            bulk_insert_auto_clerk_res(res_result, row['res_before'], row['res_after'])
+            bulk_insert_auto_clerk_res(propertyCode, res_result, row['res_before'], row['res_after'])
             print("RES DONE")
 
             occ_result = csv.DictReader(open(occupancy_file_path))
             occ_result = list(occ_result)
             print(len(occ_result))
-            bulk_insert_auto_clerk_occ(occ_result, row['occ_before'], row['occ_after'])
+            bulk_insert_auto_clerk_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
             print("OCC DONE")
 
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)

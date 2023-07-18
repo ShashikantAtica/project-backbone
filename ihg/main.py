@@ -209,7 +209,7 @@ def IHG_Pms(row):
     propertyCode = row['propertyCode']
 
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
-    attachment_format = "./reports"
+    folder_name = "./reports/"
     messages_array = []
     for label_name in label_array:
         print("label_name :: ", label_name)
@@ -260,7 +260,7 @@ def IHG_Pms(row):
 
                         # Open file in binary write mode
                         file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{attachment_format}/{file_name}.xlsx", "wb")
+                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xlsx", "wb")
                         binary_file.write(file_data)
                         binary_file.close()
 
@@ -299,8 +299,8 @@ def IHG_Pms(row):
                 print("No messages to save")
 
     # Modification of res report
-    reservation_file_path = f'{attachment_format}/Reservation.xlsx'
-    occupancy_file_path = f'{attachment_format}/Occupancy.xlsx'
+    reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xlsx'
+    occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.xlsx'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_occupancy_file = os.path.isfile(occupancy_file_path)
@@ -312,9 +312,9 @@ def IHG_Pms(row):
         read.columns = read.columns.str.replace(' ', '', regex=True)
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
-        read.to_csv(f"{attachment_format}/Reservations.csv", index=False)
+        read.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{attachment_format}/Reservations.csv"))
+        res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv"))
         res_result = list(res_result)
 
         # Occupancy Data Clean and Insert
@@ -331,9 +331,9 @@ def IHG_Pms(row):
                         "ADR", "BFR", "Groupcommitted", "Groupcontracted", "GroupPickupasofdate", "Grouppickup", "Occ",
                         "OVB", "Paceasofdate1", "Paceasofdate2", "Pickupasofdate", "Pickupasofdate1", "Roomssold",
                         "TotalRoomsCommitted"]
-        read.to_csv(f"{attachment_format}/Occupancy.csv", index=False, header=headers_list)
+        read.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
 
-        occ_result = csv.DictReader(open(f"{attachment_format}/Occupancy.csv"))
+        occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv"))
         occ_result = list(occ_result)
 
         if len(res_result) > 0 and len(occ_result) > 0:
