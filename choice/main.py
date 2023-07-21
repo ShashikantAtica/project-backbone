@@ -246,7 +246,7 @@ def Choice_Pms(row):
                             temp.write(y.content)
                             temp.seek(0)
                             read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
-                            reservation_dataframe.append(read_xl[1:])
+                            reservation_dataframe.append(read_xl)
                             temp.close()
                             print(
                                 f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
@@ -339,7 +339,7 @@ def Choice_Pms(row):
                             temp.write(z.content)
                             temp.seek(0)
                             read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
-                            occupancy_dataframe.append(read_xl[1:])
+                            occupancy_dataframe.append(read_xl)
                             temp.close()
                             print(
                                 f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
@@ -417,7 +417,7 @@ def Choice_Pms(row):
                             temp.write(cancel_report_get.content)
                             temp.seek(0)
                             read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
-                            cancellation_dataframe.append(read_xl[1:])
+                            cancellation_dataframe.append(read_xl)
                             temp.close()
                             print(
                                 f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
