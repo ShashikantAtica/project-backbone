@@ -68,16 +68,17 @@ def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
     conn.close()
 
 
-def bulk_insert_choice_cancel(cancel_list, cancel_before, cancel_after):
+def bulk_insert_choice_cancel(propertyCode, cancel_list, cancel_before, cancel_after):
     start_date = "'" + cancel_before.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
 
     end_date = "'" + cancel_after.format("YYYY-MM-DD") + "'"
     print("end_date :: ", end_date)
+    db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of occ (up to 90 Days)
     conn = db_config.get_db_connection()
-    conn.execute(f'DELETE FROM choice_cancellation where "CxlDate" between {start_date} and {end_date};')
+    conn.execute(f'DELETE FROM choice_cancellation where "CxlDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
 
     # Add new data of occ (up to 90 Days)
@@ -557,7 +558,7 @@ def Choice_Pms(row):
                 cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv"))
                 cancel_result = list(cancel_result)
                 print(len(cancel_result))
-                bulk_insert_choice_cancel(cancel_result, row['res_before'], row['res_after'])
+                bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
                 print("CANCELLATION DONE")
 
                 revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv"))
