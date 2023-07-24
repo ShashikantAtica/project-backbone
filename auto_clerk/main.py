@@ -92,7 +92,7 @@ def AutoClerk_Pms(row):
         password = json_dict['p']
 
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
@@ -440,7 +440,7 @@ if __name__ == '__main__':
                 'current_date': CURRENT_DATE,
                 'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
                 'res_after': CURRENT_DATE.shift(days=RES_AFTER),
-                'occ_before': CURRENT_DATE.shift(days=OCC_BEFORE),
+                'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
                 'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
                 "propertyCode": PROPERTY_CODE,
                 "pullDateId": LAST_PULL_DATE_ID
