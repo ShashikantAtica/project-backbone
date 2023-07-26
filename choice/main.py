@@ -138,7 +138,7 @@ def Choice_Pms(row):
         elif property_type == 'Choice':
             BASE_URL = "https://www.choiceadvantage.com/choicehotels"
 
-        try:
+        # try:
             with requests.Session() as s:
                 s.headers.update({'Upgrade-Insecure-Requests': '1',
                                   'User-Agent': 'Mozilla/5.0 '
@@ -268,6 +268,8 @@ def Choice_Pms(row):
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading reservations")
                         read = pd.read_csv(filename)
+                        if 'IDS_ACCOUNT' in read.columns:
+                            read.rename(columns={"IDS_ACCOUNT": "Account"}, inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read.columns = read.columns.str.replace(' ', '', regex=True).str.replace('.', '', regex=True)
@@ -570,8 +572,8 @@ def Choice_Pms(row):
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
-        except Exception:
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Something went wrong", IS_ERROR=True)
+        # except Exception:
+        #     update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Something went wrong", IS_ERROR=True)
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
