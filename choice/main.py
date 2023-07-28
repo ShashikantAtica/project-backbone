@@ -545,25 +545,25 @@ def Choice_Pms(row):
 
             if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file:
                 # Insert into Database
-                res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv"))
+                res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv", encoding="utf-8"))
                 res_result = list(res_result)
                 print(len(res_result))
                 bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
                 print("RES DONE")
 
-                occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv"))
+                occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
                 print(len(occ_result))
                 bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
                 print("OCC DONE")
 
-                cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv"))
+                cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv", encoding="utf-8"))
                 cancel_result = list(cancel_result)
                 print(len(cancel_result))
                 bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
                 print("CANCELLATION DONE")
 
-                revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv"))
+                revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv", encoding="utf-8"))
                 revenue_result = list(revenue_result)
                 print(len(revenue_result))
                 bulk_insert_choice_revenue(propertyCode, revenue_result)
