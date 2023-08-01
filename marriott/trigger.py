@@ -172,13 +172,13 @@ def main():
 
             if check_forecast_file:
                 # Insert into Database
-                res_result = csv.DictReader(open(reservation_file_path))
+                res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
                 res_result = list(res_result)
                 print(len(res_result))
                 bulk_insert_marriott_res(row['propertyCode'], res_result, row['res_before'], row['res_after'])
                 print("RES DONE")
 
-                fore_result = csv.DictReader(open(forecast_file_path))
+                fore_result = csv.DictReader(open(forecast_file_path, encoding="utf-8"))
                 fore_result = list(fore_result)
                 print(len(fore_result))
                 bulk_insert_marriott_fore(row['propertyCode'], fore_result, row['fore_before'], row['fore_after'])

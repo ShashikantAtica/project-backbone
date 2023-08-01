@@ -354,7 +354,7 @@ def Synxis_Cloud_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv"))
+        res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
         res_result = list(res_result)
 
         # Forecast Data Clean and Insert
@@ -364,7 +364,7 @@ def Synxis_Cloud_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
 
-        fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv"))
+        fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
         fore_result = list(fore_result)
 
         if len(res_result) > 0 and len(fore_result) > 0:

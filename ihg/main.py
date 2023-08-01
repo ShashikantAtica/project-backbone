@@ -314,7 +314,7 @@ def IHG_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv"))
+        res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
         res_result = list(res_result)
 
         # Occupancy Data Clean and Insert
@@ -333,7 +333,7 @@ def IHG_Pms(row):
                         "TotalRoomsCommitted"]
         read.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
 
-        occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv"))
+        occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
         occ_result = list(occ_result)
 
         if len(res_result) > 0 and len(occ_result) > 0:

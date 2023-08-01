@@ -319,65 +319,69 @@ def OperaCloud_Pms(row):
         # Parsing the XML file
         xmlparse = Xet.parse(reservation_file_path)
         root = xmlparse.getroot()
-        for i in root[0][0][2][0][2]:
-            RESV_NAME_ID = i.find("RESV_NAME_ID").text
-            GUARANTEE_CODE = i.find("GUARANTEE_CODE").text
-            RESV_STATUS = i.find("RESV_STATUS").text
-            ROOM = i.find("ROOM").text
-            FULL_NAME = i.find("FULL_NAME").text
-            DEPARTURE = i.find("DEPARTURE").text
-            PERSONS = i.find("PERSONS").text
-            GROUP_NAME = i.find("GROUP_NAME").text
-            NO_OF_ROOMS = i.find("NO_OF_ROOMS").text
-            ROOM_CATEGORY_LABEL = i.find("ROOM_CATEGORY_LABEL").text
-            RATE_CODE = i.find("RATE_CODE").text
-            INSERT_USER = i.find("INSERT_USER").text
-            INSERT_DATE = i.find("INSERT_DATE").text
-            GUARANTEE_CODE_DESC = i.find("GUARANTEE_CODE_DESC").text
-            COMPANY_NAME = i.find("COMPANY_NAME").text
-            TRAVEL_AGENT_NAME = i.find("TRAVEL_AGENT_NAME").text
-            ARRIVAL = i.find("ARRIVAL").text
-            NIGHTS = i.find("NIGHTS").text
-            COMP_HOUSE_YN = i.find("COMP_HOUSE_YN").text
-            SHARE_AMOUNT = i.find("SHARE_AMOUNT").text
-            C_T_S_NAME = i.find("C_T_S_NAME").text
-            SHORT_RESV_STATUS = i.find("SHORT_RESV_STATUS").text
-            SHARE_AMOUNT_PER_STAY = i.find("SHARE_AMOUNT_PER_STAY").text
-            #
-            rows.append({"RESV_NAME_ID": RESV_NAME_ID,
-                         "GUARANTEE_CODE": GUARANTEE_CODE,
-                         "RESV_STATUS": RESV_STATUS,
-                         "ROOM": ROOM,
-                         "FULL_NAME": FULL_NAME,
-                         "DEPARTURE": DEPARTURE,
-                         "PERSONS": PERSONS,
-                         "GROUP_NAME": GROUP_NAME,
-                         "NO_OF_ROOMS": NO_OF_ROOMS,
-                         "ROOM_CATEGORY_LABEL": ROOM_CATEGORY_LABEL,
-                         "RATE_CODE": RATE_CODE,
-                         "INSERT_USER": INSERT_USER,
-                         "INSERT_DATE": INSERT_DATE,
-                         "GUARANTEE_CODE_DESC": GUARANTEE_CODE_DESC,
-                         "COMPANY_NAME": COMPANY_NAME,
-                         "TRAVEL_AGENT_NAME": TRAVEL_AGENT_NAME,
-                         "ARRIVAL": ARRIVAL,
-                         "NIGHTS": NIGHTS,
-                         "COMP_HOUSE_YN": COMP_HOUSE_YN,
-                         "SHARE_AMOUNT": SHARE_AMOUNT,
-                         "C_T_S_NAME": C_T_S_NAME,
-                         "SHORT_RESV_STATUS": SHORT_RESV_STATUS,
-                         "SHARE_AMOUNT_PER_STAY": SHARE_AMOUNT_PER_STAY})
+        try:
+            for i in root[0][0][2][0][2]:
+                RESV_NAME_ID = i.find("RESV_NAME_ID").text
+                GUARANTEE_CODE = i.find("GUARANTEE_CODE").text
+                RESV_STATUS = i.find("RESV_STATUS").text
+                ROOM = i.find("ROOM").text
+                FULL_NAME = i.find("FULL_NAME").text
+                DEPARTURE = i.find("DEPARTURE").text
+                PERSONS = i.find("PERSONS").text
+                GROUP_NAME = i.find("GROUP_NAME").text
+                NO_OF_ROOMS = i.find("NO_OF_ROOMS").text
+                ROOM_CATEGORY_LABEL = i.find("ROOM_CATEGORY_LABEL").text
+                RATE_CODE = i.find("RATE_CODE").text
+                INSERT_USER = i.find("INSERT_USER").text
+                INSERT_DATE = i.find("INSERT_DATE").text
+                GUARANTEE_CODE_DESC = i.find("GUARANTEE_CODE_DESC").text
+                COMPANY_NAME = i.find("COMPANY_NAME").text
+                TRAVEL_AGENT_NAME = i.find("TRAVEL_AGENT_NAME").text
+                ARRIVAL = i.find("ARRIVAL").text
+                NIGHTS = i.find("NIGHTS").text
+                COMP_HOUSE_YN = i.find("COMP_HOUSE_YN").text
+                SHARE_AMOUNT = i.find("SHARE_AMOUNT").text
+                C_T_S_NAME = i.find("C_T_S_NAME").text
+                SHORT_RESV_STATUS = i.find("SHORT_RESV_STATUS").text
+                SHARE_AMOUNT_PER_STAY = i.find("SHARE_AMOUNT_PER_STAY").text
+                #
+                rows.append({"RESV_NAME_ID": RESV_NAME_ID,
+                             "GUARANTEE_CODE": GUARANTEE_CODE,
+                             "RESV_STATUS": RESV_STATUS,
+                             "ROOM": ROOM,
+                             "FULL_NAME": FULL_NAME,
+                             "DEPARTURE": DEPARTURE,
+                             "PERSONS": PERSONS,
+                             "GROUP_NAME": GROUP_NAME,
+                             "NO_OF_ROOMS": NO_OF_ROOMS,
+                             "ROOM_CATEGORY_LABEL": ROOM_CATEGORY_LABEL,
+                             "RATE_CODE": RATE_CODE,
+                             "INSERT_USER": INSERT_USER,
+                             "INSERT_DATE": INSERT_DATE,
+                             "GUARANTEE_CODE_DESC": GUARANTEE_CODE_DESC,
+                             "COMPANY_NAME": COMPANY_NAME,
+                             "TRAVEL_AGENT_NAME": TRAVEL_AGENT_NAME,
+                             "ARRIVAL": ARRIVAL,
+                             "NIGHTS": NIGHTS,
+                             "COMP_HOUSE_YN": COMP_HOUSE_YN,
+                             "SHARE_AMOUNT": SHARE_AMOUNT,
+                             "C_T_S_NAME": C_T_S_NAME,
+                             "SHORT_RESV_STATUS": SHORT_RESV_STATUS,
+                             "SHARE_AMOUNT_PER_STAY": SHARE_AMOUNT_PER_STAY})
 
-        df = pd.DataFrame(rows, columns=cols)
-        df.insert(0, column="propertyCode", value=propertyCode)
-        df.insert(1, column="pullDateId", value=pullDateId)
-        df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
-        df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
-        df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
-        df.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
+            df = pd.DataFrame(rows, columns=cols)
+            df.insert(0, column="propertyCode", value=propertyCode)
+            df.insert(1, column="pullDateId", value=pullDateId)
+            df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
+            df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
+            df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
+            df.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv"))
-        res_result = list(res_result)
+            res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
+            res_result = list(res_result)
+        except Exception:
+            res_result = []
+            print("Reservation Data not available")
 
         # Occupancy Data Clean and Insert
         cols = ['REVENUE', 'NO_ROOMS', 'IND_DEDUCT_ROOMS', 'IND_NON_DEDUCT_ROOMS', 'GRP_DEDUCT_ROOMS',
@@ -393,82 +397,161 @@ def OperaCloud_Pms(row):
         # Parsing the XML file
         xmlparse = Xet.parse(occupancy_file_path)
         root = xmlparse.getroot()
-        for i in root[0][0][1][0][2]:
-            REVENUE = i.find('REVENUE').text
-            NO_ROOMS = i.find('NO_ROOMS').text
-            IND_DEDUCT_ROOMS = i.find('IND_DEDUCT_ROOMS').text
-            IND_NON_DEDUCT_ROOMS = i.find('IND_NON_DEDUCT_ROOMS').text
-            GRP_DEDUCT_ROOMS = i.find('GRP_DEDUCT_ROOMS').text
-            GRP_NON_DEDUCT_ROOMS = i.find('GRP_NON_DEDUCT_ROOMS').text
-            NO_PERSONS = i.find('NO_PERSONS').text
-            ARRIVAL_ROOMS = i.find('ARRIVAL_ROOMS').text
-            DEPARTURE_ROOMS = i.find('DEPARTURE_ROOMS').text
-            COMPLIMENTARY_ROOMS = i.find('COMPLIMENTARY_ROOMS').text
-            HOUSE_USE_ROOMS = i.find('HOUSE_USE_ROOMS').text
-            DAY_USE_ROOMS = i.find('DAY_USE_ROOMS').text
-            NO_SHOW_ROOMS = i.find('NO_SHOW_ROOMS').text
-            INVENTORY_ROOMS = i.find('INVENTORY_ROOMS').text
-            CONSIDERED_DATE = i.find('CONSIDERED_DATE').text
-            CHAR_CONSIDERED_DATE = i.find('CHAR_CONSIDERED_DATE').text
-            IND_DEDUCT_REVENUE = i.find('IND_DEDUCT_REVENUE').text
-            IND_NON_DEDUCT_REVENUE = i.find('IND_NON_DEDUCT_REVENUE').text
-            GRP_NON_DEDUCT_REVENUE = i.find('GRP_NON_DEDUCT_REVENUE').text
-            GRP_DEDUCT_REVENUE = i.find('GRP_DEDUCT_REVENUE').text
-            OWNER_ROOMS = i.find('OWNER_ROOMS').text
-            FF_ROOMS = i.find('FF_ROOMS').text
-            CF_OOO_ROOMS = i.find('CF_OOO_ROOMS').text
-            CF_CALC_OCC_ROOMS = i.find('CF_CALC_OCC_ROOMS').text
-            CF_CALC_INV_ROOMS = i.find('CF_CALC_INV_ROOMS').text
-            CF_AVERAGE_ROOM_RATE = i.find('CF_AVERAGE_ROOM_RATE').text
-            CF_OCCUPANCY = i.find('CF_OCCUPANCY').text
-            CF_IND_DED_REV = i.find('CF_IND_DED_REV').text
-            CF_IND_NON_DED_REV = i.find('CF_IND_NON_DED_REV').text
-            CF_BLK_DED_REV = i.find('CF_BLK_DED_REV').text
-            CF_BLK_NON_DED_REV = i.find('CF_BLK_NON_DED_REV').text
+        if root[0][0][1][0][1].text == 'Forecast':
+            for i in root[0][0][1][0][2]:
+                REVENUE = i.find('REVENUE').text
+                NO_ROOMS = i.find('NO_ROOMS').text
+                IND_DEDUCT_ROOMS = i.find('IND_DEDUCT_ROOMS').text
+                IND_NON_DEDUCT_ROOMS = i.find('IND_NON_DEDUCT_ROOMS').text
+                GRP_DEDUCT_ROOMS = i.find('GRP_DEDUCT_ROOMS').text
+                GRP_NON_DEDUCT_ROOMS = i.find('GRP_NON_DEDUCT_ROOMS').text
+                NO_PERSONS = i.find('NO_PERSONS').text
+                ARRIVAL_ROOMS = i.find('ARRIVAL_ROOMS').text
+                DEPARTURE_ROOMS = i.find('DEPARTURE_ROOMS').text
+                COMPLIMENTARY_ROOMS = i.find('COMPLIMENTARY_ROOMS').text
+                HOUSE_USE_ROOMS = i.find('HOUSE_USE_ROOMS').text
+                DAY_USE_ROOMS = i.find('DAY_USE_ROOMS').text
+                NO_SHOW_ROOMS = i.find('NO_SHOW_ROOMS').text
+                INVENTORY_ROOMS = i.find('INVENTORY_ROOMS').text
+                CONSIDERED_DATE = i.find('CONSIDERED_DATE').text
+                CHAR_CONSIDERED_DATE = i.find('CHAR_CONSIDERED_DATE').text
+                IND_DEDUCT_REVENUE = i.find('IND_DEDUCT_REVENUE').text
+                IND_NON_DEDUCT_REVENUE = i.find('IND_NON_DEDUCT_REVENUE').text
+                GRP_NON_DEDUCT_REVENUE = i.find('GRP_NON_DEDUCT_REVENUE').text
+                GRP_DEDUCT_REVENUE = i.find('GRP_DEDUCT_REVENUE').text
+                OWNER_ROOMS = i.find('OWNER_ROOMS').text
+                FF_ROOMS = i.find('FF_ROOMS').text
+                CF_OOO_ROOMS = i.find('CF_OOO_ROOMS').text
+                CF_CALC_OCC_ROOMS = i.find('CF_CALC_OCC_ROOMS').text
+                CF_CALC_INV_ROOMS = i.find('CF_CALC_INV_ROOMS').text
+                CF_AVERAGE_ROOM_RATE = i.find('CF_AVERAGE_ROOM_RATE').text
+                CF_OCCUPANCY = i.find('CF_OCCUPANCY').text
+                CF_IND_DED_REV = i.find('CF_IND_DED_REV').text
+                CF_IND_NON_DED_REV = i.find('CF_IND_NON_DED_REV').text
+                CF_BLK_DED_REV = i.find('CF_BLK_DED_REV').text
+                CF_BLK_NON_DED_REV = i.find('CF_BLK_NON_DED_REV').text
 
-            rows.append({
-                'REVENUE': REVENUE,
-                'NO_ROOMS': NO_ROOMS,
-                'IND_DEDUCT_ROOMS': IND_DEDUCT_ROOMS,
-                'IND_NON_DEDUCT_ROOMS': IND_NON_DEDUCT_ROOMS,
-                'GRP_DEDUCT_ROOMS': GRP_DEDUCT_ROOMS,
-                'GRP_NON_DEDUCT_ROOMS': GRP_NON_DEDUCT_ROOMS,
-                'NO_PERSONS': NO_PERSONS,
-                'ARRIVAL_ROOMS': ARRIVAL_ROOMS,
-                'DEPARTURE_ROOMS': DEPARTURE_ROOMS,
-                'COMPLIMENTARY_ROOMS': COMPLIMENTARY_ROOMS,
-                'HOUSE_USE_ROOMS': HOUSE_USE_ROOMS,
-                'DAY_USE_ROOMS': DAY_USE_ROOMS,
-                'NO_SHOW_ROOMS': NO_SHOW_ROOMS,
-                'INVENTORY_ROOMS': INVENTORY_ROOMS,
-                'CONSIDERED_DATE': CONSIDERED_DATE,
-                'CHAR_CONSIDERED_DATE': CHAR_CONSIDERED_DATE,
-                'IND_DEDUCT_REVENUE': IND_DEDUCT_REVENUE,
-                'IND_NON_DEDUCT_REVENUE': IND_NON_DEDUCT_REVENUE,
-                'GRP_NON_DEDUCT_REVENUE': GRP_NON_DEDUCT_REVENUE,
-                'GRP_DEDUCT_REVENUE': GRP_DEDUCT_REVENUE,
-                'OWNER_ROOMS': OWNER_ROOMS,
-                'FF_ROOMS': FF_ROOMS,
-                'CF_OOO_ROOMS': CF_OOO_ROOMS,
-                'CF_CALC_OCC_ROOMS': CF_CALC_OCC_ROOMS,
-                'CF_CALC_INV_ROOMS': CF_CALC_INV_ROOMS,
-                'CF_AVERAGE_ROOM_RATE': CF_AVERAGE_ROOM_RATE,
-                'CF_OCCUPANCY': CF_OCCUPANCY,
-                'CF_IND_DED_REV': CF_IND_DED_REV,
-                'CF_IND_NON_DED_REV': CF_IND_NON_DED_REV,
-                'CF_BLK_DED_REV': CF_BLK_DED_REV,
-                'CF_BLK_NON_DED_REV': CF_BLK_NON_DED_REV
-            })
+                rows.append({
+                    'REVENUE': REVENUE,
+                    'NO_ROOMS': NO_ROOMS,
+                    'IND_DEDUCT_ROOMS': IND_DEDUCT_ROOMS,
+                    'IND_NON_DEDUCT_ROOMS': IND_NON_DEDUCT_ROOMS,
+                    'GRP_DEDUCT_ROOMS': GRP_DEDUCT_ROOMS,
+                    'GRP_NON_DEDUCT_ROOMS': GRP_NON_DEDUCT_ROOMS,
+                    'NO_PERSONS': NO_PERSONS,
+                    'ARRIVAL_ROOMS': ARRIVAL_ROOMS,
+                    'DEPARTURE_ROOMS': DEPARTURE_ROOMS,
+                    'COMPLIMENTARY_ROOMS': COMPLIMENTARY_ROOMS,
+                    'HOUSE_USE_ROOMS': HOUSE_USE_ROOMS,
+                    'DAY_USE_ROOMS': DAY_USE_ROOMS,
+                    'NO_SHOW_ROOMS': NO_SHOW_ROOMS,
+                    'INVENTORY_ROOMS': INVENTORY_ROOMS,
+                    'CONSIDERED_DATE': CONSIDERED_DATE,
+                    'CHAR_CONSIDERED_DATE': CHAR_CONSIDERED_DATE,
+                    'IND_DEDUCT_REVENUE': IND_DEDUCT_REVENUE,
+                    'IND_NON_DEDUCT_REVENUE': IND_NON_DEDUCT_REVENUE,
+                    'GRP_NON_DEDUCT_REVENUE': GRP_NON_DEDUCT_REVENUE,
+                    'GRP_DEDUCT_REVENUE': GRP_DEDUCT_REVENUE,
+                    'OWNER_ROOMS': OWNER_ROOMS,
+                    'FF_ROOMS': FF_ROOMS,
+                    'CF_OOO_ROOMS': CF_OOO_ROOMS,
+                    'CF_CALC_OCC_ROOMS': CF_CALC_OCC_ROOMS,
+                    'CF_CALC_INV_ROOMS': CF_CALC_INV_ROOMS,
+                    'CF_AVERAGE_ROOM_RATE': CF_AVERAGE_ROOM_RATE,
+                    'CF_OCCUPANCY': CF_OCCUPANCY,
+                    'CF_IND_DED_REV': CF_IND_DED_REV,
+                    'CF_IND_NON_DED_REV': CF_IND_NON_DED_REV,
+                    'CF_BLK_DED_REV': CF_BLK_DED_REV,
+                    'CF_BLK_NON_DED_REV': CF_BLK_NON_DED_REV
+                })
+            df = pd.DataFrame(rows, columns=cols)
+            df.insert(0, column="propertyCode", value=propertyCode)
+            df.insert(1, column="pullDateId", value=pullDateId)
+            df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
+            df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
+            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
 
-        df = pd.DataFrame(rows, columns=cols)
-        df.insert(0, column="propertyCode", value=propertyCode)
-        df.insert(1, column="pullDateId", value=pullDateId)
-        df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
-        df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
-        df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+            occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = list(occ_result)
+        elif root[0][0][1][1][1].text == 'Forecast':
+            for i in root[0][0][1][1][2]:
+                REVENUE = i.find('REVENUE').text
+                NO_ROOMS = i.find('NO_ROOMS').text
+                IND_DEDUCT_ROOMS = i.find('IND_DEDUCT_ROOMS').text
+                IND_NON_DEDUCT_ROOMS = i.find('IND_NON_DEDUCT_ROOMS').text
+                GRP_DEDUCT_ROOMS = i.find('GRP_DEDUCT_ROOMS').text
+                GRP_NON_DEDUCT_ROOMS = i.find('GRP_NON_DEDUCT_ROOMS').text
+                NO_PERSONS = i.find('NO_PERSONS').text
+                ARRIVAL_ROOMS = i.find('ARRIVAL_ROOMS').text
+                DEPARTURE_ROOMS = i.find('DEPARTURE_ROOMS').text
+                COMPLIMENTARY_ROOMS = i.find('COMPLIMENTARY_ROOMS').text
+                HOUSE_USE_ROOMS = i.find('HOUSE_USE_ROOMS').text
+                DAY_USE_ROOMS = i.find('DAY_USE_ROOMS').text
+                NO_SHOW_ROOMS = i.find('NO_SHOW_ROOMS').text
+                INVENTORY_ROOMS = i.find('INVENTORY_ROOMS').text
+                CONSIDERED_DATE = i.find('CONSIDERED_DATE').text
+                CHAR_CONSIDERED_DATE = i.find('CHAR_CONSIDERED_DATE').text
+                IND_DEDUCT_REVENUE = i.find('IND_DEDUCT_REVENUE').text
+                IND_NON_DEDUCT_REVENUE = i.find('IND_NON_DEDUCT_REVENUE').text
+                GRP_NON_DEDUCT_REVENUE = i.find('GRP_NON_DEDUCT_REVENUE').text
+                GRP_DEDUCT_REVENUE = i.find('GRP_DEDUCT_REVENUE').text
+                OWNER_ROOMS = i.find('OWNER_ROOMS').text
+                FF_ROOMS = i.find('FF_ROOMS').text
+                CF_OOO_ROOMS = i.find('CF_OOO_ROOMS').text
+                CF_CALC_OCC_ROOMS = i.find('CF_CALC_OCC_ROOMS').text
+                CF_CALC_INV_ROOMS = i.find('CF_CALC_INV_ROOMS').text
+                CF_AVERAGE_ROOM_RATE = i.find('CF_AVERAGE_ROOM_RATE').text
+                CF_OCCUPANCY = i.find('CF_OCCUPANCY').text
+                CF_IND_DED_REV = i.find('CF_IND_DED_REV').text
+                CF_IND_NON_DED_REV = i.find('CF_IND_NON_DED_REV').text
+                CF_BLK_DED_REV = i.find('CF_BLK_DED_REV').text
+                CF_BLK_NON_DED_REV = i.find('CF_BLK_NON_DED_REV').text
 
-        occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv"))
-        occ_result = list(occ_result)
+                rows.append({
+                    'REVENUE': REVENUE,
+                    'NO_ROOMS': NO_ROOMS,
+                    'IND_DEDUCT_ROOMS': IND_DEDUCT_ROOMS,
+                    'IND_NON_DEDUCT_ROOMS': IND_NON_DEDUCT_ROOMS,
+                    'GRP_DEDUCT_ROOMS': GRP_DEDUCT_ROOMS,
+                    'GRP_NON_DEDUCT_ROOMS': GRP_NON_DEDUCT_ROOMS,
+                    'NO_PERSONS': NO_PERSONS,
+                    'ARRIVAL_ROOMS': ARRIVAL_ROOMS,
+                    'DEPARTURE_ROOMS': DEPARTURE_ROOMS,
+                    'COMPLIMENTARY_ROOMS': COMPLIMENTARY_ROOMS,
+                    'HOUSE_USE_ROOMS': HOUSE_USE_ROOMS,
+                    'DAY_USE_ROOMS': DAY_USE_ROOMS,
+                    'NO_SHOW_ROOMS': NO_SHOW_ROOMS,
+                    'INVENTORY_ROOMS': INVENTORY_ROOMS,
+                    'CONSIDERED_DATE': CONSIDERED_DATE,
+                    'CHAR_CONSIDERED_DATE': CHAR_CONSIDERED_DATE,
+                    'IND_DEDUCT_REVENUE': IND_DEDUCT_REVENUE,
+                    'IND_NON_DEDUCT_REVENUE': IND_NON_DEDUCT_REVENUE,
+                    'GRP_NON_DEDUCT_REVENUE': GRP_NON_DEDUCT_REVENUE,
+                    'GRP_DEDUCT_REVENUE': GRP_DEDUCT_REVENUE,
+                    'OWNER_ROOMS': OWNER_ROOMS,
+                    'FF_ROOMS': FF_ROOMS,
+                    'CF_OOO_ROOMS': CF_OOO_ROOMS,
+                    'CF_CALC_OCC_ROOMS': CF_CALC_OCC_ROOMS,
+                    'CF_CALC_INV_ROOMS': CF_CALC_INV_ROOMS,
+                    'CF_AVERAGE_ROOM_RATE': CF_AVERAGE_ROOM_RATE,
+                    'CF_OCCUPANCY': CF_OCCUPANCY,
+                    'CF_IND_DED_REV': CF_IND_DED_REV,
+                    'CF_IND_NON_DED_REV': CF_IND_NON_DED_REV,
+                    'CF_BLK_DED_REV': CF_BLK_DED_REV,
+                    'CF_BLK_NON_DED_REV': CF_BLK_NON_DED_REV
+                })
+            df = pd.DataFrame(rows, columns=cols)
+            df.insert(0, column="propertyCode", value=propertyCode)
+            df.insert(1, column="pullDateId", value=pullDateId)
+            df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
+            df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
+            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+
+            occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = list(occ_result)
+        else:
+            occ_result = []
+            print("Occupancy Data not available")
 
         print("RES RESULT")
         print(res_result)

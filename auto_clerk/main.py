@@ -330,13 +330,13 @@ def AutoClerk_Pms(row):
             # End Data Modification Reservation
 
             # Insert Into Database
-            res_result = csv.DictReader(open(reservation_file_path))
+            res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
             res_result = list(res_result)
             print(len(res_result))
             bulk_insert_auto_clerk_res(propertyCode, res_result, row['res_before'], row['res_after'])
             print("RES DONE")
 
-            occ_result = csv.DictReader(open(occupancy_file_path))
+            occ_result = csv.DictReader(open(occupancy_file_path, encoding="utf-8"))
             occ_result = list(occ_result)
             print(len(occ_result))
             bulk_insert_auto_clerk_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
