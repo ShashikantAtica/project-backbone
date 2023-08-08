@@ -46,7 +46,7 @@ def send_Email_Report():
                 tab1Values += f"""</tr>"""
 
             msg = EmailMessage()
-            msg['Subject'] = f"Today's Script Report({today_date}) "
+            msg['Subject'] = f"Atica Today's Script Report({today_date}) "
             msg['From'] = os.environ['SMTP_EMAIL']
             msg['To'] = TO_MAIL_ARRAY
             msg.set_content('table1')
