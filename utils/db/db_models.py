@@ -112,6 +112,20 @@ choice_revenue_model = Table(
     Column('YTD_AVG', String(55)),
 )
 
+choice_revenue_detail_model = Table(
+    'choice_revenue_detail', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(55)),
+    Column('pullDateId', BIGINT),
+    Column('IDS_DATE_DAY', String(55)),
+    Column('RateCode', String(55)),
+    Column('RoomNights', String(55)),
+    Column('RoomNightsPer', String(55)),
+    Column('RoomRevenue', String(55)),
+    Column('RoomRevenuePer', String(55)),
+    Column('DailyAVG', String(55)),
+)
+
 auto_clerk_res_model = Table(
     'auto_clerk_res', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),

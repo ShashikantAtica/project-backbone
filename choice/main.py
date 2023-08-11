@@ -102,6 +102,25 @@ def bulk_insert_choice_revenue(propertyCode, revenue_list):
     conn.close()
 
 
+def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue_before, revenue_after):
+    start_date = "'" + revenue_before.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+
+    end_date = "'" + revenue_after.format("YYYY-MM-DD") + "'"
+    print("end_date :: ", end_date)
+    db_propertyCode = "'" + propertyCode + "'"
+
+    # Delete existing data of revenue detail (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(f'DELETE FROM choice_revenue_detail where "IDS_DATE_DAY" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    conn.close()
+
+    # Add new data of revenue detail (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.choice_revenue_detail_model.insert(), revenue_detail_list)
+    conn.close()
+
+
 def Choice_Pms(row):
     atica_property_code = row['atica_property_code']
     external_property_code = row['external_property_code']
@@ -519,15 +538,107 @@ def Choice_Pms(row):
                         read.to_csv(filename, index=False, header=headers_list)
                     # End Revenue By Rate Code Report
 
+                    # Start Revenue By Rate Code Detail Report
+                    revenue_detail_dataframe = []
+                    start_date = row['res_before']
+                    end_date = row['res_after']
+                    curr = start_date
+                    while curr <= end_date:
+                        start = curr
+                        end = curr.shift(days=+45)
+                        if end > end_date:
+                            end = end_date
+                        curr = curr.shift(days=+46)
+
+                        revenue_detail_data_post = {
+                            "JOD": "apache_revenue_by_rate_code_detail",
+                            "locale": "en_US",
+                            "ARG0": external_property_code,
+                            "ARG1": username,
+                            "ARG2": current_date.format("M/D/YYYY"),
+                            "ARG3": start.format("M/D/YYYY"),
+                            "ARG4": end.format("M/D/YYYY"),
+                            "ARG5": "",
+                            "ARG6": "",
+                            "ARG7": "",
+                            "ARG8": "",
+                            "ARG9": "",
+                            "ARG10": "",
+                            "ARG11": "",
+                            "ARG12": "",
+                            "ARG13": "",
+                            "ARG14": "",
+                            "ARG15": "",
+                            "CSV": "true",
+                            "CSV_SUPPRESS_HEADERS": "false",
+                            "reportId": "77",
+                            "updateCounter": "Y",
+                            "includeCheckedOut": "",
+                            "includeInHouse": "",
+                            "altLocale": "",
+                            "reportName": "",
+                            "isGuestServiceEnabled": "",
+                            "sortorder": "",
+                            "showCurrencySymbol": "",
+                            "commaSeparatedAccounts": "",
+                            "activityDateType": "",
+                            "reportServerKey": serverkey,
+                            "reportServerUsername": username,
+                            "fullPageRequestTime": int(time.time())
+                        }
+                        revenue_detail_page_get = s.post(f'{BASE_URL}/RevenueByRateCodeDetailReport.go')
+
+                        revenue_detail_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=revenue_detail_data_post)
+                        report_type = '[Revenue Detail]'
+                        print(f"[{atica_property_code}]{report_type} Sent request!")
+
+                        if revenue_detail_report_get.status_code == 200:
+                            temp = tempfile.TemporaryFile()
+                            temp.write(revenue_detail_report_get.content)
+                            temp.seek(0)
+                            read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
+                            revenue_detail_dataframe.append(read_xl)
+                            temp.close()
+                            print(
+                                f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+                        else:
+                            print(
+                                f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+
+                    revenue_detail_report = pd.concat(revenue_detail_dataframe, ignore_index=True)
+
+                    filename = f'{folder_name}{propertyCode}_Revenue_Detail.csv'
+                    revenue_detail_report.to_csv(filename, index=False)
+                    revenue_detail_binary_stream = open(filename, 'rb')
+                    revenue_detail_binary_data = revenue_detail_binary_stream.read()
+
+                    if not ignore_size_check and len(revenue_detail_binary_data) < 5000:
+                        print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending to the spider")
+                        os.remove(filename)
+                    else:
+                        print(f"[{atica_property_code}]{report_type} Uploading Revenue Detail report")
+                        read = pd.read_csv(filename)
+                        read.insert(0, column="propertyCode", value=propertyCode)
+                        read.insert(1, column="pullDateId", value=pullDateId)
+                        try:
+                            read['﻿IDS_DATE_DAY'] = pd.to_datetime(read['﻿IDS_DATE_DAY'])
+                        except Exception:
+                            read['IDS_DATE_DAY'] = pd.to_datetime(read['IDS_DATE_DAY'])
+                        headers_list = ["propertyCode", "pullDateId", "IDS_DATE_DAY", "RateCode", "RoomNights", "RoomNightsPer", "RoomRevenue", "RoomRevenuePer", "DailyAVG"]
+                        read.to_csv(filename, index=False, header=headers_list)
+                    # End Revenue By Rate Code Detail Report
+
             reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
             occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.csv'
             cancellation_file_path = f'{folder_name}{propertyCode}_Cancellation.csv'
             revenue_file_path = f'{folder_name}{propertyCode}_Revenue.csv'
+            revenue_detail_file_path = f'{folder_name}{propertyCode}_Revenue_Detail.csv'
 
             check_reservation_file = os.path.isfile(reservation_file_path)
             check_occupancy_file = os.path.isfile(occupancy_file_path)
             check_cancellation_file = os.path.isfile(cancellation_file_path)
             check_revenue_file = os.path.isfile(revenue_file_path)
+            check_revenue_detail_file = os.path.isfile(revenue_detail_file_path)
 
             error_msg = ""
 
@@ -543,7 +654,10 @@ def Choice_Pms(row):
             if not check_revenue_file:
                 error_msg = error_msg + " Revenue file - N/A"
 
-            if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file:
+            if not check_revenue_detail_file:
+                error_msg = error_msg + " Revenue Detail file - N/A"
+
+            if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file and check_revenue_detail_file:
                 # Insert into Database
                 res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv", encoding="utf-8"))
                 res_result = list(res_result)
@@ -568,6 +682,12 @@ def Choice_Pms(row):
                 print(len(revenue_result))
                 bulk_insert_choice_revenue(propertyCode, revenue_result)
                 print("REVENUE DONE")
+
+                revenue_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue_Detail.csv", encoding="utf-8"))
+                revenue_detail_result = list(revenue_detail_result)
+                print(len(revenue_detail_result))
+                bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_result, row['res_before'], row['res_after'])
+                print("REVENUE DETAIL DONE")
 
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:

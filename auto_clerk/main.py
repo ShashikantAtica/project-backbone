@@ -106,7 +106,7 @@ def AutoClerk_Pms(row):
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
         })
-        driver = Chrome(options=chrome_options)
+        driver = webdriver.Chrome(options=chrome_options, executable_path='../chromedriver.exe')
         driver.maximize_window()
 
         driver.get('https://www.bwh.autoclerkcloud.com/logon.do2')
