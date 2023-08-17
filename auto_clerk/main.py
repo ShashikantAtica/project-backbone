@@ -92,7 +92,7 @@ def AutoClerk_Pms(row):
         password = json_dict['p']
 
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
@@ -134,9 +134,8 @@ def AutoClerk_Pms(row):
 
         # Forecast Report Start
         report_type = 'Forecast'
-        link = driver.find_element(By.XPATH, '/html/body/div[1]/div/nav/ul/li[3]/ul/li[1]/a').get_attribute("href")
+        driver.find_element(By.LINK_TEXT, 'Reports').click()
 
-        driver.get(link)
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.LINK_TEXT, "Forecast Report")))
         driver.find_element(By.LINK_TEXT, "Forecast Report").click()
         time.sleep(2)
