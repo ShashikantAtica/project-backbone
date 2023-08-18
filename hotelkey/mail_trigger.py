@@ -1,3 +1,5 @@
+import sys
+sys.path.append("..")
 import arrow
 import requests
 from selenium import webdriver
