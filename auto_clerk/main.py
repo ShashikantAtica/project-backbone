@@ -205,9 +205,9 @@ def AutoClerk_Pms(row):
                 Res_End_date = res_end_date
             curr = curr.shift(days=+15)
 
-            WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "arrivalStart")))
-            driver.find_element(By.NAME, "arrivalStart").send_keys(Res_Start_date.format('M/D/YY'))
-            driver.find_element(By.NAME, "arrivalEnd").send_keys(Res_End_date.format('M/D/YY'))
+            WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "createdAtBegin")))
+            driver.find_element(By.NAME, "createdAtBegin").send_keys(Res_Start_date.format('M/D/YY'))
+            driver.find_element(By.NAME, "createdAtEnd").send_keys(Res_End_date.format('M/D/YY'))
             driver.find_element(By.ID, "buttonCSV").click()
 
             filename = "result.csv"
