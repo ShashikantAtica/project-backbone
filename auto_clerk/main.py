@@ -24,7 +24,7 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def bulk_insert_auto_clerk_res(propertyCode,res_list, res_before, res_after):
+def bulk_insert_auto_clerk_res(propertyCode, res_list, res_before, res_after):
     start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
     end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
@@ -52,7 +52,7 @@ def bulk_insert_auto_clerk_res(propertyCode,res_list, res_before, res_after):
     conn.close()
 
 
-def bulk_insert_auto_clerk_occ(propertyCode,occ_list, occ_before, occ_after):
+def bulk_insert_auto_clerk_occ(propertyCode, occ_list, occ_before, occ_after):
     start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
 
