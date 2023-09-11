@@ -20,36 +20,6 @@ class InvalidReportException(Exception):
     pass
 
 
-# def validate_request(request):
-#     payload = request.get_json()
-#     spider_property_code = payload["spider_property_code"]
-#     print("spider_property_code :", spider_property_code)
-#     # log.set_spider_property_code(spider_property_code)
-#
-#     # db = DB()
-#
-#     # where = {'id': payload["exec_id"]}
-#     # confirm exec log exists
-#     # exec_log = db.select(table=DB.EXECUTIONS_TABLE, where=where)
-#     # if (len(exec_log) == 0):
-#     #     raise InvalidRequestException("Execution log does not exist")
-#
-#     # get secret
-#     secret_name = payload['gcp_secret']
-#     print("secret_name :", secret_name)
-#     # if not secret_exists(secret_name):
-#     #     raise InvalidRequestException(f"gcp secret {secret_name} does not exist")
-#
-#     # validate query property with spider_property_code
-#     url_property = re.search("(?:^|[?&])p_Prop=([^&]*)", payload['reservation_report_url'])
-#     if url_property is None:
-#         raise InvalidRequestException(f"Report property is not set")
-#
-#     short_property_code = payload['spider_property_code'][2:]
-#     if url_property[1] != short_property_code:
-#         raise InvalidRequestException(f"Report property does not match: {short_property_code} != {url_property[1]}")
-
-
 def process_report(session, payload):
     property_code = payload['external_property_code']
     print(f"start for {property_code}")

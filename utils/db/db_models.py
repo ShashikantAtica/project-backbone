@@ -126,6 +126,28 @@ choice_revenue_detail_model = Table(
     Column('DailyAVG', String(55)),
 )
 
+choice_group_pickup_detail_model = Table(
+    'choice_group_pickup_detail', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(55)),
+    Column('pullDateId', BIGINT),
+    Column('GroupName', String(55)),
+    Column('GroupStatus', String(55)),
+    Column('RollingCutOffDays', String(55)),
+    Column('FixedCutOffDate', String(55)),
+    Column('SalesManager', String(55)),
+    Column('RoomType', String(55)),
+    Column('BlockDate', String(55)),
+    Column('OriginalBlock', String(55)),
+    Column('CurrentBlock', String(55)),
+    Column('GuaranteedArrivalsPickedUp', String(55)),
+    Column('NonGuaranteedArrivalsPickedUp', String(55)),
+    Column('TotalPickedUp', String(55)),
+    Column('RoomsNotPickedUp', String(55)),
+    Column('Revenue', String(55)),
+    Column('ADR', String(55)),
+)
+
 auto_clerk_res_model = Table(
     'auto_clerk_res', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
