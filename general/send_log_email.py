@@ -12,6 +12,7 @@ from dotenv.main import load_dotenv
 load_dotenv()
 # TO_MAIL_ARRAY = ["yash.malani@softqubes.com", "hardik.kanak@softqubes.com"]
 TO_MAIL_ARRAY = ["hardik.kanak@softqubes.com"]
+CC_MAIL_ARRAY = ["yash.malani@softqubes.com"]
 
 
 def send_Email_Report():
@@ -49,6 +50,7 @@ def send_Email_Report():
             msg['Subject'] = f"Atica Today's Script Report({today_date}) "
             msg['From'] = os.environ['SMTP_EMAIL']
             msg['To'] = TO_MAIL_ARRAY
+            msg['BCC'] = CC_MAIL_ARRAY
             msg.set_content('table1')
             html = """
                 <!DOCTYPE html>
