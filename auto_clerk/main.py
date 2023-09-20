@@ -71,6 +71,25 @@ def bulk_insert_auto_clerk_occ(propertyCode, occ_list, occ_before, occ_after):
     conn.close()
 
 
+def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_list, occ_before, occ_after):
+    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+
+    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
+    print("end_date :: ", end_date)
+    db_propertyCode = "'" + propertyCode + "'"
+
+    # Delete existing data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(f'DELETE FROM auto_clerk_group_block_summary where "Arrive" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    conn.close()
+
+    # Add new data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.auto_clerk_group_block_summary_model.insert(), group_block_summary_list)
+    conn.close()
+
+
 def AutoClerk_Pms(row):
     atica_property_code = row['atica_property_code']
     secret_name = row['gcp_secret']
@@ -241,15 +260,46 @@ def AutoClerk_Pms(row):
         filename = os.path.join(save_dir, "Reservation.csv")
         merged_df.to_csv(filename, header=head, index=False)
         print(f"{report_type} report saved successfully")
+
+        # Start Group Block Summary Report
+        report_type = 'Group_Block_Summary'
+        driver.find_element(By.LINK_TEXT, "Reports").click()
+        time.sleep(2)
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.LINK_TEXT, "Group Block")))
+        driver.find_element(By.LINK_TEXT, "Group Block").click()
+        time.sleep(2)
+        driver.find_element(By.ID, "startdate").clear()
+        driver.find_element(By.ID, "startdate").send_keys(row['res_before'].format("M/D/YY"))
+        driver.find_element(By.ID, "enddate").clear()
+        driver.find_element(By.ID, "enddate").send_keys(row['res_after'].format("M/D/YY"))
+
+        try:
+            driver.find_element(By.XPATH, "//select[@name='output_type']/option[text()='Data (CSV)']").click()
+        except NoSuchElementException:
+            driver.find_element(By.XPATH, "//select[@name='output_type']/option[@value='csv']").click()
+
+        filepath = f'{folder_name}groupBlockSummary.csv'
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+        driver.find_element(By.ID, "reportbutton").click()
+        print(f"{report_type} report request sent")
+        time.sleep(5)
+        while not os.path.exists(filepath):
+            time.sleep(1)
+
+        print(f"{report_type} report saved successfully")
         driver.quit()
 
         reservation_file_path = f'{folder_name}Reservation.csv'
         occupancy_file_path = f'{folder_name}Occupancy.csv'
+        group_block_summary_file_path = f'{folder_name}groupBlockSummary.csv'
 
         check_reservation_file = os.path.isfile(reservation_file_path)
         check_occupancy_file = os.path.isfile(occupancy_file_path)
+        check_group_block_summary_file = os.path.isfile(group_block_summary_file_path)
 
-        if check_reservation_file and check_occupancy_file:
+        if check_reservation_file and check_occupancy_file and check_group_block_summary_file:
             # Start Data Modification Occupancy
             df = pd.read_csv(occupancy_file_path)
             df = df.drop([0, 1, 2, 3, 4, 5])
@@ -328,6 +378,19 @@ def AutoClerk_Pms(row):
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
+            # Start Group Block Summary Modification
+            df = pd.read_csv(group_block_summary_file_path, header=None, skiprows=6, skipfooter=1, engine='python')
+            df = df.dropna(axis=0, how='all').dropna(axis=1, how='all')
+            headers = ['GroupBookingName', 'Confirmation', 'Arrive', 'Depart', 'Block', 'P_U', 'Diff', "BlockedRevenue", "PickedUpRevenue", "CutoffDate"]
+            df.columns = headers
+            df['Arrive'] = pd.to_datetime(df['Arrive'], errors='coerce', format='%m/%d/%y')
+            df['Depart'] = pd.to_datetime(df['Depart'], errors='coerce', format='%m/%d/%y')
+            df['CutoffDate'] = pd.to_datetime(df['CutoffDate'], errors='coerce', format='%m/%d/%y')
+            df.insert(0, column="propertyCode", value=propertyCode)
+            df.insert(1, column="pullDateId", value=pullDateId)
+            df.to_csv(group_block_summary_file_path, index=False)
+            # End Group Block Summary Modification
+
             # Insert Into Database
             res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
             res_result = list(res_result)
@@ -341,18 +404,19 @@ def AutoClerk_Pms(row):
             bulk_insert_auto_clerk_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
             print("OCC DONE")
 
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            group_block_summary_result = csv.DictReader(open(group_block_summary_file_path, encoding="utf-8"))
+            group_block_summary_result = list(group_block_summary_result)
+            print(len(group_block_summary_result))
+            bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_result, row['res_before'], row['res_after'])
+            print("GROUP BLOCK SUMMARY DONE")
 
+            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
             msg = "File Not found!!!"
             update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
-
-
-
     except Exception as e:
         if driver:
             driver.quit()
-        print(e)
         msg = f"[{atica_property_code}] Somethings went wrong."
         print(msg)
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
@@ -438,7 +502,7 @@ if __name__ == '__main__':
                 'property_type': PMS_NAME,
                 'current_date': CURRENT_DATE,
                 'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
-                'res_after': CURRENT_DATE.shift(days=RES_AFTER),
+                'res_after': CURRENT_DATE.shift(days=+RES_AFTER),
                 'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
                 'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
                 "propertyCode": PROPERTY_CODE,

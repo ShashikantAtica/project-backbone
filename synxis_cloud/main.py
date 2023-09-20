@@ -152,6 +152,94 @@ def bulk_insert_synxis_cloud_forecast(res_list, propertyCode):
     print("Data imported")
 
 
+def bulk_insert_synxis_cloud_revenue_recap(res_list, propertyCode):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
+
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
+
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
+    conn = db_config.get_db_connection()
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.close()
+
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of reservation
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from synxis_cloud_revenue_recap where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
+    # Add new data of reservation
+    print("Data importing...")
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), res_list)
+    conn.close()
+    print("Data imported")
+
+
+def bulk_insert_synxis_cloud_monthly_summary(res_list, propertyCode):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
+
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
+
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
+    conn = db_config.get_db_connection()
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.close()
+
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of reservation
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from synxis_cloud_monthly_summary where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
+    # Add new data of reservation
+    print("Data importing...")
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.synxis_cloud_monthly_summary_model.insert(), res_list)
+    conn.close()
+    print("Data imported")
+
+
 def prep_service():
     creds = None
     AticaCred = '../utils/email/AticaCred.json'
@@ -208,7 +296,7 @@ def Synxis_Cloud_Pms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
 
-    label_array = [f"{propertyCode} Reservation", f"{propertyCode} Forecast"]
+    label_array = [f"{propertyCode} Reservation", f"{propertyCode} Forecast", f"{propertyCode} Revenue", f"{propertyCode} Monthly"]
     attachment_format = "./reports"
     messages_array = []
     for label_name in label_array:
@@ -338,11 +426,15 @@ def Synxis_Cloud_Pms(row):
     # Modification of res report
     reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.csv'
     forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast.csv'
+    revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue.csv'
+    monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly.csv'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_forecast_file = os.path.isfile(forecast_file_path)
+    check_revenue_file = os.path.isfile(revenue_file_path)
+    check_monthly_file = os.path.isfile(monthly_file_path)
 
-    if check_reservation_file and check_forecast_file:
+    if check_reservation_file and check_forecast_file and check_revenue_file and check_monthly_file:
         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
         read['Status_Dt'] = pd.to_datetime(read['Status_Dt'])
@@ -367,12 +459,37 @@ def Synxis_Cloud_Pms(row):
         fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
         fore_result = list(fore_result)
 
-        if len(res_result) > 0 and len(fore_result) > 0:
+        # Revenue Recap Data Clean and Insert
+        read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
+        read.insert(0, column="propertyCode", value=propertyCode)
+        read.insert(1, column="pullDateId", value=pullDateId)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
+
+        rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
+        rev_result = list(rev_result)
+
+        # Monthly Summary Data Clean and Insert
+        read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
+        read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
+        read.insert(0, column="propertyCode", value=propertyCode)
+        read.insert(1, column="pullDateId", value=pullDateId)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
+
+        monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
+        monthly_result = list(monthly_result)
+
+        if len(res_result) > 0 and len(fore_result) > 0 and len(rev_result) > 0 and len(monthly_result) > 0:
             bulk_insert_synxis_cloud_res(res_result, propertyCode=propertyCode)
             print("RES DONE")
 
             bulk_insert_synxis_cloud_forecast(fore_result, propertyCode=propertyCode)
             print("FORE DONE")
+
+            bulk_insert_synxis_cloud_revenue_recap(rev_result, propertyCode=propertyCode)
+            print("REV DONE")
+
+            bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode=propertyCode)
+            print("MONTHLY DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:

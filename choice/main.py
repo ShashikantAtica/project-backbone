@@ -121,24 +121,24 @@ def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue
     conn.close()
 
 
-# def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_list, group_pickup_before, group_pickup_after):
-#     start_date = "'" + group_pickup_before.format("YYYY-MM-DD") + "'"
-#     print("start_date :: ", start_date)
-#
-#     end_date = "'" + group_pickup_after.format("YYYY-MM-DD") + "'"
-#     print("end_date :: ", end_date)
-#     db_propertyCode = "'" + propertyCode + "'"
-#
-#     # Delete existing data of occ (up to 90 Days)
-#     conn = db_config.get_db_connection()
-#     conn.execute(
-#         f'DELETE FROM choice_group_pickup_detail where "FixedCutOffDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
-#     conn.close()
-#
-#     # Add new data of occ (up to 90 Days)
-#     conn = db_config.get_db_connection()
-#     conn.execute(db_models.choice_group_pickup_detail_model.insert(), group_pickup_detail_list)
-#     conn.close()
+def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_list, group_pickup_before, group_pickup_after):
+    start_date = "'" + group_pickup_before.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+
+    end_date = "'" + group_pickup_after.format("YYYY-MM-DD") + "'"
+    print("end_date :: ", end_date)
+    db_propertyCode = "'" + propertyCode + "'"
+
+    # Delete existing data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(
+        f'DELETE FROM choice_group_pickup_detail where "FixedCutOffDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    conn.close()
+
+    # Add new data of occ (up to 90 Days)
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.choice_group_pickup_detail_model.insert(), group_pickup_detail_list)
+    conn.close()
 
 def Choice_Pms(row):
     atica_property_code = row['atica_property_code']
@@ -647,105 +647,105 @@ def Choice_Pms(row):
                         read.to_csv(filename, index=False, header=headers_list)
                     # End Revenue By Rate Code Detail Report
 
-                    # # Start Group Pickup Detail Report
-                    # group_pickup_detail_dataframe = []
-                    # start_date = row['occ_before']
-                    # end_date = row['occ_after']
-                    # curr = start_date
-                    # while curr <= end_date:
-                    #     start = curr
-                    #     end = curr.shift(days=+45)
-                    #     if end > end_date:
-                    #         end = end_date
-                    #     curr = curr.shift(days=+46)
-                    #
-                    #     group_pickup_detail_data_post = {
-                    #         "ie": "pdf",
-                    #         "locale": "en_US",
-                    #         "JOD": "apache_group_pickup_detail",
-                    #         "userId": username,
-                    #         "businessDate": current_date.format("M/D/YYYY"),
-                    #         "property": external_property_code,
-                    #         "CSV": "true",
-                    #         "CSV_SUPPRESS_HEADERS": "false",
-                    #         "PRINT": "N",
-                    #         "COPIES": "1",
-                    #         "SHARED": "false",
-                    #         "sortorder": "sortby_roomType, sortby_blockDate",
-                    #         "reportId": "58",
-                    #         "updateCounter": "Y",
-                    #         "queryType": "dateRange",
-                    #         "arrivalDateFrom": start.format("M/D/YYYY"),
-                    #         "arrivalDateTo": end.format("M/D/YYYY"),
-                    #         "groupId": "",
-                    #         "selectAll": "",
-                    #         "groupStatus": "T",
-                    #         "groupStatus": "D",
-                    #         "groupStatus": "I",
-                    #         "groupStatus": "O",
-                    #         "revenueType": "current_revenue",
-                    #         "roomNights": "total_picked_up",
-                    #         "salesManagerUserId": "*",
-                    #         "CSVcheckbox": "on",
-                    #         "reportServerKey": serverkey,
-                    #         "reportServerUsername": username,
-                    #         "fullPageRequestTime": int(time.time())
-                    #     }
-                    #     group_pickup_detail_page_get = s.post(f'{BASE_URL}/GroupPickupDetailsReport.go')
-                    #
-                    #     group_pickup_detail_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=group_pickup_detail_data_post)
-                    #     report_type = '[Group Pickup Detail]'
-                    #     print(f"[{atica_property_code}]{report_type} Sent request!")
-                    #
-                    #     if group_pickup_detail_report_get.status_code == 200:
-                    #         temp = tempfile.TemporaryFile()
-                    #         temp.write(group_pickup_detail_report_get.content)
-                    #         temp.seek(0)
-                    #         read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
-                    #         group_pickup_detail_dataframe.append(read_xl)
-                    #         temp.close()
-                    #         print(
-                    #             f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
-                    #     else:
-                    #         print(
-                    #             f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
-                    #
-                    # group_pickup_detail_report = pd.concat(group_pickup_detail_dataframe, ignore_index=True)
-                    #
-                    # filename = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
-                    # group_pickup_detail_report.to_csv(filename, index=False)
-                    # group_pickup_detail_binary_stream = open(filename, 'rb')
-                    # group_pickup_detail_binary_data = group_pickup_detail_binary_stream.read()
-                    #
-                    # if not ignore_size_check and len(group_pickup_detail_binary_data) < 5000:
-                    #     print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
-                    #     os.remove(filename)
-                    # else:
-                    #     print(f"[{atica_property_code}]{report_type} Uploading Group Pickup Detail report")
-                    #     read = pd.read_csv(filename)
-                    #     read.insert(0, column="propertyCode", value=propertyCode)
-                    #     read.insert(1, column="pullDateId", value=pullDateId)
-                    #     read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'])
-                    #     read['Block Date'] = pd.to_datetime(read['Block Date'])
-                    #     headers_list = ["propertyCode", "pullDateId", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
-                    #                     "RoomType", "BlockDate", "OriginalBlock", "CurrentBlock", "GuaranteedArrivalsPickedUp", "NonGuaranteedArrivalsPickedUp",
-                    #                     "TotalPickedUp", "RoomsNotPickedUp", "Revenue", "ADR"]
-                    #     read.to_csv(filename, index=False, header=headers_list)
-                    # # End Group Pickup Detail Report
+                    # Start Group Pickup Detail Report
+                    group_pickup_detail_dataframe = []
+                    start_date = row['res_before']
+                    end_date = row['res_after']
+                    curr = start_date
+                    while curr <= end_date:
+                        start = curr
+                        end = curr.shift(days=+45)
+                        if end > end_date:
+                            end = end_date
+                        curr = curr.shift(days=+46)
+
+                        group_pickup_detail_data_post = {
+                            "ie": "pdf",
+                            "locale": "en_US",
+                            "JOD": "apache_group_pickup_detail",
+                            "userId": username,
+                            "businessDate": current_date.format("M/D/YYYY"),
+                            "property": external_property_code,
+                            "CSV": "true",
+                            "CSV_SUPPRESS_HEADERS": "false",
+                            "PRINT": "N",
+                            "COPIES": "1",
+                            "SHARED": "false",
+                            "sortorder": "sortby_roomType, sortby_blockDate",
+                            "reportId": "58",
+                            "updateCounter": "Y",
+                            "queryType": "dateRange",
+                            "arrivalDateFrom": start.format("M/D/YYYY"),
+                            "arrivalDateTo": end.format("M/D/YYYY"),
+                            "groupId": "",
+                            "selectAll": "",
+                            "groupStatus": "T",
+                            "groupStatus": "D",
+                            "groupStatus": "I",
+                            "groupStatus": "O",
+                            "revenueType": "current_revenue",
+                            "roomNights": "total_picked_up",
+                            "salesManagerUserId": "*",
+                            "CSVcheckbox": "on",
+                            "reportServerKey": serverkey,
+                            "reportServerUsername": username,
+                            "fullPageRequestTime": int(time.time())
+                        }
+                        group_pickup_detail_page_get = s.post(f'{BASE_URL}/GroupPickupDetailsReport.go')
+
+                        group_pickup_detail_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=group_pickup_detail_data_post)
+                        report_type = '[Group Pickup Detail]'
+                        print(f"[{atica_property_code}]{report_type} Sent request!")
+
+                        if group_pickup_detail_report_get.status_code == 200:
+                            temp = tempfile.TemporaryFile()
+                            temp.write(group_pickup_detail_report_get.content)
+                            temp.seek(0)
+                            read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
+                            group_pickup_detail_dataframe.append(read_xl)
+                            temp.close()
+                            print(
+                                f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+                        else:
+                            print(
+                                f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+
+                    group_pickup_detail_report = pd.concat(group_pickup_detail_dataframe, ignore_index=True)
+
+                    filename = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
+                    group_pickup_detail_report.to_csv(filename, index=False)
+                    group_pickup_detail_binary_stream = open(filename, 'rb')
+                    group_pickup_detail_binary_data = group_pickup_detail_binary_stream.read()
+
+                    if not ignore_size_check and len(group_pickup_detail_binary_data) < 1000:
+                        print(f"[{atica_property_code}]{report_type} Report size < 1 kb not sending, having only header")
+                        os.remove(filename)
+                    else:
+                        print(f"[{atica_property_code}]{report_type} Uploading Group Pickup Detail report")
+                        read = pd.read_csv(filename)
+                        read.insert(0, column="propertyCode", value=propertyCode)
+                        read.insert(1, column="pullDateId", value=pullDateId)
+                        read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'])
+                        read['Block Date'] = pd.to_datetime(read['Block Date'])
+                        headers_list = ["propertyCode", "pullDateId", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
+                                        "RoomType", "BlockDate", "OriginalBlock", "CurrentBlock", "GuaranteedArrivalsPickedUp", "NonGuaranteedArrivalsPickedUp",
+                                        "TotalPickedUp", "RoomsNotPickedUp", "Revenue", "ADR"]
+                        read.to_csv(filename, index=False, header=headers_list)
+                    # End Group Pickup Detail Report
 
             reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
             occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.csv'
             cancellation_file_path = f'{folder_name}{propertyCode}_Cancellation.csv'
             revenue_file_path = f'{folder_name}{propertyCode}_Revenue.csv'
             revenue_detail_file_path = f'{folder_name}{propertyCode}_Revenue_Detail.csv'
-            # group_pickup_detail_file_path = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
+            group_pickup_detail_file_path = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
 
             check_reservation_file = os.path.isfile(reservation_file_path)
             check_occupancy_file = os.path.isfile(occupancy_file_path)
             check_cancellation_file = os.path.isfile(cancellation_file_path)
             check_revenue_file = os.path.isfile(revenue_file_path)
             check_revenue_detail_file = os.path.isfile(revenue_detail_file_path)
-            # check_group_pickup_detail_file = os.path.isfile(group_pickup_detail_file_path)
+            check_group_pickup_detail_file = os.path.isfile(group_pickup_detail_file_path)
 
             error_msg = ""
 
@@ -764,11 +764,10 @@ def Choice_Pms(row):
             if not check_revenue_detail_file:
                 error_msg = error_msg + " Revenue Detail file - N/A"
 
-            # if not check_group_pickup_detail_file:
-                # error_msg = error_msg + " Group Pickup Detail file - N/A"
+            if not check_group_pickup_detail_file:
+                error_msg = error_msg + " Group Pickup Detail file - N/A"
 
-            # if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file and check_revenue_detail_file and check_group_pickup_detail_file:
-            if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file and check_revenue_detail_file:
+            if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file and check_revenue_detail_file and check_group_pickup_detail_file:
                 # Insert into Database
                 res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv", encoding="utf-8"))
                 res_result = list(res_result)
@@ -800,11 +799,11 @@ def Choice_Pms(row):
                 bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_result, row['res_before'], row['res_after'])
                 print("REVENUE DETAIL DONE")
 
-                # group_pickup_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Group_Pickup_Detail.csv", encoding="utf-8"))
-                # group_pickup_detail_result = list(group_pickup_detail_result)
-                # print(len(group_pickup_detail_result))
-                # bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['occ_before'], row['occ_after'])
-                # print("GROUP PICKUP DETAIL DONE")
+                group_pickup_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Group_Pickup_Detail.csv", encoding="utf-8"))
+                group_pickup_detail_result = list(group_pickup_detail_result)
+                print(len(group_pickup_detail_result))
+                bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['occ_before'], row['occ_after'])
+                print("GROUP PICKUP DETAIL DONE")
 
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
