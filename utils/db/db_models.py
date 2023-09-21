@@ -148,6 +148,24 @@ choice_group_pickup_detail_model = Table(
     Column('ADR', String(55)),
 )
 
+choice_cancellation_list_model = Table(
+    'choice_cancellation_list', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(55)),
+    Column('pullDateId', BIGINT),
+    Column('Account', String(55)),
+    Column('Guest_Name', String(55)),
+    Column('Arrival_Group', String(55)),
+    Column('Nights', String(55)),
+    Column('Rate_Plan', String(55)),
+    Column('GTD', String(55)),
+    Column('Source', String(55)),
+    Column('Rm_Type', String(55)),
+    Column('Cxl_Code', String(55)),
+    Column('Cxl_Date', String(55)),
+    Column('Cxl_Clk', String(55)),
+)
+
 auto_clerk_res_model = Table(
     'auto_clerk_res', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
