@@ -1,6 +1,8 @@
 import os
 import sys
 
+from bs4 import BeautifulSoup
+
 sys.path.append("..")
 import arrow
 import csv
@@ -143,6 +145,50 @@ def bulk_insert_opera_cloud_occ(res_list, propertyCode):
     print("Data imported")
 
 
+def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
+
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
+
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
+    conn = db_config.get_db_connection()
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.close()
+
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of reservation
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from opera_arrival where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
+    # Add new data of reservation
+    print("Data importing...")
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.opera_arrival_model.insert(), arrival_list)
+    conn.close()
+    print("Data imported")
+
+
 def OperaCloud_Pms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
@@ -150,12 +196,14 @@ def OperaCloud_Pms(row):
     # Modification of res report
     reservation_file_path = f'{propertyCode}_Reservation.xml'
     occupancy_file_path = f'{propertyCode}_Occupancy.xml'
+    arrival_file_path = f'{propertyCode}_Arrival.xml'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_occupancy_file = os.path.isfile(occupancy_file_path)
+    check_arrival_file = os.path.isfile(arrival_file_path)
 
-    if check_reservation_file and check_occupancy_file:
-        # Reservation Data Clean and Insert
+    if check_reservation_file and check_occupancy_file and check_arrival_file:
+        # Start Reservation Report
         cols = ["RESV_NAME_ID", "GUARANTEE_CODE", "RESV_STATUS", "ROOM", "FULL_NAME", "DEPARTURE", "PERSONS",
                 "GROUP_NAME",
                 "NO_OF_ROOMS", "ROOM_CATEGORY_LABEL", "RATE_CODE", "INSERT_USER", "INSERT_DATE", "GUARANTEE_CODE_DESC",
@@ -229,8 +277,9 @@ def OperaCloud_Pms(row):
         except Exception:
             res_result = []
             print("Reservation Data not available")
+        # End Reservation Report
 
-        # Occupancy Data Clean and Insert
+        # Start Occupancy Report
         cols = ['REVENUE', 'NO_ROOMS', 'IND_DEDUCT_ROOMS', 'IND_NON_DEDUCT_ROOMS', 'GRP_DEDUCT_ROOMS',
                 'GRP_NON_DEDUCT_ROOMS',
                 'NO_PERSONS', 'ARRIVAL_ROOMS', 'DEPARTURE_ROOMS', 'COMPLIMENTARY_ROOMS', 'HOUSE_USE_ROOMS',
@@ -399,18 +448,57 @@ def OperaCloud_Pms(row):
         else:
             occ_result = []
             print("Occupancy Data not available")
+        # End Occupancy Report
+
+        # Start Arrival Report
+        arrival_dataframe = []
+
+        with open(arrival_file_path, 'r') as f:
+            read = f.read()
+            soup_data = BeautifulSoup(read, "xml")
+            column_names = soup_data.find_all('G_RESERVATION')
+
+            for column_name in column_names:
+                data_dict = {}
+                for element in column_name:
+                    tag = element.name
+                    text = element.get_text(strip=True)
+                    data_dict[tag] = text
+                arrival_dataframe.append(data_dict)
+
+        arrival_data_concat = pd.DataFrame(arrival_dataframe)
+        headers = arrival_data_concat.columns[1:]
+        final_df = arrival_data_concat[headers]
+        final_df.insert(0, column="propertyCode", value=propertyCode)
+        final_df.insert(1, column="pullDateId", value=pullDateId)
+        final_df['UPDATE_DATE'] = pd.to_datetime(final_df['UPDATE_DATE'])
+        final_df['TRUNC_BEGIN'] = pd.to_datetime(final_df['TRUNC_BEGIN'])
+        final_df['TRUNC_END'] = pd.to_datetime(final_df['TRUNC_END'])
+        final_df['ARRIVAL'] = pd.to_datetime(final_df['ARRIVAL'])
+        final_df['DEPARTURE'] = pd.to_datetime(final_df['DEPARTURE'])
+        final_df['BEGIN_DATE'] = pd.to_datetime(final_df['BEGIN_DATE'])
+        final_df.to_csv(f"{propertyCode}_Arrival.csv", index=False)
+
+        arrival_result = csv.DictReader(open(f"{propertyCode}_Arrival.csv", encoding="utf-8"))
+        arrival_result = list(arrival_result)
+        # End Arrival Report
 
         print("RES RESULT")
         print(res_result)
         print("OCC RESULT")
         print(occ_result)
+        print("ARRIVAL RESULT")
+        print(arrival_result)
 
-        if len(res_result) > 0 and len(occ_result) > 0:
+        if len(res_result) > 0 and len(occ_result) > 0 and len(arrival_result) > 0:
             bulk_insert_opera_cloud_res(res_result, propertyCode=propertyCode)
             print("RES DONE")
 
             bulk_insert_opera_cloud_occ(occ_result, propertyCode=propertyCode)
             print("OCC DONE")
+
+            bulk_insert_opera_cloud_arrival(arrival_result, propertyCode=propertyCode)
+            print("ARRIVAL DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
