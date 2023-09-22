@@ -170,7 +170,7 @@ def main():
             if not check_forecast_file:
                 error_msg = error_msg + " Forecast file - N/A"
 
-            if check_forecast_file:
+            if check_forecast_file and check_reservation_file:
                 # Insert into Database
                 res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
                 res_result = list(res_result)
