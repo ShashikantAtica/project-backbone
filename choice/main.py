@@ -140,6 +140,7 @@ def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_lis
     conn.execute(db_models.choice_group_pickup_detail_model.insert(), group_pickup_detail_list)
     conn.close()
 
+
 def Choice_Pms(row):
     atica_property_code = row['atica_property_code']
     external_property_code = row['external_property_code']
@@ -310,12 +311,14 @@ def Choice_Pms(row):
                             read.rename(columns={"IDS_ACCOUNT": "Account"}, inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
-                        read.columns = read.columns.str.replace(' ', '', regex=True).str.replace('.', '', regex=True)
-                        read['Arrive'] = pd.to_datetime(read['Arrive'])
-                        read['Depart'] = pd.to_datetime(read['Depart'])
-                        read['ReserveDate'] = pd.to_datetime(read['ReserveDate'])
-                        read['CancellationDate'] = pd.to_datetime(read['CancellationDate'])
-                        read.to_csv(filename, index=False)
+                        read['Arrive'] = pd.to_datetime(read['Arrive'], format="%m/%d/%y")
+                        read['Depart'] = pd.to_datetime(read['Depart'], format="%m/%d/%y")
+                        read['Reserve Date'] = pd.to_datetime(read['Reserve Date'], format="%m/%d/%y")
+                        read['Cancellation Date'] = pd.to_datetime(read['Cancellation Date'], format="%m/%d/%y")
+                        headers = ['propertyCode', 'pullDateId', 'Account', 'GuestName', 'Arrive', 'Depart', 'Nights', 'Status',
+                                   'Rate', 'RateCode', 'Type', 'Room', 'Source', 'CRSConfNo', 'GTD', 'ReserveDate', 'User',
+                                   'SharedAccount', 'TrackCode', 'Package', 'CancellationDate', 'CXLUserID']
+                        read.to_csv(filename, header=headers, index=False)
                     # End Reservation Report
 
                     # Start Occupancy Report
@@ -403,13 +406,14 @@ def Choice_Pms(row):
                         read = pd.read_csv(filename)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
-                        read.rename(columns={read.columns[2]: "IDS_DATE"}, inplace=True)
-                        read.columns = read.columns.str.replace(' ', '', regex=True).str.replace('.', '', regex=True)
                         try:
-                            read['﻿IDS_DATE'] = pd.to_datetime(read['﻿IDS_DATE'])
+                            read['﻿IDS_DATE'] = pd.to_datetime(read['﻿IDS_DATE'], format="%m/%d/%y")
                         except Exception:
-                            read['IDS_DATE'] = pd.to_datetime(read['IDS_DATE'])
-                        read.to_csv(filename, index=False)
+                            read['IDS_DATE'] = pd.to_datetime(read['IDS_DATE'], format="%m/%d/%y")
+                        headers = ['propertyCode', 'pullDateId', 'IDS_DATE', 'Day', 'Rooms', 'OOO', 'StayOver', 'Arrivals',
+                                   'DueOut', 'Available', 'GroupBlock', 'GroupPickedUp', 'TransNGTD', 'TransGTD', 'Occupied',
+                                   'OccPercent', 'RoomRev', 'RevPAR', 'ADR', 'Ppl']
+                        read.to_csv(filename, header=headers, index=False)
                     # End Occupancy Report
 
                     # Start Cancellation Report
@@ -640,9 +644,9 @@ def Choice_Pms(row):
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         try:
-                            read['﻿IDS_DATE_DAY'] = pd.to_datetime(read['﻿IDS_DATE_DAY'])
+                            read['﻿IDS_DATE_DAY'] = pd.to_datetime(read['﻿IDS_DATE_DAY'], format="%m/%d/%y - %a")
                         except Exception:
-                            read['IDS_DATE_DAY'] = pd.to_datetime(read['IDS_DATE_DAY'])
+                            read['IDS_DATE_DAY'] = pd.to_datetime(read['IDS_DATE_DAY'], format="%m/%d/%y - %a")
                         headers_list = ["propertyCode", "pullDateId", "IDS_DATE_DAY", "RateCode", "RoomNights", "RoomNightsPer", "RoomRevenue", "RoomRevenuePer", "DailyAVG"]
                         read.to_csv(filename, index=False, header=headers_list)
                     # End Revenue By Rate Code Detail Report
@@ -725,8 +729,8 @@ def Choice_Pms(row):
                         read = pd.read_csv(filename)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
-                        read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'])
-                        read['Block Date'] = pd.to_datetime(read['Block Date'])
+                        read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'], format="%m/%d/%y")
+                        read['Block Date'] = pd.to_datetime(read['Block Date'], format="%m/%d/%y")
                         headers_list = ["propertyCode", "pullDateId", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
                                         "RoomType", "BlockDate", "OriginalBlock", "CurrentBlock", "GuaranteedArrivalsPickedUp", "NonGuaranteedArrivalsPickedUp",
                                         "TotalPickedUp", "RoomsNotPickedUp", "Revenue", "ADR"]
@@ -808,8 +812,9 @@ def Choice_Pms(row):
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
-        except Exception:
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Something went wrong", IS_ERROR=True)
+        except Exception as e:
+            print(e)
+            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
