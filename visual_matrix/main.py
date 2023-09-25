@@ -14,52 +14,92 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def bulk_insert_visual_matrix_front_office_arrival(propertyCode, front_office_arrival_list, res_before, res_after):
-    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
+def bulk_insert_visual_matrix_front_office_arrival(propertyCode, front_office_arrival_list):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
 
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
-    arrive = '"Arrive"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
 
-    # Delete existing data of reservation (up to 90 Days)
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
     conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE from visual_matrix_front_office_arrival where {arrive} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
     conn.close()
 
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of reservation
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from visual_matrix_front_office_arrival where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
     # Add new data of reservation (up to 90 Days)
+    print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.visual_matrix_front_office_arrival_model.insert(), front_office_arrival_list)
     conn.close()
+    print("Data imported")
 
 
-def bulk_insert_visual_matrix_occupancy(propertyCode, occ_list, occ_before, occ_after):
-    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
+def bulk_insert_visual_matrix_occupancy(propertyCode, occ_list):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
 
-    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
-    print("end_date :: ", end_date)
-    db_propertyCode = "'" + propertyCode + "'"
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
 
-    # Delete existing data of occ (up to 90 Days)
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
     conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE FROM visual_matrix_occupancy where "Date" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
     conn.close()
 
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of reservation
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from visual_matrix_occupancy where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
     # Add new data of occ (up to 90 Days)
+    print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.visual_matrix_occupancy_model.insert(), occ_list)
     conn.close()
+    print("Data imported")
 
 
 def VisualMatrix_Pms(row):
@@ -219,13 +259,13 @@ def VisualMatrix_Pms(row):
                 front_office_arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Front_Office_Arrival.csv", encoding="utf-8"))
                 front_office_arrival_result = list(front_office_arrival_result)
                 print(len(front_office_arrival_result))
-                bulk_insert_visual_matrix_front_office_arrival(propertyCode, front_office_arrival_result, row['res_before'], row['res_after'])
+                bulk_insert_visual_matrix_front_office_arrival(propertyCode, front_office_arrival_result)
                 print("FRONT OFFICE ARRIVAL DONE")
 
                 occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
                 print(len(occ_result))
-                bulk_insert_visual_matrix_occupancy(propertyCode, occ_result, row['occ_before'], row['occ_after'])
+                bulk_insert_visual_matrix_occupancy(propertyCode, occ_result)
                 print("OCC DONE")
 
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
