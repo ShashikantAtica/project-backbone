@@ -69,7 +69,7 @@ def choice_cancellation(row):
         password = json_dict['p']
 
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
