@@ -69,7 +69,7 @@ def choice_cancellation(row):
         password = json_dict['p']
 
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
@@ -104,7 +104,7 @@ def choice_cancellation(row):
         driver.find_element(By.ID, "CancellationListReport").click()
 
         start_date = row['res_before'].format('M/D/YYYY')
-        end_date = row['res_after'].format('M/D/YYYY')
+        end_date = row['res_after'].shift(days=-1).format('M/D/YYYY')
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "startDatePastCurrent")))
         start_date_field = driver.find_element(By.NAME, "startDatePastCurrent")
         start_date_field.clear()
