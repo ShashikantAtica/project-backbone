@@ -460,9 +460,13 @@ def Synxis_Cloud_Pms(row):
         fore_result = list(fore_result)
 
         # Revenue Recap Data Clean and Insert
+        date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
+        date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
         read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
+        read.insert(2, column="Date", value=date)
+        read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
         read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
 
         rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))

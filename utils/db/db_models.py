@@ -613,6 +613,7 @@ synxis_cloud_revenue_recap_model = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('propertyCode', String(55)),
     Column('pullDateId', BIGINT),
+    Column('Date', String(55)),
     Column('report_type', String(55)),
     Column('report_type_values', String(55)),
     Column('Room_Nights', String(55)),
