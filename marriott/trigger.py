@@ -6,6 +6,8 @@ sys.path.append("..")
 import arrow
 from function.forecast import handle_request as forecast_handle_request
 from function.reservation import handle_request as reservation_handle_request
+from function.realized_activity import handle_request as realized_activity_handle_request
+from function.selenium_total_yield import get_total_yield_report_url as total_yield_handle_request
 from utils.db import db_config
 from utils.db import db_models
 
@@ -55,6 +57,92 @@ def bulk_insert_marriott_fore(propertyCode, fore_list, fore_before, fore_after):
     conn = db_config.get_db_connection()
     conn.execute(db_models.marriott_forecast_model.insert(), fore_list)
     conn.close()
+
+
+def bulk_insert_marriott_realized_activity(propertyCode, realized_activity_list):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
+
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
+
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
+    conn = db_config.get_db_connection()
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.close()
+
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of realized activity
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from marriott_realized_activity where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
+    print("Data importing...")
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.marriott_realized_activity_model.insert(), realized_activity_list)
+    conn.close()
+    print("Data imported")
+
+
+def bulk_insert_marriott_total_yield(propertyCode, total_yield_list):
+    current_date = arrow.now()
+    print("current_date :: ", current_date)
+
+    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
+    pulledDate = '"pulledDate"'
+
+    propertyCodeValue = "'" + propertyCode + "'"
+    propertyCode = '"propertyCode"'
+
+    DB_STATUS = "'FINISHED'"
+
+    conn = db_config.get_db_connection()
+    result = conn.execute(
+        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.close()
+
+    pullDateIdValue = None
+    try:
+        pullDateIdValue = result.first()['id']
+    except:
+        print("result none")
+
+    if pullDateIdValue is not None:
+        pullDateId = '"pullDateId"'
+        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
+
+        # Delete existing data of total yield
+        conn = db_config.get_db_connection()
+        conn.execute(
+            f'DELETE from marriott_total_yield where {pullDateId} = {pullDateIdValue};')
+        conn.close()
+        print("DELETE OLD DATA!!!", pullDateIdValue)
+    else:
+        print("Not previous data!!!")
+
+    print("Data importing...")
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.marriott_total_yield_model.insert(), total_yield_list)
+    conn.close()
+    print("Data imported")
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
@@ -150,6 +238,8 @@ def main():
 
             forecast_handle_request(row)
             reservation_handle_request(row)
+            realized_activity_handle_request(row)
+            total_yield_handle_request(row)
             print(f"SCRIPT DONE FOR {PMS_NAME}")
 
             print(f"Sending Report to Database for {PMS_NAME}")
@@ -158,9 +248,13 @@ def main():
 
             reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
             forecast_file_path = f'{folder_name}{propertyCode}_Forecast.csv'
+            realized_activity_file_path = f'{folder_name}{propertyCode}_Realized_Activity.csv'
+            total_yield_file_path = f'{folder_name}{propertyCode}_Total_Yield.csv'
 
             check_reservation_file = os.path.isfile(reservation_file_path)
             check_forecast_file = os.path.isfile(forecast_file_path)
+            check_realized_activity_file = os.path.isfile(realized_activity_file_path)
+            check_total_yield_file = os.path.isfile(total_yield_file_path)
 
             error_msg = ""
 
@@ -170,7 +264,13 @@ def main():
             if not check_forecast_file:
                 error_msg = error_msg + " Forecast file - N/A"
 
-            if check_forecast_file and check_reservation_file:
+            if not check_realized_activity_file:
+                error_msg = error_msg + " Realized Activity file - N/A"
+
+            if not check_total_yield_file:
+                error_msg = error_msg + " Total Yield file - N/A"
+
+            if check_forecast_file and check_reservation_file and check_realized_activity_file and check_total_yield_file:
                 # Insert into Database
                 res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
                 res_result = list(res_result)
@@ -183,6 +283,18 @@ def main():
                 print(len(fore_result))
                 bulk_insert_marriott_fore(row['propertyCode'], fore_result, row['fore_before'], row['fore_after'])
                 print("FORE DONE")
+
+                realized_activity_result = csv.DictReader(open(realized_activity_file_path, encoding="utf-8"))
+                realized_activity_result = list(realized_activity_result)
+                print(len(realized_activity_result))
+                bulk_insert_marriott_realized_activity(row['propertyCode'], realized_activity_result)
+                print("REALIZED ACTIVITY DONE")
+
+                total_yield_result = csv.DictReader(open(total_yield_file_path, encoding="utf-8"))
+                total_yield_result = list(total_yield_result)
+                print(len(total_yield_result))
+                bulk_insert_marriott_total_yield(row['propertyCode'], total_yield_result)
+                print("TOTAL YIELD DONE")
 
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
