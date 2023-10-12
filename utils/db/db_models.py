@@ -375,6 +375,32 @@ opera_res_model = Table(
     Column('SHARE_AMOUNT_PER_STAY', String(55)),
 )
 
+opera_rbrc_model = Table(
+    'opera_rbrc', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(20)),
+    Column('pullDateId', String(20)),
+    Column('RESORT', String(55)),
+    Column('BUSINESS_DATE', String(55)),
+    Column('CHAR_BUSINESS_DATE', String(55)),
+    Column('MASTER_VALUE', String(55)),
+    Column('CF_MASTER_SEQ', String(55)),
+    Column('GROUP_NAME', String(55)),
+    Column('ARR_TODAY', String(55)),
+    Column('NO_DEFINITE_ROOMS', String(55)),
+    Column('IN_GUEST', String(55)),
+    Column('OCC_SINGLE', String(55)),
+    Column('DOUBLE_OCC', String(55)),
+    Column('REVENUE', String(55)),
+    Column('FB_REV', String(55)),
+    Column('OTHER_REV', String(55)),
+    Column('TOTAL_REVENUE', String(55)),
+    Column('RESORT_ROOM', String(55)),
+    Column('PER_OCC', String(55)),
+    Column('GET_ARR', String(55)),
+    Column('MULTI_OCC_PER', String(55)),
+)
+
 opera_arrival_model = Table(
     'opera_arrival', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
