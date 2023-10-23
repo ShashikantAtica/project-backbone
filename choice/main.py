@@ -171,11 +171,7 @@ def Choice_Pms(row):
         print(msg)
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
     else:
-        BASE_URL = ""
-        if property_type == 'Skytouch':
-            BASE_URL = "https://www.skytouchhos.com/pms"
-        elif property_type == 'Choice':
-            BASE_URL = "https://www.choiceadvantage.com/choicehotels"
+        domain_url = "https://www.choiceadvantage.com/choicehotels"
 
         try:
             with requests.Session() as s:
@@ -185,16 +181,16 @@ def Choice_Pms(row):
                                                 'AppleWebKit/537.36 (KHTML, like Gecko) '
                                                 'Chrome/70.0.3538.77 Safari/537.36'})
 
-                url2 = f'{BASE_URL}/j_security_check'
+                url2 = f'{domain_url}/j_security_check'
                 data = {'j_username': username, 'j_password': password}
                 login_url = s.post(url2, data=data)
                 print(login_url.status_code)
-                page = s.post(f'{BASE_URL}/Login.do')
+                page = s.post(f'{domain_url}/Login.do')
 
                 final_login_params = {
                     "propertyCode": external_property_code
                 }
-                final_login = s.post(f"{BASE_URL}/Login.do?cleanSession=true", params=final_login_params)
+                final_login = s.post(f"{domain_url}/Login.do?cleanSession=true", params=final_login_params)
                 soup = BeautifulSoup(final_login.content, 'html.parser')
                 scr = soup.findAll("script", {"src": re.compile('propInfoCached.js')})
                 if not scr:
@@ -209,7 +205,7 @@ def Choice_Pms(row):
                         print(f"{atica_property_code} due to {e}")
                         raise e
 
-                testurl = f'{BASE_URL}/' + js_path
+                testurl = f'{domain_url}/' + js_path
                 propidpage = s.get(testurl)
                 myvars = str(propidpage.content).split(';')
                 serverkey = None
@@ -275,9 +271,9 @@ def Choice_Pms(row):
                             'fullPageRequestTime': int(time.time())
                         }
 
-                        k = s.post(f"{BASE_URL}/ReservationActivityReport.go")
+                        k = s.post(f"{domain_url}/ReservationActivityReport.go")
 
-                        y = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=reservation_data_post)
+                        y = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=reservation_data_post)
                         report_type = '[Reservation]'
 
                         print(f"[{atica_property_code}]{report_type} Sent request!")
@@ -374,7 +370,7 @@ def Choice_Pms(row):
                             occupancy_data_post['commaSeparatedAccounts'] = ""
                             occupancy_data_post['activityDateType'] = ""
 
-                        z = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=occupancy_data_post)
+                        z = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=occupancy_data_post)
                         report_type = '[Occupancy]'
                         print(f"[{atica_property_code}]{report_type} Sent request!")
 
@@ -450,9 +446,9 @@ def Choice_Pms(row):
                             cancellation_data_post['commaSeparatedAccounts'] = ""
                             cancellation_data_post['activityDateType'] = ""
 
-                        cancel_page_get = s.post(f'{BASE_URL}/CancellationSummaryReport.go')
+                        cancel_page_get = s.post(f'{domain_url}/CancellationSummaryReport.go')
 
-                        cancel_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf',
+                        cancel_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf',
                                                    data=cancellation_data_post)
                         report_type = '[Cancellation]'
                         print(f"[{atica_property_code}]{report_type} Sent request!")
@@ -535,9 +531,9 @@ def Choice_Pms(row):
                         revenue_data_post['commaSeparatedAccounts'] = ""
                         revenue_data_post['activityDateType'] = ""
 
-                    revenue_page_get = s.post(f'{BASE_URL}/RevenueByRateCodeReport.go')
+                    revenue_page_get = s.post(f'{domain_url}/RevenueByRateCodeReport.go')
 
-                    revenue_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=revenue_data_post)
+                    revenue_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=revenue_data_post)
                     report_type = '[Revenue]'
                     print(f"[{atica_property_code}]{report_type} Sent request!")
 
@@ -609,9 +605,9 @@ def Choice_Pms(row):
                             "reportServerUsername": username,
                             "fullPageRequestTime": int(time.time())
                         }
-                        revenue_detail_page_get = s.post(f'{BASE_URL}/RevenueByRateCodeDetailReport.go')
+                        revenue_detail_page_get = s.post(f'{domain_url}/RevenueByRateCodeDetailReport.go')
 
-                        revenue_detail_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=revenue_detail_data_post)
+                        revenue_detail_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=revenue_detail_data_post)
                         report_type = '[Revenue Detail]'
                         print(f"[{atica_property_code}]{report_type} Sent request!")
 
@@ -695,9 +691,9 @@ def Choice_Pms(row):
                             "reportServerUsername": username,
                             "fullPageRequestTime": int(time.time())
                         }
-                        group_pickup_detail_page_get = s.post(f'{BASE_URL}/GroupPickupDetailsReport.go')
+                        group_pickup_detail_page_get = s.post(f'{domain_url}/GroupPickupDetailsReport.go')
 
-                        group_pickup_detail_report_get = s.post(f'{BASE_URL}/ReportProxyServlet.proxy?ie=pdf', data=group_pickup_detail_data_post)
+                        group_pickup_detail_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=group_pickup_detail_data_post)
                         report_type = '[Group Pickup Detail]'
                         print(f"[{atica_property_code}]{report_type} Sent request!")
 

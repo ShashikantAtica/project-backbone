@@ -57,28 +57,6 @@ def lookup(challenges, propertyCode):
     return lookup_results
 
 
-# def get_security_code(phone):
-#     phone = str(phone)
-#     if phone[0] != '+':
-#         phone = '+' + phone
-#
-#     aws_access_key_id = get_secret('aws_access_key_id')
-#     aws_secret_access_key = get_secret('aws_secret_access_key')
-#     s3 = boto3.client(
-#         's3',
-#         aws_access_key_id=aws_access_key_id,
-#         aws_secret_access_key=aws_secret_access_key
-#     )
-#
-#     time.sleep(3)
-#     otp_file = s3.get_object(Bucket="marriott-script", Key=f"{phone}/otp.otp")
-#     format_str = 'ddd, DD MMM YYYY HH:mm:ss ZZZ'
-#     last_modified = arrow.get(otp_file['ResponseMetadata']['HTTPHeaders']['last-modified'], format_str)
-#     security_code = otp_file["Body"].read().decode()
-#     print(security_code)
-#     return security_code, last_modified
-
-
 def _submit_login(user_id, password):
     with requests.session() as session:
         _get_slash_mrdw(session)

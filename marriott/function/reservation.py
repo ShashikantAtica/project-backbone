@@ -5,8 +5,6 @@ import pandas as pd
 from marriott.utils.login import get_session, FailedLoginException
 from marriott.utils.mrdw import export, download
 
-MAX_RETRIES = 5
-
 
 class RetryException(Exception):
     pass

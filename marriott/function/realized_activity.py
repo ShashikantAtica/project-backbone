@@ -8,8 +8,6 @@ from marriott.utils.login import get_session, FailedLoginException
 from requests.exceptions import ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 
-MAX_RETRIES = 3
-
 
 class RetryException(Exception):
     pass
