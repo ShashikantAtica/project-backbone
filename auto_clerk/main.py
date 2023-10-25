@@ -6,7 +6,7 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -155,9 +155,9 @@ def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary
 
 def AutoClerk_Pms(row):
     atica_property_code = row['atica_property_code']
-    secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+    platform = "PMS"
 
     username = None
     password = None
@@ -167,8 +167,8 @@ def AutoClerk_Pms(row):
     save_dir = os.path.abspath(f'reports/{propertyCode}/')
     driver = None
     try:
-        print("secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']

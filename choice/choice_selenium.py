@@ -6,7 +6,7 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -49,9 +49,9 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list, res_be
 
 def choice_cancellation(row):
     atica_property_code = row['atica_property_code']
-    secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+    platform = "PMS"
 
     username = None
     password = None
@@ -60,8 +60,8 @@ def choice_cancellation(row):
     save_dir = os.path.abspath('reports/')
     driver = None
     try:
-        print("secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']

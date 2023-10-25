@@ -7,7 +7,7 @@ import arrow
 import pandas as pd
 import numpy as np
 import requests
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 import csv
 
 from utils.db import db_config
@@ -105,19 +105,16 @@ def bulk_insert_visual_matrix_occupancy(propertyCode, occ_list):
 def VisualMatrix_Pms(row):
     atica_property_code = row['atica_property_code']
     external_property_code = row['external_property_code']
-    secret_name = row['gcp_secret']
-    property_type = row['property_type']
-    ignore_size_check = False
-    current_date = row['current_date']
     propertyCode = row['propertyCode']
     pullDateId = row['pullDateId']
+    platform = "PMS"
     folder_name = "./reports/"
 
     username = None
     password = None
     try:
-        print("secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']

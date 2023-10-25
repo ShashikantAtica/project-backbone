@@ -5,7 +5,7 @@ import ast
 
 sys.path.append("..")
 import arrow
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 from bs4 import BeautifulSoup as bs
 from utils.db import db_config
 
@@ -14,14 +14,15 @@ class FailedLoginException(Exception):
     pass
 
 
-def get_session(gcp_secret, propertyCode):
-    session = _login(gcp_secret, propertyCode)
+def get_session(gcp_secret, propertyCode, atica_propertyCode):
+    session = _login(gcp_secret, propertyCode, atica_propertyCode)
 
     return session
 
 
-def _login(secret_name, propertyCode):
-    secret = get_secret_dict(secret_name)
+def _login(secret_name, propertyCode, atica_propertyCode):
+    platform = "PMS"
+    secret = get_secret_dict(atica_propertyCode, platform)
     start = arrow.now()
     session, challenge = _submit_login(secret['u'], secret['p'])
 

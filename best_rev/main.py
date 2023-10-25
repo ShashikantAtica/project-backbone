@@ -6,7 +6,7 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -65,17 +65,17 @@ def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list):
 def BestRev_Pms(row):
     try:
         atica_property_code = row['atica_property_code']
-        secret_name = row['gcp_secret']
         pullDateId = row['pullDateId']
         propertyCode = row['propertyCode']
+        platform = "RMS"
 
         save_dir = os.path.abspath(f'reports/')
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         folder_name = "./reports/"
 
-        print(f"{atica_property_code} secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print(f"{atica_property_code} Getting Secret Details")
         username = json_dict['u']
         password = json_dict['p']

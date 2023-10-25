@@ -2,6 +2,11 @@ import json
 from google.cloud import secretmanager
 from google.api_core.exceptions import NotFound
 import pandas as pd
+import requests
+from dotenv.main import load_dotenv
+import os
+
+load_dotenv()
 
 from utils.secrets.creds import CREDS_MODE
 
@@ -16,7 +21,7 @@ def _latest_secret_name(secret_id):
 def get_secret(secret_id):
     if secret_id is None or secret_id == "":
         return "{'msg':'secret_id is none or empty!!!'}"
-    print("CREDS_MODE :: ",CREDS_MODE)
+    print("CREDS_MODE :: ", CREDS_MODE)
     if CREDS_MODE == "GOOGLE_SECRET_MANAGER":
         client = secretmanager.SecretManagerServiceClient()
         response = client.access_secret_version(request={"name": _latest_secret_name(secret_id)})
@@ -59,6 +64,23 @@ def add_secret_version(secret_id, secret):
     response = client.add_secret_version(parent=f"{parent}/secrets/{secret_id}", payload={'data': secret})
 
     return response
+
+
+def get_secret_from_api(propertyId, platform):
+    x_token = os.environ['API_X_TOKEN']
+    url = f"https://api.aticastays.com/api/v1/bit-warden/get-login-details?propertyId={propertyId}&platform={platform}&requesterEmail=hari.softqubes+backbone@aticaglobal.com"
+
+    headers = {
+        'X-Token': x_token
+    }
+
+    response = requests.get(url, headers=headers)
+    response_data = response.json()
+    response_data['info']['u'] = response_data['info']['username']
+    del response_data['info']['username']
+    response_data['info']['p'] = response_data['info']['password']
+    del response_data['info']['password']
+    return response_data['info']
 
 
 if __name__ == '__main__':

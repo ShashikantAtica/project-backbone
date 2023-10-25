@@ -5,7 +5,7 @@ import re
 import time
 import arrow
 from marriott.utils.login import lookup
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
@@ -16,7 +16,8 @@ from selenium.webdriver.chrome.service import Service
 
 
 def get_total_yield_report_url(payload):
-    secret = get_secret_dict(payload['gcp_secret'])
+    platform = "PMS"
+    secret = get_secret_dict(payload['propertyCode'], platform)
     username = secret['u']
     password = secret['p']
     external_property_code = payload['external_property_code']
