@@ -12,13 +12,10 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
-from seleniumrequests import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import chromedriver_autoinstaller
-
-chromedriver_autoinstaller.install()
+from selenium.webdriver.chrome.service import Service
 
 from utils.db import db_config
 from utils.db import db_models
@@ -191,7 +188,9 @@ def AutoClerk_Pms(row):
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
         })
-        driver = webdriver.Chrome(options=chrome_options, executable_path='../chromedriver.exe')
+
+        service = Service('../chromedriver.exe')
+        driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
 
         driver.get('https://www.bwh.autoclerkcloud.com/logon.do2')
