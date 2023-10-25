@@ -107,33 +107,8 @@ def bulk_insert_opera_cloud_rbrc(rbrc_list, propertyCode):
 
     # Add new data of reservation
     print("Data importing...")
-    # print(rbrc_list)
     conn = db_config.get_db_connection()
-    # rbrc_list1=[{'id': 1234 ,'propertyCode': 'USTX230602-test', 'pullDateId': '804', 'RESORT': '12345', 'BUSINESS_DATE': '2023-10-01', 'CHAR_BUSINESS_DATE': '2023-01-06', 'MASTER_VALUE': 'HOUSE', 'CF_MASTER_SEQ': 'HOUSE', 'GROUP_NAME': 'HOUSE', 'ARR_TODAY': '0', 'NO_DEFINITE_ROOMS': '0', 'IN_GUEST': '0', 'OCC_SINGLE': '0', 'DOUBLE_OCC': '0', 'REVENUE': '0', 'FB_REV': '0', 'OTHER_REV': '0', 'TOTAL_REVENUE': '0', 'RESORT_ROOM': '152', 'PER_OCC': '0', 'GET_ARR': '0', 'MULTI_OCC_PER': '0'}]
     conn.execute(db_models.opera_rbrc_model.insert(), rbrc_list)
-    # conn.execute(db_models.opera_rbrc_model.insert(
-    #     'propertyCode': 'USTX230602',
-    #     'pullDateId': '804',
-    #     'RESORT': '12345',
-    #     'BUSINESS_DATE': '2023-10-01',
-    #     'CHAR_BUSINESS_DATE': '2023-01-06',
-    #     'MASTER_VALUE': 'IOUSE',
-    #     'CF_MASTER_SEQ': 'IOUSE',
-    #     'GROUP_NAME': 'IOUSE',
-    #     'ARR_TODAY': '01',
-    #     'NO_DEFINITE_ROOMS': '01',
-    #     'IN_GUEST': '01',
-    #     'OCC_SINGLE': '01',
-    #     'DOUBLE_OCC': '01',
-    #     'REVENUE': '01',
-    #     'FB_REV': '01',
-    #     'OTHER_REV': '01',
-    #     'TOTAL_REVENUE': '568',
-    #     'RESORT_ROOM': '152',
-    #     'PER_OCC': '5.26315789',
-    #     'GET_ARR': '71',
-    #     'MULTI_OCC_PER': '0'
-    # )
     conn.close()
     print("Data imported")
 
@@ -302,58 +277,51 @@ def OperaCloud_Pms(row):
         xmlparse = Xet.parse(rbrc_file_path)
         root = xmlparse.getroot()
 
-        # total_entry=len(root[0][0][0][0][3])
         
         try:
-            itr_day=0
             for i in root[0][0][0]:
-                RESORT = i.find("RESORT").text
-                BUSINESS_DATE = i.find("BUSINESS_DATE").text
-                CHAR_BUSINESS_DATE = i.find("CHAR_BUSINESS_DATE").text
-                # print(RESORT, BUSINESS_DATE, CHAR_BUSINESS_DATE)
-                itr_market=0
-                for i in root[0][0][0][itr_day][3]:
-                    MASTER_VALUE = i.find("MASTER_VALUE").text
-                    CF_MASTER_SEQ = i.find("CF_MASTER_SEQ").text
-                    GROUP_NAME  = i.find("GROUP_NAME").text
-                    for j in root[0][0][0][itr_day][3][itr_market][3]:
-                        ARR_TODAY = j.find("ARR_TODAY").text
-                        NO_DEFINITE_ROOMS = j.find("NO_DEFINITE_ROOMS").text
-                        IN_GUEST  = j.find("IN_GUEST").text
-                        OCC_SINGLE = j.find("OCC_SINGLE").text
-                        DOUBLE_OCC = j.find("DOUBLE_OCC").text
-                        REVENUE = j.find("REVENUE").text
-                        FB_REV = j.find("FB_REV").text
-                        OTHER_REV = j.find("OTHER_REV").text
-                        TOTAL_REVENUE  = j.find("TOTAL_REVENUE").text
-                        RESORT_ROOM = j.find("RESORT_ROOM").text
-                        PER_OCC = j.find("PER_OCC").text
-                        GET_ARR  = j.find("GET_ARR").text
-                        MULTI_OCC_PER  = j.find("MULTI_OCC_PER").text
-                    itr_market+=1
-                    rows.append({
-                            "RESORT": RESORT,
-                            "BUSINESS_DATE": BUSINESS_DATE,
-                            "CHAR_BUSINESS_DATE": CHAR_BUSINESS_DATE,
-                            "MASTER_VALUE": MASTER_VALUE,
-                            "CF_MASTER_SEQ": CF_MASTER_SEQ,
-                            "GROUP_NAME": GROUP_NAME,
-                            "ARR_TODAY": ARR_TODAY,
-                            "NO_DEFINITE_ROOMS": NO_DEFINITE_ROOMS,
-                            "IN_GUEST": IN_GUEST,
-                            "OCC_SINGLE": OCC_SINGLE,
-                            "DOUBLE_OCC": DOUBLE_OCC,
-                            "REVENUE": REVENUE,
-                            "FB_REV": FB_REV,
-                            "OTHER_REV": OTHER_REV,
-                            "TOTAL_REVENUE": TOTAL_REVENUE,
-                            "RESORT_ROOM": RESORT_ROOM,
-                            "PER_OCC": PER_OCC,
-                            "GET_ARR": GET_ARR,
-                            "MULTI_OCC_PER": MULTI_OCC_PER})
-                    # print(RESORT, BUSINESS_DATE, CHAR_BUSINESS_DATE, MASTER_VALUE, CF_MASTER_SEQ, GROUP_NAME, ARR_TODAY, NO_DEFINITE_ROOMS)
-                itr_day+=1
-
+                RESORT = i.find("RESORT").text if(i.find("RESORT")) is not None else ""
+                BUSINESS_DATE = i.find("BUSINESS_DATE").text if(i.find("BUSINESS_DATE")) is not None else ""
+                CHAR_BUSINESS_DATE = i.find("CHAR_BUSINESS_DATE").text if(i.find("CHAR_BUSINESS_DATE")) is not None else ""
+                for k in i.find("LIST_MARKET"):
+                    MASTER_VALUE = k.find("MASTER_VALUE").text if(k.find("MASTER_VALUE") is not None and k.find("MASTER_VALUE").text != "{NULL}")   else ""
+                    CF_MASTER_SEQ = k.find("CF_MASTER_SEQ").text if(k.find("CF_MASTER_SEQ")) is not None else ""
+                    GROUP_NAME  = k.find("GROUP_NAME").text if(k.find("GROUP_NAME") is not None and k.find("GROUP_NAME").text != "Unknown") else ""
+                    for j in k.find("LIST_DETAIL"):
+                        ARR_TODAY = j.find("ARR_TODAY").text if(j.find("ARR_TODAY")) is not None else ""
+                        NO_DEFINITE_ROOMS = j.find("NO_DEFINITE_ROOMS").text if(j.find("NO_DEFINITE_ROOMS")) is not None else ""
+                        IN_GUEST  = j.find("IN_GUEST").text if(j.find("IN_GUEST")) is not None else ""
+                        OCC_SINGLE = j.find("OCC_SINGLE").text if(j.find("OCC_SINGLE")) is not None else ""
+                        DOUBLE_OCC = j.find("DOUBLE_OCC").text if(j.find("DOUBLE_OCC")) is not None else ""
+                        REVENUE = j.find("REVENUE").text if(j.find("REVENUE")) is not None else ""
+                        FB_REV = j.find("FB_REV").text if(j.find("FB_REV")) is not None else ""
+                        OTHER_REV = j.find("OTHER_REV").text if(j.find("OTHER_REV")) is not None else ""
+                        TOTAL_REVENUE  = j.find("TOTAL_REVENUE").text if(j.find("TOTAL_REVENUE")) is not None else ""
+                        RESORT_ROOM = j.find("RESORT_ROOM").text if(j.find("RESORT_ROOM")) is not None else ""
+                        PER_OCC = j.find("PER_OCC").text if(j.find("PER_OCC")) is not None else ""
+                        GET_ARR  = j.find("GET_ARR").text if(j.find("GET_ARR")) is not None else ""
+                        MULTI_OCC_PER  = j.find("MULTI_OCC_PER").text if(j.find("MULTI_OCC_PER")) is not None else ""
+                        rows.append({
+                                "RESORT": RESORT,
+                                "BUSINESS_DATE": BUSINESS_DATE,
+                                "CHAR_BUSINESS_DATE": CHAR_BUSINESS_DATE,
+                                "MASTER_VALUE": MASTER_VALUE,
+                                "CF_MASTER_SEQ": CF_MASTER_SEQ,
+                                "GROUP_NAME": GROUP_NAME,
+                                "ARR_TODAY": ARR_TODAY,
+                                "NO_DEFINITE_ROOMS": NO_DEFINITE_ROOMS,
+                                "IN_GUEST": IN_GUEST,
+                                "OCC_SINGLE": OCC_SINGLE,
+                                "DOUBLE_OCC": DOUBLE_OCC,
+                                "REVENUE": REVENUE,
+                                "FB_REV": FB_REV,
+                                "OTHER_REV": OTHER_REV,
+                                "TOTAL_REVENUE": TOTAL_REVENUE,
+                                "RESORT_ROOM": RESORT_ROOM,
+                                "PER_OCC": PER_OCC,
+                                "GET_ARR": GET_ARR,
+                                "MULTI_OCC_PER": MULTI_OCC_PER})
+                    
             df = pd.DataFrame(rows, columns=cols)
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
@@ -398,8 +366,6 @@ if __name__ == '__main__':
     print(result)
     print("Fetched successfully")
     for item in result:
-        # if(item['propertyCode']!="USTX230602"):
-        #     continue
         PROPERTY_ID = item['id']
         PROPERTY_CODE = item['propertyCode']
         EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
