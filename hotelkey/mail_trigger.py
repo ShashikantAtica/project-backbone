@@ -109,8 +109,6 @@ def Hotelkey_Pms(row):
             # Reservation Report End
     except Exception as e:
         print(e)
-    finally:
-        driver.quit()
 
 
 if __name__ == '__main__':

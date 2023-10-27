@@ -311,6 +311,9 @@ def Choice_Pms(row):
                         read['Depart'] = pd.to_datetime(read['Depart'], format="%m/%d/%y")
                         read['Reserve Date'] = pd.to_datetime(read['Reserve Date'], format="%m/%d/%y")
                         read['Cancellation Date'] = pd.to_datetime(read['Cancellation Date'], format="%m/%d/%y")
+                        read['CRS Conf. No'] = read['CRS Conf. No'].fillna(0).astype(int)
+                        read['Room'] = read['Room'].fillna(0).astype(int)
+
                         headers = ['propertyCode', 'pullDateId', 'Account', 'GuestName', 'Arrive', 'Depart', 'Nights', 'Status',
                                    'Rate', 'RateCode', 'Type', 'Room', 'Source', 'CRSConfNo', 'GTD', 'ReserveDate', 'User',
                                    'SharedAccount', 'TrackCode', 'Package', 'CancellationDate', 'CXLUserID']
@@ -484,6 +487,8 @@ def Choice_Pms(row):
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read['Cxl Date'] = pd.to_datetime(read['Cxl Date'])
+                        read['# Resv'] = read['# Resv'].fillna(0).astype(int)
+                        read['Room nights'] = read['Room nights'].fillna(0).astype(int)
                         headers_list = ["propertyCode", "pullDateId", "CancellationReason", "CxlDate", "Resv", "RoomNights",
                                         "RoomRev"]
                         read.to_csv(filename, index=False, header=headers_list)
@@ -549,6 +554,7 @@ def Choice_Pms(row):
                         read = pd.read_csv(filename)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
+                        read['%Room Nights'] = read['%Room Nights'].fillna(0).astype(int)
                         headers_list = ["propertyCode", "pullDateId", "IDS_RATE_CODE", "RoomNights", "RoomNightsPer",
                                         "RoomRevenue", "RoomRevenuePer", "DailyAVG", "PTDRoomNights", "PTDRoomNightsPer",
                                         "PTDRoomRevenue", "PTDRoomRevenuePer", "PTD_AVG", "YTDRoomNights",
@@ -643,6 +649,7 @@ def Choice_Pms(row):
                             read['﻿IDS_DATE_DAY'] = pd.to_datetime(read['﻿IDS_DATE_DAY'], format="%m/%d/%y - %a")
                         except Exception:
                             read['IDS_DATE_DAY'] = pd.to_datetime(read['IDS_DATE_DAY'], format="%m/%d/%y - %a")
+                        read['%Room Nights'] = read['%Room Nights'].fillna(0).astype(int)
                         headers_list = ["propertyCode", "pullDateId", "IDS_DATE_DAY", "RateCode", "RoomNights", "RoomNightsPer", "RoomRevenue", "RoomRevenuePer", "DailyAVG"]
                         read.to_csv(filename, index=False, header=headers_list)
                     # End Revenue By Rate Code Detail Report
