@@ -192,7 +192,10 @@ def VisualMatrix_Pms(row):
                         new_df = new_df.dropna(subset=['Arrive', 'Departs'], how='all')
                         new_df.loc[new_df['Guest Name'].isnull(), 'Guest Name'] = ''
                         headers = ['propertyCode', 'pullDateId', 'GuestName', 'Status', 'Arrive', 'Departs', 'A', 'C', 'Type', 'Rate', 'PKG', 'MOP', 'ADV_DEP', 'Share', 'Room']
-                        new_df.to_csv(f'{folder_name}{propertyCode}_Front_Office_Arrival.csv', header=headers, index=False)
+                        new_df.columns = headers
+                        new_df['A'] = new_df['A'].fillna(0).astype(int)
+                        new_df['C'] = new_df['C'].fillna(0).astype(int)
+                        new_df.to_csv(f'{folder_name}{propertyCode}_Front_Office_Arrival.csv', index=False)
                         print(f"[{atica_property_code}]{report_type} report pulled successfully")
                     else:
                         print(f"[{atica_property_code}]{report_type} report failed due to status code: {front_office_arrival_response.status_code}")
@@ -231,7 +234,9 @@ def VisualMatrix_Pms(row):
                         new_df = new_df.dropna(subset=['Date'])
                         headers = ['propertyCode', 'pullDateId', 'Date', 'Day', 'Maint', 'GuestArrivals_Non_GTD', 'GuestArrivals_GTD', 'GroupArrivals_Non_GTD', 'GroupArrivals_GTD', 'GroupAlloc', 'ARV',
                                    'Dep', 'StayOvers', 'AvailRms', 'OccRms', 'OccPer', 'RmRev', 'ADR', 'RevPar', 'ActualRoomsLY', 'OccPerVariance']
-                        new_df.to_csv(f'{folder_name}{propertyCode}_Occupancy.csv', header=headers, index=False)
+                        new_df.columns = headers
+                        new_df['ActualRoomsLY'] = new_df['ActualRoomsLY'].fillna(0).astype(int)
+                        new_df.to_csv(f'{folder_name}{propertyCode}_Occupancy.csv', index=False)
                         print(f"[{atica_property_code}]{report_type} report pulled successfully")
                     else:
                         print(f"[{atica_property_code}]{report_type} report failed due to status code: {occupancy_response.status_code}")

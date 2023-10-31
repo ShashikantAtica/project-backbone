@@ -396,6 +396,8 @@ def AutoClerk_Pms(row):
             shifted_df.insert(0, column="propertyCode", value=propertyCode)
             shifted_df.insert(1, column="pullDateId", value=pullDateId)
             shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
+            shifted_df['UnusedAllotment'] = shifted_df['UnusedAllotment'].fillna(0).astype(int)
+            shifted_df['AvailRooms'] = shifted_df['AvailRooms'].fillna(0).astype(int)
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
 
@@ -440,6 +442,7 @@ def AutoClerk_Pms(row):
             df['departure date'] = pd.to_datetime(df['departure date'])
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
+            df['room number'] = df['room number'].fillna(0).astype(int)
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
@@ -453,6 +456,9 @@ def AutoClerk_Pms(row):
             df['CutoffDate'] = pd.to_datetime(df['CutoffDate'], errors='coerce', format='%m/%d/%y')
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
+            df['Block'] = df['Block'].fillna(0).astype(int)
+            df['P_U'] = df['P_U'].fillna(0).astype(int)
+            df['Diff'] = df['Diff'].fillna(0).astype(int)
             df.to_csv(group_block_summary_file_path, index=False)
             # End Group Block Summary Modification
 

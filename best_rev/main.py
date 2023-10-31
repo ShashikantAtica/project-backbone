@@ -156,6 +156,7 @@ def BestRev_Pms(row):
         df['Stay Date'] = pd.to_datetime(df['Stay Date'])
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
+        df['Priority'] = df['Priority'].fillna(0).astype(int)
         headers = ["propertyCode", "pullDateId", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "Event", "BestWesternRate", "RecommendedRate", "RatetoUpload",
                    "RecommendationStatus", "MarketRate", "AvailableRooms", "TransientCapacity", "TotalForecast_IncludesGroup", "OntheBooks_IncludesGroup",
                    "AverageDailyRate", "RevPAR", "Occupancy_IncludesGroup", "ForecastOccupancy_IncludesGroup"]
