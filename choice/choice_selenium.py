@@ -6,16 +6,15 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import chromedriver_autoinstaller
-
-chromedriver_autoinstaller.install()
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import Select
 
 from utils.db import db_config
 from utils.db import db_models
@@ -51,9 +50,9 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list, res_be
 
 def choice_cancellation(row):
     atica_property_code = row['atica_property_code']
-    secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+    platform = "PMS"
 
     username = None
     password = None
@@ -62,8 +61,8 @@ def choice_cancellation(row):
     save_dir = os.path.abspath('reports/')
     driver = None
     try:
-        print("secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
@@ -83,7 +82,8 @@ def choice_cancellation(row):
             "safebrowsing.enabled": True
         })
 
-        driver = webdriver.Chrome(options=chrome_options, executable_path='../chromedriver.exe')
+        service = Service('../chromedriver.exe')
+        driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
 
         print(f"{atica_property_code} Script start for Choice Cancellation List")
@@ -105,7 +105,9 @@ def choice_cancellation(row):
 
         start_date = row['res_before'].format('M/D/YYYY')
         end_date = row['res_after'].shift(days=-1).format('M/D/YYYY')
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "startDatePastCurrent")))
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "activityDateType")))
+        select = Select(driver.find_element(By.NAME, 'activityDateType'))
+        select.select_by_value('cancel')
         start_date_field = driver.find_element(By.NAME, "startDatePastCurrent")
         start_date_field.clear()
         start_date_field.send_keys(start_date)
@@ -127,16 +129,15 @@ def choice_cancellation(row):
         time.sleep(5)
         driver.quit()
 
-        df = pd.read_csv(f'{folder_name}report.csv')
-        df.columns = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26"]
-        selected_columns = ["10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]
-        new_df = df[selected_columns].copy()
+        df = pd.read_csv(f'{folder_name}report.csv', skiprows=1)
         new_column_names = ["Account", "Guest_Name", "Arrival_Group", "Nights", "Rate_Plan", "GTD", "Source", "Rm_Type", "Cxl_Code", "Cxl_Date", "Cxl_Clk"]
-        new_df.columns = new_column_names
-        new_df.dropna(inplace=True, how="all")
-        new_df.insert(0, column="propertyCode", value=propertyCode)
-        new_df.insert(1, column="pullDateId", value=pullDateId)
-        new_df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List.csv', index=False)
+        df.columns = new_column_names
+        df.dropna(inplace=True, how="all")
+        df.insert(0, column="propertyCode", value=propertyCode)
+        df.insert(1, column="pullDateId", value=pullDateId)
+        df['Account'] = df['Account'].fillna(0).astype(int)
+        df['Nights'] = df['Nights'].fillna(0).astype(int)
+        df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List.csv', index=False)
         if os.path.exists(f'{folder_name}report.csv'):
             os.remove(f'{folder_name}report.csv')
         print(f"{atica_property_code} Choice Cancellation List report pulled successfully")
