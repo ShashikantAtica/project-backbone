@@ -5,7 +5,7 @@ import ast
 
 sys.path.append("..")
 import arrow
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 from bs4 import BeautifulSoup as bs
 from utils.db import db_config
 
@@ -14,14 +14,15 @@ class FailedLoginException(Exception):
     pass
 
 
-def get_session(gcp_secret, propertyCode):
-    session = _login(gcp_secret, propertyCode)
+def get_session(gcp_secret, propertyCode, atica_propertyCode):
+    session = _login(gcp_secret, propertyCode, atica_propertyCode)
 
     return session
 
 
-def _login(secret_name, propertyCode):
-    secret = get_secret_dict(secret_name)
+def _login(secret_name, propertyCode, atica_propertyCode):
+    platform = "PMS"
+    secret = get_secret_dict(atica_propertyCode, platform)
     start = arrow.now()
     session, challenge = _submit_login(secret['u'], secret['p'])
 
@@ -55,28 +56,6 @@ def lookup(challenges, propertyCode):
     lookup_results = [chart_dict[lookup[1]][(int(lookup[2]) - 1)] for lookup in challenges]
 
     return lookup_results
-
-
-# def get_security_code(phone):
-#     phone = str(phone)
-#     if phone[0] != '+':
-#         phone = '+' + phone
-#
-#     aws_access_key_id = get_secret('aws_access_key_id')
-#     aws_secret_access_key = get_secret('aws_secret_access_key')
-#     s3 = boto3.client(
-#         's3',
-#         aws_access_key_id=aws_access_key_id,
-#         aws_secret_access_key=aws_secret_access_key
-#     )
-#
-#     time.sleep(3)
-#     otp_file = s3.get_object(Bucket="marriott-script", Key=f"{phone}/otp.otp")
-#     format_str = 'ddd, DD MMM YYYY HH:mm:ss ZZZ'
-#     last_modified = arrow.get(otp_file['ResponseMetadata']['HTTPHeaders']['last-modified'], format_str)
-#     security_code = otp_file["Body"].read().decode()
-#     print(security_code)
-#     return security_code, last_modified
 
 
 def _submit_login(user_id, password):

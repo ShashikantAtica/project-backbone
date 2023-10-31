@@ -7,16 +7,19 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from utils.secrets.SecretManager import get_secret_dict
+from selenium.webdriver.chrome.service import Service
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 from utils.db import db_config
 
 
 def Hotelkey_Pms(row):
-    secret_name = row['gcp_secret']
+    atica_property_code = row['atica_property_code']
     external_property_code = row['external_property_code']
+    propertyCode = row['propertyCode']
+    platform = "RMS"
     try:
-        print("secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
@@ -38,7 +41,9 @@ def Hotelkey_Pms(row):
                 "download.directory_upgrade": True,
                 "safebrowsing.enabled": True
             })
-            driver = webdriver.Chrome(options=chrome_options, executable_path='../chromedriver.exe')
+
+            service = Service('../chromedriver.exe')
+            driver = webdriver.Chrome(options=chrome_options, service=service)
             driver.maximize_window()
 
             driver.get(login_url)
@@ -104,8 +109,6 @@ def Hotelkey_Pms(row):
             # Reservation Report End
     except Exception as e:
         print(e)
-    finally:
-        driver.quit()
 
 
 if __name__ == '__main__':

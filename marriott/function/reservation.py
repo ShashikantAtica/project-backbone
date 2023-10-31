@@ -5,8 +5,6 @@ import pandas as pd
 from marriott.utils.login import get_session, FailedLoginException
 from marriott.utils.mrdw import export, download
 
-MAX_RETRIES = 5
-
 
 class RetryException(Exception):
     pass
@@ -57,7 +55,7 @@ def handle_request(request):
 
     session = None
     try:
-        session = get_session(payload['gcp_secret'], payload['external_property_code'])
+        session = get_session(payload['gcp_secret'], payload['external_property_code'], payload['propertyCode'])
         process_report(session, payload)
 
     except (InvalidRequestException, InvalidReportException, FailedLoginException) as e:

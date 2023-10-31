@@ -357,7 +357,12 @@ def Hotelkey_Pms(row):
         header = ['propertyCode', 'pullDateId', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
                   'Group', 'RateCode', 'Product', 'AssignedProduct', 'Rate', 'TaxInc', 'ProjectedRevenue', 'TotalWithoutTax', 'PayMth', 'PaymentsTaken',
                   'DepositsScheduled', 'BalanceDue', 'CreationDate', 'CreationUser', 'CP', 'CPName', 'Blank']
-        read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False, header=header)
+        read.columns = header
+        read['Nts'] = read['Nts'].fillna(0).astype(int)
+        read['Adl'] = read['Adl'].fillna(0).astype(int)
+        read['PaymentsTaken'] = read['PaymentsTaken'].fillna(0).astype(int)
+        read['DepositsScheduled'] = read['DepositsScheduled'].fillna(0).astype(int)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
 
         res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
         res_result = list(res_result)
@@ -370,7 +375,21 @@ def Hotelkey_Pms(row):
         header = ['propertyCode', 'pullDateId', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
                   'SD', 'OccOTB', 'OccPYClose', 'OccPYVar', 'ADROTB', 'ADRPYClose', 'ADRPYVar', 'DiscPer', 'Price1', 'LT1', 'Per1', 'RM1', 'Price2', 'LT2', 'Per2',
                   'RM2', 'Price3', 'LT3', 'Per3', 'RM3', 'Price4', 'LT4', 'Per4', 'RM4']
-        read.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False, header=header)
+        read.columns = header
+        read['DiscPer'] = read['DiscPer'].fillna(0).astype(int)
+        read['LT1'] = read['LT1'].fillna(0).astype(int)
+        read['Per1'] = read['Per1'].fillna(0).astype(int)
+        read['RM1'] = read['RM1'].fillna(0).astype(int)
+        read['LT2'] = read['LT2'].fillna(0).astype(int)
+        read['Per2'] = read['Per2'].fillna(0).astype(int)
+        read['RM2'] = read['RM2'].fillna(0).astype(int)
+        read['LT3'] = read['LT3'].fillna(0).astype(int)
+        read['Per3'] = read['Per3'].fillna(0).astype(int)
+        read['RM3'] = read['RM3'].fillna(0).astype(int)
+        read['LT4'] = read['LT4'].fillna(0).astype(int)
+        read['Per4'] = read['Per4'].fillna(0).astype(int)
+        read['RM4'] = read['RM4'].fillna(0).astype(int)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
         occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
         occ_result = list(occ_result)

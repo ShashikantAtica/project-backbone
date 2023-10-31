@@ -6,19 +6,16 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
-from seleniumrequests import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import chromedriver_autoinstaller
-
-chromedriver_autoinstaller.install()
+from selenium.webdriver.chrome.service import Service
 
 from utils.db import db_config
 from utils.db import db_models
@@ -158,9 +155,9 @@ def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary
 
 def AutoClerk_Pms(row):
     atica_property_code = row['atica_property_code']
-    secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+    platform = "PMS"
 
     username = None
     password = None
@@ -170,8 +167,8 @@ def AutoClerk_Pms(row):
     save_dir = os.path.abspath(f'reports/{propertyCode}/')
     driver = None
     try:
-        print("secret_name :: ", secret_name)
-        json_dict = get_secret_dict(secret_name)
+        print(f"Getting Secret for {atica_property_code}")
+        json_dict = get_secret_dict(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
@@ -191,7 +188,9 @@ def AutoClerk_Pms(row):
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
         })
-        driver = webdriver.Chrome(options=chrome_options, executable_path='../chromedriver.exe')
+
+        service = Service('../chromedriver.exe')
+        driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
 
         driver.get('https://www.bwh.autoclerkcloud.com/logon.do2')
@@ -397,6 +396,8 @@ def AutoClerk_Pms(row):
             shifted_df.insert(0, column="propertyCode", value=propertyCode)
             shifted_df.insert(1, column="pullDateId", value=pullDateId)
             shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
+            shifted_df['UnusedAllotment'] = shifted_df['UnusedAllotment'].fillna(0).astype(int)
+            shifted_df['AvailRooms'] = shifted_df['AvailRooms'].fillna(0).astype(int)
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
 
@@ -441,6 +442,7 @@ def AutoClerk_Pms(row):
             df['departure date'] = pd.to_datetime(df['departure date'])
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
+            df['room number'] = df['room number'].fillna(0).astype(int)
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
@@ -454,6 +456,9 @@ def AutoClerk_Pms(row):
             df['CutoffDate'] = pd.to_datetime(df['CutoffDate'], errors='coerce', format='%m/%d/%y')
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
+            df['Block'] = df['Block'].fillna(0).astype(int)
+            df['P_U'] = df['P_U'].fillna(0).astype(int)
+            df['Diff'] = df['Diff'].fillna(0).astype(int)
             df.to_csv(group_block_summary_file_path, index=False)
             # End Group Block Summary Modification
 
