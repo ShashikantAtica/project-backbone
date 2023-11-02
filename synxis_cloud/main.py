@@ -452,7 +452,6 @@ def Synxis_Cloud_Pms(row):
         read['Total_Price_For_Child_Age_Group4'] = read['Total_Price_For_Child_Age_Group4'].fillna(0).astype(int)
         read['Total_Price_For_Child_Age_Group5'] = read['Total_Price_For_Child_Age_Group5'].fillna(0).astype(int)
         read['Total_Price_For_Child_Unknown_Age_Group'] = read['Total_Price_For_Child_Unknown_Age_Group'].fillna(0).astype(int)
-        read['Channel_Connect_Confirm_NO'] = read['Channel_Connect_Confirm_NO'].fillna(0).astype(int)
         read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
         read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
         read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
