@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 
 def bulk_insert_choice_noshow(propertyCode, Noshow_result):
-
+# log(n)*M indexing check.
     conn = db_config.get_db_connection()
     stmt = insert(db_models.choice_noshow_model).values(Noshow_result)
     stmt = stmt.on_conflict_do_nothing(index_elements=['ACCOUNT'])
@@ -121,15 +121,11 @@ def choice_noshow(row):
             page=reader.pages[itr_page]
             textt=page.extract_text()
             textt = textt.replace("\n", " ")
-            #Extracting account numbers User: 
+            #Extracting account numbers & Auth Status
             for idx in range(0, len(textt)):
                 next_nine_char_str=textt[idx : idx+9]
                 if(next_nine_char_str.isnumeric() and textt[idx-6 : idx-2]!="User"):
                     account.append(next_nine_char_str)
-                    idx+=9
-        # Error Authorized Settled 
-            for idx in range(0, len(textt)):
-                next_nine_char_str=textt[idx : idx+9]
                 if((next_nine_char_str.isnumeric() and textt[idx-6 : idx-2]!="User") or (textt[idx : idx+9]=="Date/Time")):
                     if(textt[idx-8:idx-1]=="No Auth"):
                         auth_status.append("No Auth")
@@ -148,15 +144,11 @@ def choice_noshow(row):
             page=reader.pages[itr_page]
             textt=page.extract_text()
             textt = textt.replace("\n", " ")
-            #Extracting account numbers User: 
+            #Extracting account numbers & Auth Status
             for idx in range(0, len(textt)):
                 next_nine_char_str=textt[idx : idx+9]
                 if(next_nine_char_str.isnumeric() and textt[idx-6 : idx-2]!="User"):
                     account.append(next_nine_char_str)
-                    idx+=9
-        # Error Authorized Settled 
-            for idx in range(0, len(textt)):
-                next_nine_char_str=textt[idx : idx+9]
                 if((next_nine_char_str.isnumeric() and textt[idx-6 : idx-2]!="User") or (textt[idx : idx+14]=="Total No Shows")):
                     if(textt[idx-8:idx-1]=="No Auth"):
                         auth_status.append("No Auth")
@@ -169,47 +161,51 @@ def choice_noshow(row):
                     else:
                         auth_status.append("")
             auth_status.pop(itr_pop) 
-        # account, created_at, updated_at, property_code, auth_status
-        cols = ["propertyCode","pullDateId","ACCOUNT","AUTH_STATUS","CREATED_AT","UPDATED_AT"]
-        rows = []
-                
-        print("Number of auth_status : ",len(auth_status), "Number of account : ", len(account))
-        for x in range(0, len(account)):
-            rows.append({
-                    "propertyCode": propertyCode,
-                    "pullDateId": pullDateId,
-                    "ACCOUNT": account[x],
-                    "AUTH_STATUS": auth_status[x],
-                    "CREATED_AT": "'" + str(arrow.now()) + "'",
-                    "UPDATED_AT": "'" + str(arrow.now()) + "'"})
-            
-        df = pd.DataFrame(rows, columns=cols)
-        df.to_csv(f"{folder_name}{propertyCode}_Noshow.csv", index=False)
-        Noshow_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Noshow.csv", encoding="utf-8"))
-        Noshow_result = list(Noshow_result)
-        print(Noshow_result)
-        
-        print(f"{atica_property_code} Choice noshow report pulled successfully")
 
-        Noshow_file_path = f'{folder_name}{propertyCode}_Noshow.csv'
-
-        check_Noshow_file = os.path.isfile(Noshow_file_path)
-
-        error_msg = ""
-
-        if not check_Noshow_file:
-            error_msg = error_msg + " Noshow file - N/A"
-
-        if check_Noshow_file:
-            Noshow_result = csv.DictReader(open(Noshow_file_path, encoding="utf-8"))
-            Noshow_result = list(Noshow_result)
-            print(len(Noshow_result))
-            bulk_insert_choice_noshow(propertyCode, Noshow_result)
-            print("Noshow DONE")
-
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+        if(len(auth_status)!=len(account)):
+            update_into_pulldate(pullDateId, ERROR_NOTE="Data is mismatched for Account-Auth_status", IS_ERROR=True)
         else:
-            update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
+            # account, created_at, updated_at, property_code, auth_status
+            cols = ["propertyCode","pullDateId","ACCOUNT","AUTH_STATUS","CREATED_AT","UPDATED_AT"]
+            rows = []
+                    
+            print("Number of auth_status : ",len(auth_status), "Number of account : ", len(account))
+            for x in range(0, len(account)):
+                rows.append({
+                        "propertyCode": propertyCode,
+                        "pullDateId": pullDateId,
+                        "ACCOUNT": account[x],
+                        "AUTH_STATUS": auth_status[x],
+                        "CREATED_AT": "'" + str(arrow.now()) + "'",
+                        "UPDATED_AT": "'" + str(arrow.now()) + "'"})
+                
+            df = pd.DataFrame(rows, columns=cols)
+            df.to_csv(f"{folder_name}{propertyCode}_Noshow.csv", index=False)
+            Noshow_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Noshow.csv", encoding="utf-8"))
+            Noshow_result = list(Noshow_result)
+            print(Noshow_result)
+            
+            print(f"{atica_property_code} Choice noshow report pulled successfully")
+
+            Noshow_file_path = f'{folder_name}{propertyCode}_Noshow.csv'
+
+            check_Noshow_file = os.path.isfile(Noshow_file_path)
+
+            error_msg = ""
+
+            if not check_Noshow_file:
+                error_msg = error_msg + " Noshow file - N/A"
+
+            if check_Noshow_file:
+                Noshow_result = csv.DictReader(open(Noshow_file_path, encoding="utf-8"))
+                Noshow_result = list(Noshow_result)
+                print(len(Noshow_result))
+                bulk_insert_choice_noshow(propertyCode, Noshow_result)
+                print("Noshow DONE")
+                #insert type of report also
+                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            else:
+                update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
 
     except Exception as e:
         if driver:
@@ -286,7 +282,8 @@ if __name__ == '__main__':
         CURRENT_DATE = arrow.now()
         PULLED_DATE = CURRENT_DATE.date()
 
-        # Add entry into pull date table
+            #insert type of report also
+        # Add entry into pull date table 
         LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
 
         if LAST_PULL_DATE_ID is not None:
