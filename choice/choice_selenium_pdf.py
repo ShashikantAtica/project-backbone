@@ -6,7 +6,7 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -62,7 +62,7 @@ def choice_cancellation(row):
     driver = None
     try:
         print(f"Getting Secret for {atica_property_code}")
-        json_dict = get_secret_dict(propertyCode, platform)
+        json_dict = get_secret_from_api(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
