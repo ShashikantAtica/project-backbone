@@ -31,7 +31,7 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list, res_be
     # print("current_date :: ", current_date)
     # start_date = current_date.shift(days=-90)
     # print("start_date :: ", start_date)
-    reservation = '"Arrival_Group"'
+    reservation = '"Cxl_Date"'
     db_propertyCode = "'" + propertyCode + "'"
     # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
