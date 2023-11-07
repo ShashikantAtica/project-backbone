@@ -10,7 +10,7 @@ import time
 import arrow
 import pandas as pd
 import requests
-from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api
 from bs4 import BeautifulSoup
 import csv
 
@@ -132,7 +132,7 @@ def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_lis
     # Delete existing data of occ (up to 90 Days)
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE FROM choice_group_pickup_detail where "FixedCutOffDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+        f'DELETE FROM choice_group_pickup_detail where "BlockDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
 
     # Add new data of occ (up to 90 Days)
@@ -156,7 +156,7 @@ def Choice_Pms(row):
     password = None
     try:
         print(f"Getting Secret for {atica_property_code}")
-        json_dict = get_secret_dict(propertyCode, platform)
+        json_dict = get_secret_from_api(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
@@ -809,7 +809,7 @@ def Choice_Pms(row):
                 group_pickup_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Group_Pickup_Detail.csv", encoding="utf-8"))
                 group_pickup_detail_result = list(group_pickup_detail_result)
                 print(len(group_pickup_detail_result))
-                bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['occ_before'], row['occ_after'])
+                bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['res_before'], row['res_after'])
                 print("GROUP PICKUP DETAIL DONE")
 
                 update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
