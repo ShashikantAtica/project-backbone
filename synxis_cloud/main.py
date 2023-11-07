@@ -481,7 +481,6 @@ def Synxis_Cloud_Pms(row):
         read['F_B'] = read['F_B'].fillna(0).astype(int)
         read['Other'] = read['Other'].fillna(0).astype(int)
         read['Month_To_Date_F_B'] = read['Month_To_Date_F_B'].fillna(0).astype(int)
-        read['Month_To_Date_Others'] = read['Month_To_Date_Others'].fillna(0).astype(int)
         read['Year_To_Date_F_B'] = read['Year_To_Date_F_B'].fillna(0).astype(int)
         read['F_B_Total'] = read['F_B_Total'].fillna(0).astype(int)
         read['Other_Total'] = read['Other_Total'].fillna(0).astype(int)
