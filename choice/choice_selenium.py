@@ -137,7 +137,24 @@ def choice_cancellation(row):
         df.insert(1, column="pullDateId", value=pullDateId)
         df['Account'] = df['Account'].fillna(0).astype(int)
         df['Nights'] = df['Nights'].fillna(0).astype(int)
-        df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List.csv', index=False)
+
+        output_df = pd.DataFrame(columns=df.columns)
+
+        previous_row = None
+
+        for index, data in df.iterrows():
+            if previous_row is not None and int(data["Account"]) == 0:
+                previous_row["Guest_Name"] += f", {data['Guest_Name']}"
+            else:
+                if previous_row is not None:
+                    output_df = pd.concat([output_df, previous_row.to_frame().T], ignore_index=True)
+                previous_row = data
+
+        if previous_row is not None:
+            output_df = pd.concat([output_df, previous_row.to_frame().T], ignore_index=True)
+        output_df['Arrival_Group'] = pd.to_datetime(output_df['Arrival_Group'], format="%m/%d/%y").dt.date
+        output_df['Cxl_Date'] = pd.to_datetime(output_df['Cxl_Date'], format="%m/%d/%y").dt.date
+        output_df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List.csv', index=False)
         if os.path.exists(f'{folder_name}report.csv'):
             os.remove(f'{folder_name}report.csv')
         print(f"{atica_property_code} Choice Cancellation List report pulled successfully")
