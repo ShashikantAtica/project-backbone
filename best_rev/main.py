@@ -6,7 +6,7 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -75,7 +75,7 @@ def BestRev_Pms(row):
         folder_name = "./reports/"
 
         print(f"Getting Secret for {atica_property_code}")
-        json_dict = get_secret_dict(propertyCode, platform)
+        json_dict = get_secret_from_api(propertyCode, platform)
         print(f"{atica_property_code} Getting Secret Details")
         username = json_dict['u']
         password = json_dict['p']
@@ -157,7 +157,7 @@ def BestRev_Pms(row):
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
         df['Priority'] = df['Priority'].fillna(0).astype(int)
-        headers = ["propertyCode", "pullDateId", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "Event", "BestWesternRate", "RecommendedRate", "RatetoUpload",
+        headers = ["propertyCode", "pullDateId", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "BestWesternRate", "RecommendedRate", "RatetoUpload",
                    "RecommendationStatus", "MarketRate", "AvailableRooms", "TransientCapacity", "TotalForecast_IncludesGroup", "OntheBooks_IncludesGroup",
                    "AverageDailyRate", "RevPAR", "Occupancy_IncludesGroup", "ForecastOccupancy_IncludesGroup"]
         df.to_csv(new_file, header=headers, index=False)
