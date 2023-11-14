@@ -166,6 +166,17 @@ choice_cancellation_list_model = Table(
     Column('Cxl_Clk', String(55)),
 )
 
+choice_noshow_model = Table(
+    'choice_noshow', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(20)),
+    Column('pullDateId', String(20)),
+    Column('ACCOUNT', String(55)),
+    Column('AUTH_STATUS', String(55)),
+    Column('CREATED_AT', TIMESTAMP(timezone=True)),
+    Column('UPDATED_AT', TIMESTAMP(timezone=True)),
+)
+
 auto_clerk_res_model = Table(
     'auto_clerk_res', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),

@@ -1,0 +1,38 @@
+propertyCode,pullDateId,GroupName,GroupStatus,RollingCutOffDays,FixedCutOffDate,SalesManager,RoomType,BlockDate,OriginalBlock,CurrentBlock,GuaranteedArrivalsPickedUp,NonGuaranteedArrivalsPickedUp,TotalPickedUp,RoomsNotPickedUp,Revenue,ADR
+USTX230301,920,Bentonville High School,O,0,2023-08-05,Tracey Willis,NQQ,2023-08-06,4,5,5,0,5,0,495.0,99.0
+USTX230301,920,Bentonville High School,O,0,2023-08-05,Tracey Willis,NQQ,2023-08-07,4,5,5,0,5,0,495.0,99.0
+USTX230301,920,Bentonville High School,O,0,2023-08-05,Tracey Willis,NQQ,2023-08-08,4,5,5,0,0,5,0.0,0.0
+USTX230301,920,covenant church,O,0,2023-08-23,,NK,2023-09-13,1,2,8,0,2,0,236.3,118.15
+USTX230301,920,covenant church,O,0,2023-08-23,,NK,2023-09-14,1,2,8,0,2,0,236.3,118.15
+USTX230301,920,covenant church,O,0,2023-08-23,,NK,2023-09-15,1,2,8,0,2,0,236.3,118.15
+USTX230301,920,covenant church,O,0,2023-08-23,,NK,2023-09-16,1,2,8,0,2,0,236.3,118.15
+USTX230301,920,covenant church,O,0,2023-08-23,,NQQ,2023-09-13,10,6,8,0,6,0,734.4,122.4
+USTX230301,920,covenant church,O,0,2023-08-23,,NQQ,2023-09-14,10,6,8,0,6,0,734.4,122.4
+USTX230301,920,covenant church,O,0,2023-08-23,,NQQ,2023-09-15,10,6,8,0,6,0,734.4,122.4
+USTX230301,920,covenant church,O,0,2023-08-23,,NQQ,2023-09-16,10,6,8,0,6,0,734.4,122.4
+USTX230301,920,Legacy Homes Corporation,O,0,2023-08-11,Traceywillis,NK,2023-08-13,11,7,9,0,7,0,574.0,82.0
+USTX230301,920,Legacy Homes Corporation,O,0,2023-08-11,Traceywillis,NK,2023-08-14,11,7,9,0,7,0,574.0,82.0
+USTX230301,920,Legacy Homes Corporation,O,0,2023-08-11,Traceywillis,NK,2023-08-15,11,7,9,0,7,0,574.0,82.0
+USTX230301,920,Legacy Homes Corporation,O,0,2023-08-11,Traceywillis,NK1,2023-08-13,2,2,9,0,2,0,164.0,82.0
+USTX230301,920,Legacy Homes Corporation,O,0,2023-08-11,Traceywillis,NK1,2023-08-14,2,2,9,0,2,0,164.0,82.0
+USTX230301,920,Legacy Homes Corporation,O,0,2023-08-11,Traceywillis,NK1,2023-08-15,2,2,9,0,2,0,164.0,82.0
+USTX230301,920,Dove Science School,O,0,2023-10-07,,NQQ,2023-10-08,13,13,13,0,13,0,"1,157.00",89.0
+USTX230301,920,Dove Science School,O,0,2023-10-07,,NQQ,2023-10-09,13,13,13,0,13,0,"1,157.00",89.0
+USTX230301,920,Dove Science School,O,0,2023-10-07,,NQQ,2023-10-10,13,13,13,0,13,0,"1,157.00",89.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK,2023-10-15,12,3,4,0,3,0,252.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK,2023-10-16,12,5,7,0,5,0,420.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK,2023-10-17,12,5,8,0,5,0,420.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK,2023-10-18,12,5,8,0,5,0,420.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK,2023-10-19,12,5,8,0,5,0,420.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK1,2023-10-16,0,1,7,0,1,0,84.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK1,2023-10-17,0,1,8,0,1,0,84.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK1,2023-10-18,0,1,8,0,1,0,84.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,NK1,2023-10-19,0,1,8,0,1,0,84.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK,2023-10-15,0,1,4,0,1,0,118.90,118.9
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK,2023-10-16,0,1,7,0,1,0,118.90,118.9
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK,2023-10-17,0,1,8,0,1,0,118.90,118.9
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK,2023-10-18,0,1,8,0,1,0,118.90,118.9
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK,2023-10-19,0,1,8,0,1,0,118.90,118.9
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK1,2023-10-17,0,1,8,0,1,0,84.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK1,2023-10-18,0,1,8,0,1,0,84.00,84.0
+USTX230301,920,Envirosmart  Pest  Control,O,0,2023-10-13,Thressia Willis,SNK1,2023-10-19,0,1,8,0,1,0,84.00,84.0
