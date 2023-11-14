@@ -144,7 +144,7 @@ def choice_noshow(row):
             page=reader.pages[itr_page]
             textt=page.extract_text()
             textt = textt.replace("\n", " ")
-            #Extracting account numbers & Auth Status
+            #Extracting account numbers & Auth_Status
             for idx in range(0, len(textt)):
                 next_nine_char_str=textt[idx : idx+9]
                 if(next_nine_char_str.isnumeric() and textt[idx-6 : idx-2]!="User"):
