@@ -31,7 +31,7 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list, res_be
     # print("current_date :: ", current_date)
     # start_date = current_date.shift(days=-90)
     # print("start_date :: ", start_date)
-    reservation = '"Cxl_Date"'
+    reservation = '"Arrival_Group"'
     db_propertyCode = "'" + propertyCode + "'"
     # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
@@ -68,7 +68,7 @@ def choice_cancellation(row):
         password = json_dict['p']
 
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
@@ -79,7 +79,8 @@ def choice_cancellation(row):
             "download.default_directory": save_dir,
             "download.prompt_for_download": False,
             "download.directory_upgrade": True,
-            "safebrowsing.enabled": True
+            "safebrowsing.enabled": True,
+            "plugins.always_open_pdf_externally": True
         })
 
         service = Service('../chromedriver.exe')
@@ -115,11 +116,11 @@ def choice_cancellation(row):
         end_date_field.clear()
         end_date_field.send_keys(end_date)
 
-        csv_input = driver.find_element(By.NAME, "CSV")
-        driver.execute_script("arguments[0].setAttribute('value', 'true');", csv_input)
-        print(f"{atica_property_code} Choice Cancellation List report generated")
+        # csv_input = driver.find_element(By.NAME, "CSV")
+        # driver.execute_script("arguments[0].setAttribute('value', 'true');", csv_input)
+        # print(f"{atica_property_code} Choice Cancellation List report generated")
 
-        filepath = os.path.join(f'{folder_name}report.csv')
+        filepath = os.path.join(f'{folder_name}report.pdf')
         if os.path.exists(filepath):
             os.remove(filepath)
         submit_button = driver.find_element(By.ID, "doSubmit")
@@ -129,55 +130,38 @@ def choice_cancellation(row):
         time.sleep(5)
         driver.quit()
 
-        df = pd.read_csv(f'{folder_name}report.csv', skiprows=1)
-        new_column_names = ["Account", "Guest_Name", "Arrival_Group", "Nights", "Rate_Plan", "GTD", "Source", "Rm_Type", "Cxl_Code", "Cxl_Date", "Cxl_Clk"]
-        df.columns = new_column_names
-        df.dropna(inplace=True, how="all")
-        df.insert(0, column="propertyCode", value=propertyCode)
-        df.insert(1, column="pullDateId", value=pullDateId)
-        df['Account'] = df['Account'].fillna(0).astype(int)
-        df['Nights'] = df['Nights'].fillna(0).astype(int)
-
-        output_df = pd.DataFrame(columns=df.columns)
-
-        previous_row = None
-
-        for index, data in df.iterrows():
-            if previous_row is not None and int(data["Account"]) == 0:
-                previous_row["Guest_Name"] += f", {data['Guest_Name']}"
-            else:
-                if previous_row is not None:
-                    output_df = pd.concat([output_df, previous_row.to_frame().T], ignore_index=True)
-                previous_row = data
-
-        if previous_row is not None:
-            output_df = pd.concat([output_df, previous_row.to_frame().T], ignore_index=True)
-        output_df['Arrival_Group'] = pd.to_datetime(output_df['Arrival_Group'], format="%m/%d/%y").dt.date
-        output_df['Cxl_Date'] = pd.to_datetime(output_df['Cxl_Date'], format="%m/%d/%y").dt.date
-        output_df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List.csv', index=False)
-        if os.path.exists(f'{folder_name}report.csv'):
-            os.remove(f'{folder_name}report.csv')
+        # df = pd.read_csv(f'{folder_name}report.csv', skiprows=1)
+        # new_column_names = ["Account", "Guest_Name", "Arrival_Group", "Nights", "Rate_Plan", "GTD", "Source", "Rm_Type", "Cxl_Code", "Cxl_Date", "Cxl_Clk"]
+        # df.columns = new_column_names
+        # df.dropna(inplace=True, how="all")
+        # df.insert(0, column="propertyCode", value=propertyCode)
+        # df.insert(1, column="pullDateId", value=pullDateId)
+        # df['Account'] = df['Account'].fillna(0).astype(int)
+        # df['Nights'] = df['Nights'].fillna(0).astype(int)
+        # df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List.csv', index=False)
+        # if os.path.exists(f'{folder_name}report.csv'):
+        #     os.remove(f'{folder_name}report.csv')
         print(f"{atica_property_code} Choice Cancellation List report pulled successfully")
 
-        cancellation_list_file_path = f'{folder_name}{propertyCode}_Cancellation_List.csv'
-
-        check_cancellation_list_file = os.path.isfile(cancellation_list_file_path)
-
-        error_msg = ""
-
-        if not check_cancellation_list_file:
-            error_msg = error_msg + " Cancellation List file - N/A"
-
-        if check_cancellation_list_file:
-            cancellation_list_result = csv.DictReader(open(cancellation_list_file_path, encoding="utf-8"))
-            cancellation_list_result = list(cancellation_list_result)
-            print(len(cancellation_list_result))
-            bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, row['res_before'], row['res_after'])
-            print("CANCELLATION LIST DONE")
-
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-        else:
-            update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
+        # cancellation_list_file_path = f'{folder_name}{propertyCode}_Cancellation_List.csv'
+        #
+        # check_cancellation_list_file = os.path.isfile(cancellation_list_file_path)
+        #
+        # error_msg = ""
+        #
+        # if not check_cancellation_list_file:
+        #     error_msg = error_msg + " Cancellation List file - N/A"
+        #
+        # if check_cancellation_list_file:
+        #     cancellation_list_result = csv.DictReader(open(cancellation_list_file_path, encoding="utf-8"))
+        #     cancellation_list_result = list(cancellation_list_result)
+        #     print(len(cancellation_list_result))
+        #     bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, row['res_before'], row['res_after'])
+        #     print("CANCELLATION LIST DONE")
+        #
+        #     update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+        # else:
+        #     update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
 
     except Exception as e:
         if driver:
