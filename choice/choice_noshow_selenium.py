@@ -7,7 +7,7 @@ import time
 import arrow
 import pandas as pd
 from PyPDF2 import PdfReader
-from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -47,7 +47,7 @@ def choice_noshow(row):
     driver = None
     try:
         print(f"Getting Secret for {atica_property_code}")
-        json_dict = get_secret_dict(propertyCode, platform)
+        json_dict = get_secret_from_api(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
@@ -163,7 +163,7 @@ def choice_noshow(row):
             auth_status.pop(itr_pop) 
 
         if(len(auth_status)!=len(account)):
-            update_into_pulldate(pullDateId, ERROR_NOTE="Data is mismatched for Account-Auth_status", IS_ERROR=True)
+            update_into_pulldate(pullDateId, ERROR_NOTE=f"{atica_property_code} Data is mismatched for Account-Auth_status", IS_ERROR=True)
         else:
             # account, created_at, updated_at, property_code, auth_status
             cols = ["propertyCode","pullDateId","ACCOUNT","AUTH_STATUS","CREATED_AT","UPDATED_AT"]
