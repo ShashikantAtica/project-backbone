@@ -6,7 +6,7 @@ sys.path.append("..")
 import time
 import arrow
 import pandas as pd
-from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
+from utils.secrets.SecretManager import get_secret_from_api
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -21,41 +21,27 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def bulk_insert_auto_clerk_res(propertyCode, res_list):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_auto_clerk_res(propertyCode, res_list, res_before, res_after):
+    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
+    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"DateTime"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from auto_clerk_res where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from auto_clerk_res where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of reservation (up to 90 Days)
     print("Data importing...")
@@ -65,41 +51,27 @@ def bulk_insert_auto_clerk_res(propertyCode, res_list):
     print("Data imported")
 
 
-def bulk_insert_auto_clerk_occ(propertyCode, occ_list):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_auto_clerk_occ(propertyCode, occ_list, occ_before, occ_after):
+    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
+    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"Date"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from auto_clerk_occ where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from auto_clerk_occ where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of occ (up to 90 Days)
     print("Data importing...")
@@ -109,41 +81,27 @@ def bulk_insert_auto_clerk_occ(propertyCode, occ_list):
     print("Data imported")
 
 
-def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_list):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_list, res_before, res_after):
+    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
+    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"Arrive"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from auto_clerk_group_block_summary where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from auto_clerk_group_block_summary where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of occ (up to 90 Days)
     print("Data importing...")
@@ -168,7 +126,7 @@ def AutoClerk_Pms(row):
     driver = None
     try:
         print(f"Getting Secret for {atica_property_code}")
-        json_dict = get_secret_dict(propertyCode, platform)
+        json_dict = get_secret_from_api(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
@@ -466,19 +424,19 @@ def AutoClerk_Pms(row):
             res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
             res_result = list(res_result)
             print(len(res_result))
-            bulk_insert_auto_clerk_res(propertyCode, res_result)
+            bulk_insert_auto_clerk_res(propertyCode, res_result, row['res_before'], row['res_after'])
             print("RES DONE")
 
             occ_result = csv.DictReader(open(occupancy_file_path, encoding="utf-8"))
             occ_result = list(occ_result)
             print(len(occ_result))
-            bulk_insert_auto_clerk_occ(propertyCode, occ_result)
+            bulk_insert_auto_clerk_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
             print("OCC DONE")
 
             group_block_summary_result = csv.DictReader(open(group_block_summary_file_path, encoding="utf-8"))
             group_block_summary_result = list(group_block_summary_result)
             print(len(group_block_summary_result))
-            bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_result)
+            bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_result, row['res_before'], row['res_after'])
             print("GROUP BLOCK SUMMARY DONE")
 
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
