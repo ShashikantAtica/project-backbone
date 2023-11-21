@@ -19,41 +19,27 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list, fore_start_date, fore_end_date):
+    start_date = "'" + fore_start_date.format("YYYY-MM-DD") + "'"
+    end_date = "'" + fore_end_date.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"StayDate"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from bestrev_total_forecast where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of total forecast
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from bestrev_total_forecast where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     print("Data importing...")
     conn = db_config.get_db_connection()
@@ -153,6 +139,9 @@ def BestRev_Pms(row):
         print(f"{atica_property_code} Modification of Total Forecast Report")
         new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
         df = pd.read_csv(new_file, engine='python')
+        if df.empty:
+            error_msg = "Total Forecast file is empty"
+            return error_msg
         df['Stay Date'] = pd.to_datetime(df['Stay Date'])
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
@@ -177,7 +166,9 @@ def BestRev_Pms(row):
             total_forecast_result = csv.DictReader(open(f"{folder_name}{propertyCode}_TotalForecast.csv", encoding="utf-8"))
             total_forecast_result = list(total_forecast_result)
             print(len(total_forecast_result))
-            bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_result)
+            fore_start_date = arrow.now().format("YYYY-MM-DD")
+            fore_end_date = arrow.now().shift(days=+365).format("YYYY-MM-DD")
+            bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_result, fore_start_date, fore_end_date)
             print("TOTAL FORECAST DONE")
 
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
