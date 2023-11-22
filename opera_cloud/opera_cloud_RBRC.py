@@ -70,42 +70,20 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_opera_cloud_rbrc(rbrc_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    BUSINESS_DATE = '"BUSINESS_DATE"'
+    yesterday_date = arrow.now().shift(days=-4)
+    print("yesterday_date :: ", yesterday_date)
+    formatted_yesterday_date = "'" + yesterday_date.format('YYYY-MM-DD') + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of RBRC
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from opera_rbrc where {BUSINESS_DATE} = {formatted_yesterday_date};')
     conn.close()
+    print("DELETE OLD DATA!!!", formatted_yesterday_date)
 
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from opera_rbrc where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
-
-    # Add new data of reservation
+    # Add new data of RBRC
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.opera_rbrc_model.insert(), rbrc_list)
