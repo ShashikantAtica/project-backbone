@@ -69,19 +69,23 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 
-def bulk_insert_opera_cloud_rbrc(rbrc_list, propertyCode):
+def bulk_insert_opera_cloud_rbrc(rbrc_list, date_set, propertyCode):
 
     BUSINESS_DATE = '"BUSINESS_DATE"'
-    yesterday_date = arrow.now().shift(days=-4)
-    print("yesterday_date :: ", yesterday_date)
-    formatted_yesterday_date = "'" + yesterday_date.format('YYYY-MM-DD') + "'"
+
+    input_date_str = min(date_set)
+    input_datetime = arrow.get(input_date_str, 'DD-MMM-YY')
+    yesterday_date_of_report = input_datetime.format('YYYY-MM-DD')
+    print("yesterday_date_in_report :: ", yesterday_date_of_report)
+
+    formatted_yesterday_date_of_report = "'" + yesterday_date_of_report.format('YYYY-MM-DD') + "'"
 
     # Delete existing data of RBRC
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE from opera_rbrc where {BUSINESS_DATE} = {formatted_yesterday_date};')
+        f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_yesterday_date_of_report};')
     conn.close()
-    print("DELETE OLD DATA!!!", formatted_yesterday_date)
+    print("DELETE OLD DATA >= !!!", yesterday_date_of_report)
 
     # Add new data of RBRC
     print("Data importing...")
@@ -255,7 +259,7 @@ def OperaCloud_Pms(row):
         xmlparse = Xet.parse(rbrc_file_path)
         root = xmlparse.getroot()
 
-        
+        date_set = set()
         try:
             for i in root[0][0][0]:
                 RESORT = i.find("RESORT").text if(i.find("RESORT")) is not None else ""
@@ -299,6 +303,7 @@ def OperaCloud_Pms(row):
                                 "PER_OCC": PER_OCC,
                                 "GET_ARR": GET_ARR,
                                 "MULTI_OCC_PER": MULTI_OCC_PER})
+                        date_set.add(BUSINESS_DATE)
                     
             df = pd.DataFrame(rows, columns=cols)
             df.insert(0, column="propertyCode", value=propertyCode)
@@ -319,7 +324,7 @@ def OperaCloud_Pms(row):
         print(rbrc_result)
 
         if len(rbrc_result) > 0:
-            bulk_insert_opera_cloud_rbrc(rbrc_result, propertyCode=propertyCode)
+            bulk_insert_opera_cloud_rbrc(rbrc_result, date_set, propertyCode=propertyCode)
             print("RBRC DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
