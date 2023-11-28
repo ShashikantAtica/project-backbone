@@ -435,6 +435,8 @@ def Synxis_Cloud_Pms(row):
     check_monthly_file = os.path.isfile(monthly_file_path)
 
     if check_reservation_file and check_forecast_file and check_revenue_file and check_monthly_file:
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
         read['Status_Dt'] = pd.to_datetime(read['Status_Dt'])
@@ -444,6 +446,8 @@ def Synxis_Cloud_Pms(row):
         read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'])
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
+        read.insert(2, column="createdAt", value=createdAt)
+        read.insert(3, column="updatedAt", value=updatedAt)
         read['Pay_At_Property'] = read['Pay_At_Property'].fillna(0).astype(int)
         read['Total_Price_For_Adult'] = read['Total_Price_For_Adult'].fillna(0).astype(int)
         read['Total_Price_For_Child_Age_Group1'] = read['Total_Price_For_Child_Age_Group1'].fillna(0).astype(int)
@@ -465,6 +469,8 @@ def Synxis_Cloud_Pms(row):
         read['cal_dt'] = pd.to_datetime(read['cal_dt'])
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
+        read.insert(2, column="createdAt", value=createdAt)
+        read.insert(3, column="updatedAt", value=updatedAt)
         read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
 
         fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
@@ -476,7 +482,9 @@ def Synxis_Cloud_Pms(row):
         read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="Date", value=date)
+        read.insert(2, column="createdAt", value=createdAt)
+        read.insert(3, column="updatedAt", value=updatedAt)
+        read.insert(4, column="Date", value=date)
         read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
         read['F_B'] = read['F_B'].fillna(0).astype(int)
         read['Other'] = read['Other'].fillna(0).astype(int)
@@ -496,6 +504,8 @@ def Synxis_Cloud_Pms(row):
         read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
+        read.insert(2, column="createdAt", value=createdAt)
+        read.insert(3, column="updatedAt", value=updatedAt)
         read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
         read['FoodandBeverage'] = read['FoodandBeverage'].fillna(0).astype(int)
         read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
