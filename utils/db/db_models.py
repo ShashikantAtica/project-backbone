@@ -1124,4 +1124,43 @@ bestrev_total_forecast_model = Table(
     Column('ForecastOccupancy_IncludesGroup', String(55)),
 )
 
+ideasg3_occ_model = Table(
+    'ideasg3_occ', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(20)),
+    Column('pullDateId', String(20)),
+    Column('createdAt', TIMESTAMP(timezone=True)),
+	Column('updatedAt', TIMESTAMP(timezone=True)),
+    Column('Day_of_Week', String(55)),
+    Column('Day_of_Arrival', String(55)),
+    Column('Special_Event', String(55)),
+    Column('Out_of_Order', String(55)),
+    Column('Occupancy_On_Books_Current', String(55)),
+    Column('Occupancy_On_Books_Change', String(55)),
+    Column('Occupancy_Forecast_Current', String(55)),
+    Column('Occupancy_Forecast_Change', String(55)),
+    Column('Occupancy_Forecast%Current', String(55)),
+    Column('Occupancy_Forecast%Change', String(55)),
+    Column('Revenue_On_Books(USD)_Current', String(55)),
+    Column('Revenue_On_Books(USD)_Change', String(55)),
+    Column('Revenue_Forecast(USD)_Current', String(55)),
+    Column('Revenue_Forecast(USD)_Change', String(55)),
+    Column('ADR_On_Books(USD)_Current', String(55)),
+    Column('ADR_On_Books(USD)_Change', String(55)),
+    Column('ADR_Forecast(USD)_Current', String(55)),
+    Column('ADR_Forecast(USD)_Change', String(55)),
+    Column('RevPAR_On_Books(USD)_Current', String(55)),
+    Column('RevPAR_On_Books(USD)_Change', String(55)),
+    Column('RevPAR_Forecast(USD)_Current', String(55)),
+    Column('RevPAR_Forecast(USD)_Change', String(55)),
+    Column('Last_Room_Value_For_RC_DLX(USD)_Current', String(55)),
+    Column('Last_Room_Value_For_RC_DLX(USD)_Change', String(55)),
+    Column('Overbooking_Current', String(55)),
+    Column('Overbooking_Change', String(55)),
+    Column('BAR_by_Day_for_Room_Class_DLX(USD)_Current', String(55)),
+    Column('BAR_by_Day_for_Room_Class_DLX(USD)_Change', String(55)),
+    Column('BAR_Restricted_by_LRV_for_Room_Class_DLX_Current', String(55)),
+    Column('BAR_Restricted_by_LRV_for_Room_Class_DLX_Change', String(55))
+)
+
 # meta.create_all(engine)
