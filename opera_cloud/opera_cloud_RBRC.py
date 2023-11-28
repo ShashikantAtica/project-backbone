@@ -247,7 +247,8 @@ def OperaCloud_Pms(row):
     check_rbrc_file = os.path.isfile(rbrc_file_path)
 
     if check_rbrc_file:
-        
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
         # Start RBRC Report
         cols = ["RESORT","BUSINESS_DATE","CHAR_BUSINESS_DATE","MASTER_VALUE","CF_MASTER_SEQ","GROUP_NAME","ARR_TODAY","NO_DEFINITE_ROOMS",
         "IN_GUEST","OCC_SINGLE","DOUBLE_OCC","REVENUE",
@@ -308,6 +309,8 @@ def OperaCloud_Pms(row):
             df = pd.DataFrame(rows, columns=cols)
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
+            df.insert(2, column="createdAt", value=createdAt)
+            df.insert(3, column="updatedAt", value=updatedAt)
             df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'])
             df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
             df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
