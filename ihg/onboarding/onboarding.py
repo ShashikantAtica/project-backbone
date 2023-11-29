@@ -155,6 +155,8 @@ def IHG_Pms(row):
     if check_reservation_file and check_occupancy_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
@@ -163,6 +165,8 @@ def IHG_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
         read.insert(3, column="updatedAt", value=updatedAt)
+        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         read.to_csv(f"{propertyCode}_Reservations.csv", index=False)
 
         res_result = csv.DictReader(open(f"{propertyCode}_Reservations.csv", encoding="utf-8"))
@@ -176,8 +180,10 @@ def IHG_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
         read.insert(3, column="updatedAt", value=updatedAt)
+        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
 
-        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
+        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
                         "MaximumLOS", "MinimumLOS", "ReservationGuaranteeRequired", "24Hourhold", "AverageLeadTime",
                         "AverageLOS", "CancelDue", "CancelorNoShow", "DepositDue", "Deposit", "Groupremaining",
                         "RoomslefttoSell", "SpecialEventSpecialRequirement", "Paceasofdate", "AC", "ActualroomssoldLY",

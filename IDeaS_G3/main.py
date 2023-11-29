@@ -251,6 +251,8 @@ def IDeaSG3_Rms(row):
             date_set = set()
             createdAt = "'" + str(arrow.now()) + "'"
             updatedAt = "'" + str(arrow.now()) + "'"
+            createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+            updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
             column_mapping = {
                 'Day_of_Week': 1,
                 'Day_of_Arrival': 2,
@@ -307,6 +309,9 @@ def IDeaSG3_Rms(row):
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
+            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+
 
             df = df.reset_index(drop=True)
             df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)

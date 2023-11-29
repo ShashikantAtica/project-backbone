@@ -135,10 +135,14 @@ def choice_cancellation(row):
         df.dropna(inplace=True, how="all")
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
         df.insert(2, column="createdAt", value=createdAt)
         df.insert(3, column="updatedAt", value=updatedAt)
+        df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         df['Account'] = df['Account'].fillna(0).astype(int)
         df['Nights'] = df['Nights'].fillna(0).astype(int)
 

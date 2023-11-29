@@ -325,6 +325,8 @@ def AutoClerk_Pms(row):
         if check_reservation_file and check_occupancy_file and check_group_block_summary_file:
             createdAt = "'" + str(arrow.now()) + "'"
             updatedAt = "'" + str(arrow.now()) + "'"
+            createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+            updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
             # Start Data Modification Occupancy
             df = pd.read_csv(occupancy_file_path)
             df = df.drop([0, 1, 2, 3, 4, 5])
@@ -357,6 +359,8 @@ def AutoClerk_Pms(row):
             shifted_df.insert(1, column="pullDateId", value=pullDateId)
             shifted_df.insert(2, column="createdAt", value=createdAt)
             shifted_df.insert(3, column="updatedAt", value=updatedAt)
+            shifted_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            shifted_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
             shifted_df['UnusedAllotment'] = shifted_df['UnusedAllotment'].fillna(0).astype(int)
             shifted_df['AvailRooms'] = shifted_df['AvailRooms'].fillna(0).astype(int)
@@ -371,6 +375,8 @@ def AutoClerk_Pms(row):
                 'pullDateId',
                 'createdAt',
                 'updatedAt',
+                'createdAtEpoch',
+                'updatedAtEpoch',
                 'DateTime',
                 'Status',
                 'MyhmsConf',
@@ -408,6 +414,8 @@ def AutoClerk_Pms(row):
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
+            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['room number'] = df['room number'].fillna(0).astype(int)
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
@@ -424,6 +432,8 @@ def AutoClerk_Pms(row):
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
+            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['Block'] = df['Block'].fillna(0).astype(int)
             df['P_U'] = df['P_U'].fillna(0).astype(int)
             df['Diff'] = df['Diff'].fillna(0).astype(int)

@@ -345,6 +345,8 @@ def Hotelkey_Pms(row):
     if check_reservation_file and check_occupancy_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=1, engine='python')
         values = ['', 'Book', 'Total']
@@ -358,7 +360,9 @@ def Hotelkey_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
         read.insert(3, column="updatedAt", value=updatedAt)
-        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
+        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
                   'Group', 'RateCode', 'Product', 'AssignedProduct', 'Rate', 'TaxInc', 'ProjectedRevenue', 'TotalWithoutTax', 'PayMth', 'PaymentsTaken',
                   'DepositsScheduled', 'BalanceDue', 'CreationDate', 'CreationUser', 'CP', 'CPName', 'Blank']
         read.columns = header
@@ -378,7 +382,9 @@ def Hotelkey_Pms(row):
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
         read.insert(3, column="updatedAt", value=updatedAt)
-        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
+        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
                   'SD', 'OccOTB', 'OccPYClose', 'OccPYVar', 'ADROTB', 'ADRPYClose', 'ADRPYVar', 'DiscPer', 'Price1', 'LT1', 'Per1', 'RM1', 'Price2', 'LT2', 'Per2',
                   'RM2', 'Price3', 'LT3', 'Per3', 'RM3', 'Price4', 'LT4', 'Per4', 'RM4']
         read.columns = header

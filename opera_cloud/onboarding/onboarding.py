@@ -205,6 +205,8 @@ def OperaCloud_Pms(row):
     if check_reservation_file and check_occupancy_file and check_arrival_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
         # Start Reservation Report
         cols = ["RESV_NAME_ID", "GUARANTEE_CODE", "RESV_STATUS", "ROOM", "FULL_NAME", "DEPARTURE", "PERSONS",
                 "GROUP_NAME",
@@ -271,6 +273,8 @@ def OperaCloud_Pms(row):
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
+            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
             df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
             df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
@@ -369,6 +373,8 @@ def OperaCloud_Pms(row):
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
+            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
             df.to_csv(f"{propertyCode}_Occupancy.csv", index=False)
@@ -447,6 +453,8 @@ def OperaCloud_Pms(row):
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
+            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
             df.to_csv(f"{propertyCode}_Occupancy.csv", index=False)
@@ -481,6 +489,8 @@ def OperaCloud_Pms(row):
         final_df.insert(1, column="pullDateId", value=pullDateId)
         final_df.insert(2, column="createdAt", value=createdAt)
         final_df.insert(3, column="updatedAt", value=updatedAt)
+        final_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        final_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         final_df['UPDATE_DATE'] = pd.to_datetime(final_df['UPDATE_DATE'])
         final_df['TRUNC_BEGIN'] = pd.to_datetime(final_df['TRUNC_BEGIN'])
         final_df['TRUNC_END'] = pd.to_datetime(final_df['TRUNC_END'])
