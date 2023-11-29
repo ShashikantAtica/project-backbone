@@ -315,8 +315,8 @@ def OperaCloud_Pms(row):
     if check_reservation_file and check_occupancy_file and check_arrival_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
-        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
+        updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
         # Start Reservation Report
         cols = ["RESV_NAME_ID", "GUARANTEE_CODE", "RESV_STATUS", "ROOM", "FULL_NAME", "DEPARTURE", "PERSONS",
                 "GROUP_NAME",

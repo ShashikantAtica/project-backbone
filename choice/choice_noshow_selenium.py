@@ -176,8 +176,8 @@ def choice_noshow(row):
                         "pullDateId": pullDateId,
                         "createdAt": "'" + str(arrow.now()) + "'",
                         "updatedAt": "'" + str(arrow.now()) + "'",
-                        "createdAtEpoch" : "'" + str(int(arrow.utcnow().timestamp())) + "'",
-                        "updatedAtEpoch" : "'" + str(int(arrow.utcnow().timestamp())) + "'",
+                        "createdAtEpoch" : str(int(arrow.utcnow().timestamp())),
+                        "updatedAtEpoch" : str(int(arrow.utcnow().timestamp())),
                         "ACCOUNT": account[x],
                         "AUTH_STATUS": auth_status[x]})
                 

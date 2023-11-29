@@ -368,8 +368,8 @@ def Synxis_Cloud_Pms(row):
     if check_reservation_file and check_forecast_file and check_revenue_file and check_monthly_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
-        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
+        updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
         read['Status_Dt'] = pd.to_datetime(read['Status_Dt'])

@@ -155,8 +155,8 @@ def IHG_Pms(row):
     if check_reservation_file and check_occupancy_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
-        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
+        updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])

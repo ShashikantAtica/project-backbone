@@ -249,8 +249,8 @@ def OperaCloud_Pms(row):
     if check_rbrc_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
-        updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+        createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
+        updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
         # Start RBRC Report
         cols = ["RESORT","BUSINESS_DATE","CHAR_BUSINESS_DATE","MASTER_VALUE","CF_MASTER_SEQ","GROUP_NAME","ARR_TODAY","NO_DEFINITE_ROOMS",
         "IN_GUEST","OCC_SINGLE","DOUBLE_OCC","REVENUE",
