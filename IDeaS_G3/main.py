@@ -251,8 +251,8 @@ def IDeaSG3_Rms(row):
             date_set = set()
             createdAt = "'" + str(arrow.now()) + "'"
             updatedAt = "'" + str(arrow.now()) + "'"
-            createdAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
-            updatedAtEpoch =  "'" + str(int(arrow.utcnow().timestamp())) + "'"
+            createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
+            updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
             column_mapping = {
                 'Day_of_Week': 1,
                 'Day_of_Arrival': 2,
