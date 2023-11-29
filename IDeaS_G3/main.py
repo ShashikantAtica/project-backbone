@@ -1,6 +1,8 @@
 import os
 import sys
 
+from bs4 import BeautifulSoup
+
 sys.path.append("..")
 import arrow
 
@@ -12,6 +14,7 @@ import csv
 import base64
 import sys
 import pathlib
+import xml.etree.ElementTree as Xet
 import pandas as pd
 
 from utils.db import db_config
@@ -49,6 +52,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         DB_STATUS = "'FAILED'"
     else:
         DB_STATUS = "'FINISHED'"
+
     DB_ERROR_NOTE = "'" + str(ERROR_NOTE) + "'"
     DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
     DB_LAST_PULL_DATE_ID = "'" + str(LAST_PULL_DATE_ID) + "'"
@@ -64,44 +68,26 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_ihg_res(res_list, propertyCode, res_before, res_after):
 
-    start_date = res_before.format("YYYY-MM-DD")
-    end_date = res_after.format("YYYY-MM-DD")
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
+def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
+    # input_date_str is minimum date in report and all data with date equal more than this will get deleted and data of report will get added
+    Day_of_Arrival = '"Day_of_Arrival"'
 
+    print("lowest_date_in_report :: ", low_input_date_str)
+
+    formatted_yesterday_date_of_report = "'" + low_input_date_str + "'"
+
+    # Delete existing data of RBRC
     conn = db_config.get_db_connection()
     conn.execute(
-        f"""DELETE from ihg_res where to_char("TransactionTime(GMT)"::date,'YYYY-MM-DD') between '{start_date}' and '{end_date}' and "propertyCode" = '{propertyCode}';""")
+        f'DELETE from ideasg3_occ where {Day_of_Arrival} >= {formatted_yesterday_date_of_report};')
     conn.close()
+    print("DELETE OLD DATA >= !!!", formatted_yesterday_date_of_report)
 
+    # Add new data of RBRC
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.ihg_res_model.insert(), res_list)
-    conn.close()
-    print("Data imported")
-
-
-def bulk_insert_occ_res(res_list, propertyCode, occ_before, occ_after):
-    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    occupancy = '"Date"'
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE from ihg_occ where {occupancy} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
-    conn.close()
-
-    # Add new data of reservation
-    print("Data importing...")
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.ihg_occ_model.insert(), res_list)
+    conn.execute(db_models.ideasg3_occ_model.insert(), occ_list)
     conn.close()
     print("Data imported")
 
@@ -156,14 +142,13 @@ def create_filter(label, archiveLabel):
     return "has:attachment " + filter
 
 
-def IHG_Pms(row):
+def IDeaSG3_Rms(row):
     atica_property_code = row['atica_property_code']
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
 
-
-    label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
+    label_array = [f"{propertyCode} Occupancy"]
     folder_name = "./reports/"
     messages_array = []
     for label_name in label_array:
@@ -254,56 +239,92 @@ def IHG_Pms(row):
                 print("No messages to save")
 
     # Modification of res report
-    reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xlsx'
-    occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.xlsx'
+    occ_file_path = f'{folder_name}{propertyCode}_Occupancy.xlsx'
 
-    check_reservation_file = os.path.isfile(reservation_file_path)
-    check_occupancy_file = os.path.isfile(occupancy_file_path)
+    check_occ_file = os.path.isfile(occ_file_path)
 
-    if check_reservation_file and check_occupancy_file:
-        createdAt = "'" + str(arrow.now()) + "'"
-        updatedAt = "'" + str(arrow.now()) + "'"
+    if check_occ_file:
         
-        # Reservation Data Clean and Insert
-        read = pd.read_excel(reservation_file_path)
-        read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
-        read.columns = read.columns.str.replace(' ', '', regex=True)
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
+        # Start Occupancy snapshot Report
+        try:
+        # Parsing the Excel file
+            date_set = set()
+            createdAt = "'" + str(arrow.now()) + "'"
+            updatedAt = "'" + str(arrow.now()) + "'"
+            column_mapping = {
+                'Day_of_Week': 1,
+                'Day_of_Arrival': 2,
+                'Special_Event': 2,
+                'Out_of_Order': 2,
+                'Occupancy_On_Books_Current': 2,
+                'Occupancy_On_Books_Change': 3,
+                'Occupancy_Forecast_Current': 2,
+                'Occupancy_Forecast_Change': 2,
+                'Occupancy_Forecast%Current': 1,
+                'Occupancy_Forecast%Change': 1,
+                'Revenue_On_Books(USD)_Current': 1,
+                'Revenue_On_Books(USD)_Change': 1,
+                'Revenue_Forecast(USD)_Current': 1,
+                'Revenue_Forecast(USD)_Change': 1,
+                'ADR_On_Books(USD)_Current': 1,
+                'ADR_On_Books(USD)_Change': 1,
+                'ADR_Forecast(USD)_Current': 1,
+                'ADR_Forecast(USD)_Change': 1,
+                'RevPAR_On_Books(USD)_Current': 1,
+                'RevPAR_On_Books(USD)_Change': 1,
+                'RevPAR_Forecast(USD)_Current': 1,
+                'RevPAR_Forecast(USD)_Change': 1,
+                'Last_Room_Value_For_RC_DLX(USD)_Current': 1,
+                'Last_Room_Value_For_RC_DLX(USD)_Change': 1,
+                'Overbooking_Current': 1,
+                'Overbooking_Change': 1,
+                'BAR_by_Day_for_Room_Class_DLX(USD)_Current': 1,
+                'BAR_by_Day_for_Room_Class_DLX(USD)_Change': 1,
+                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': 1,
+                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': 1,
+            }
 
-        res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
-        res_result = list(res_result)
+            rows = []
 
-        # Occupancy Data Clean and Insert
-        read = pd.read_excel(occupancy_file_path)
-        read['Date'] = pd.to_datetime(read['Date'])
+            for row in pd.read_excel(occ_file_path, header=None, skiprows=2).values:
+                row_data = {}
+                current_col = 0
+                flag=0
+                for column, num_cols in column_mapping.items():
+                    cell_values = row[current_col:current_col + num_cols]
+                    cell_values = [str(value).replace('nan', '').strip() if pd.notna(value) else '' for value in cell_values]
+                    row_data[column] = ''.join(cell_values)
+                    current_col += num_cols
+                    if(column=='Day_of_Arrival' and row_data[column]!=''):
+                        date_set.add(row_data[column])
+                    if(row_data[column]!=''):
+                        flag=1
+                if(flag==1):
+                    rows.append(row_data)
+            print(date_set)
+            df = pd.DataFrame(rows)
+            df.insert(0, column="propertyCode", value=propertyCode)
+            df.insert(1, column="pullDateId", value=pullDateId)
+            df.insert(2, column="createdAt", value=createdAt)
+            df.insert(3, column="updatedAt", value=updatedAt)
 
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
+            df = df.reset_index(drop=True)
+            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+            occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = list(occ_result)
+        except Exception:
+            occ_result = []
+            print("Occupancy Data not available")
+        
+        
+        # End RBRC Report
 
-        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
-                        "MaximumLOS", "MinimumLOS", "ReservationGuaranteeRequired", "24Hourhold", "AverageLeadTime",
-                        "AverageLOS", "CancelDue", "CancelorNoShow", "DepositDue", "Deposit", "Groupremaining",
-                        "RoomslefttoSell", "SpecialEventSpecialRequirement", "Paceasofdate", "AC", "ActualroomssoldLY",
-                        "ADR", "BFR", "Groupcommitted", "Groupcontracted", "GroupPickupasofdate", "Grouppickup", "Occ",
-                        "OVB", "Paceasofdate1", "Paceasofdate2", "Pickupasofdate", "Pickupasofdate1", "Roomssold",
-                        "TotalRoomsCommitted"]
-        read.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
+        print("Occupancy RESULT", min(date_set))
+        print(occ_result)
 
-        occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
-        occ_result = list(occ_result)
-
-        if len(occ_result) > 0 and len(res_result) > 0:
-            bulk_insert_ihg_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
-            print("RES DONE")
-
-            bulk_insert_occ_res(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
-            print("OCC DONE")
+        if len(occ_result) > 0:
+            bulk_insert_IDeaSG3_occ(occ_result, min(date_set), propertyCode=propertyCode)
+            print("Occupancy DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
@@ -319,15 +340,14 @@ if __name__ == '__main__':
     service = prep_service()
 
     # Get all property using brand
-    PMS_NAME = "'IHG'"
-    print("SCRIPT STARTED FOR IHG")
+    PMS_NAME = "'IDeaSG3'"
+    print("SCRIPT STARTED FOR IDeaS G3")
     conn = db_config.get_db_connection()
     result = conn.execute(f'SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};')
     conn.close()
     print(result)
     print("Fetched successfully")
     for item in result:
-
         PROPERTY_ID = item['id']
         PROPERTY_CODE = item['propertyCode']
         EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
@@ -347,20 +367,20 @@ if __name__ == '__main__':
             if EXTERNAL_PROPERTY_CODE is None:
                 EXTERNAL_PROPERTY_CODE = ""
             row = {
-                'atica_property_code': '' + PMS_NAME + '_' + EXTERNAL_PROPERTY_CODE,
+                'atica_property_code': PROPERTY_CODE,
                 'external_property_code': EXTERNAL_PROPERTY_CODE,
                 'gcp_secret': PROPERTY_SECRET,
                 'property_type': PMS_NAME,
                 'current_date': CURRENT_DATE,
                 'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
                 'res_after': CURRENT_DATE.shift(days=RES_AFTER),
-                'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
+                'occ_before': CURRENT_DATE.shift(days=OCC_BEFORE),
                 'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
                 "propertyCode": PROPERTY_CODE,
                 "pullDateId": LAST_PULL_DATE_ID
             }
             print("row :: ", row)
-            IHG_Pms(row)
-            print("SCRIPT DONE FOR IHG")
+            IDeaSG3_Rms(row)
+            print("SCRIPT DONE FOR IDeaS G3")
         else:
             print("LAST_PULL_DATE_ID is NULL")
