@@ -64,41 +64,27 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_synxis_cloud_res(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
+    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
+    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"Status_Dt"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from synxis_cloud_reservation where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from synxis_cloud_reservation where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of reservation
     print("Data importing...")
@@ -108,41 +94,28 @@ def bulk_insert_synxis_cloud_res(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_forecast(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_synxis_cloud_forecast(res_list, propertyCode, occ_before, occ_after):
+    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
+    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"cal_dt"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from synxis_cloud_forecast where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from synxis_cloud_forecast where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of reservation
     print("Data importing...")
@@ -152,43 +125,15 @@ def bulk_insert_synxis_cloud_forecast(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_revenue_recap(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+def bulk_insert_synxis_cloud_revenue_recap(res_list, propertyCode, report_date):
+    prev_date = arrow.get(report_date, "DD MMM YYYY").format("YYYY-MM-DD")
+    # Delete existing data
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f"""DELETE from synxis_cloud_revenue_recap where "Date" = '{prev_date}' and "propertyCode" = '{propertyCode}';""")
     conn.close()
 
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from synxis_cloud_revenue_recap where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
-
-    # Add new data of reservation
+    # Add new data of revenue
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), res_list)
@@ -196,41 +141,27 @@ def bulk_insert_synxis_cloud_revenue_recap(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_monthly_summary(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_synxis_cloud_monthly_summary(res_list, propertyCode, res_before, res_after):
+    start_date = arrow.now().span('month')[0].format("YYYY-MM-DD")
+    end_date = arrow.now().ceil('month').format("YYYY-MM-DD")
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    # delete all data
+    # current_date = arrow.now()
+    # print("current_date :: ", current_date)
+    # start_date = current_date.shift(days=-90)
+    # print("start_date :: ", start_date)
+    reservation = '"BUSINESS_DT"'
+    db_propertyCode = "'" + propertyCode + "'"
+    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f"""DELETE from synxis_cloud_monthly_summary where {reservation} between '{start_date}' and '{end_date}' and "propertyCode" = {db_propertyCode};""")
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from synxis_cloud_monthly_summary where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of reservation
     print("Data importing...")
@@ -514,16 +445,16 @@ def Synxis_Cloud_Pms(row):
         monthly_result = list(monthly_result)
 
         if len(res_result) > 0 and len(fore_result) > 0 and len(rev_result) > 0 and len(monthly_result) > 0:
-            bulk_insert_synxis_cloud_res(res_result, propertyCode=propertyCode)
+            bulk_insert_synxis_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
             print("RES DONE")
 
-            bulk_insert_synxis_cloud_forecast(fore_result, propertyCode=propertyCode)
+            bulk_insert_synxis_cloud_forecast(fore_result, propertyCode, row['occ_before'], row['occ_after'])
             print("FORE DONE")
 
-            bulk_insert_synxis_cloud_revenue_recap(rev_result, propertyCode=propertyCode)
+            bulk_insert_synxis_cloud_revenue_recap(rev_result, propertyCode, date)
             print("REV DONE")
 
-            bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode=propertyCode)
+            bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode, row['res_before'], row['res_after'])
             print("MONTHLY DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)

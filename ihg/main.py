@@ -64,43 +64,18 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_ihg_res(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_ihg_res(res_list, propertyCode, res_before, res_after):
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
+    start_date = res_before.format("YYYY-MM-DD")
+    end_date = res_after.format("YYYY-MM-DD")
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f"""DELETE from ihg_res where to_char("TransactionTime(GMT)"::date,'YYYY-MM-DD') between '{start_date}' and '{end_date}' and "propertyCode" = '{propertyCode}';""")
     conn.close()
 
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from ihg_res where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
-
-    # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.ihg_res_model.insert(), res_list)
@@ -108,41 +83,20 @@ def bulk_insert_ihg_res(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_occ_res(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_occ_res(res_list, propertyCode, occ_before, occ_after):
+    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
+    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
+    print("start_date :: ", start_date)
+    print("end_date :: ", end_date)
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
+    occupancy = '"Date"'
+    db_propertyCode = "'" + propertyCode + "'"
 
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
+    # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f'DELETE from ihg_occ where {occupancy} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from ihg_occ where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     # Add new data of reservation
     print("Data importing...")
@@ -207,6 +161,7 @@ def IHG_Pms(row):
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+
 
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
     folder_name = "./reports/"
@@ -308,6 +263,7 @@ def IHG_Pms(row):
     if check_reservation_file and check_occupancy_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
+        
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
@@ -342,11 +298,11 @@ def IHG_Pms(row):
         occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
         occ_result = list(occ_result)
 
-        if len(res_result) > 0 and len(occ_result) > 0:
-            bulk_insert_ihg_res(res_result, propertyCode=propertyCode)
+        if len(occ_result) > 0 and len(res_result) > 0:
+            bulk_insert_ihg_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
             print("RES DONE")
 
-            bulk_insert_occ_res(occ_result, propertyCode=propertyCode)
+            bulk_insert_occ_res(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
             print("OCC DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
@@ -398,7 +354,7 @@ if __name__ == '__main__':
                 'current_date': CURRENT_DATE,
                 'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
                 'res_after': CURRENT_DATE.shift(days=RES_AFTER),
-                'occ_before': CURRENT_DATE.shift(days=OCC_BEFORE),
+                'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
                 'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
                 "propertyCode": PROPERTY_CODE,
                 "pullDateId": LAST_PULL_DATE_ID
