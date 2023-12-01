@@ -251,8 +251,8 @@ def IDeaSG3_Rms(row):
             date_set = set()
             createdAt = "'" + str(arrow.now()) + "'"
             updatedAt = "'" + str(arrow.now()) + "'"
-            createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
-            updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
+            createdAtEpoch =  int(arrow.utcnow().timestamp())
+            updatedAtEpoch =  int(arrow.utcnow().timestamp())
             column_mapping = {
                 'Day_of_Week': 1,
                 'Day_of_Arrival': 2,
@@ -311,6 +311,7 @@ def IDeaSG3_Rms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
 
 
             df = df.reset_index(drop=True)
