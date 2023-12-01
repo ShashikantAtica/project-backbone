@@ -166,7 +166,7 @@ def choice_noshow(row):
             update_into_pulldate(pullDateId, ERROR_NOTE=f"{atica_property_code} Data is mismatched for Account-Auth_status", IS_ERROR=True)
         else:
             # account, created_at, updated_at, property_code, auth_status
-            cols = ["propertyCode","pullDateId","ACCOUNT","AUTH_STATUS","CREATED_AT","UPDATED_AT"]
+            cols = ["propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch","ACCOUNT","AUTH_STATUS"]
             rows = []
                     
             print("Number of auth_status : ",len(auth_status), "Number of account : ", len(account))
@@ -174,10 +174,12 @@ def choice_noshow(row):
                 rows.append({
                         "propertyCode": propertyCode,
                         "pullDateId": pullDateId,
+                        "createdAt": "'" + str(arrow.now()) + "'",
+                        "updatedAt": "'" + str(arrow.now()) + "'",
+                        "createdAtEpoch" : int(arrow.utcnow().timestamp()),
+                        "updatedAtEpoch" : int(arrow.utcnow().timestamp()),
                         "ACCOUNT": account[x],
-                        "AUTH_STATUS": auth_status[x],
-                        "CREATED_AT": "'" + str(arrow.now()) + "'",
-                        "UPDATED_AT": "'" + str(arrow.now()) + "'"})
+                        "AUTH_STATUS": auth_status[x]})
                 
             df = pd.DataFrame(rows, columns=cols)
             df.to_csv(f"{folder_name}{propertyCode}_Noshow.csv", index=False)

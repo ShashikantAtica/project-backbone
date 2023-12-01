@@ -69,28 +69,25 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 
-def bulk_insert_opera_cloud_rbrc(rbrc_list, date_set, propertyCode):
+def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
+    # input_date_str is minimum date in report and all data with date equal more than this will get deleted and data of report will get added
+    Day_of_Arrival = '"Day_of_Arrival"'
 
-    BUSINESS_DATE = '"BUSINESS_DATE"'
+    print("lowest_date_in_report :: ", low_input_date_str)
 
-    input_date_str = min(date_set)
-    input_datetime = arrow.get(input_date_str, 'DD-MMM-YY')
-    yesterday_date_of_report = input_datetime.format('YYYY-MM-DD')
-    print("yesterday_date_in_report :: ", yesterday_date_of_report)
-
-    formatted_yesterday_date_of_report = "'" + yesterday_date_of_report.format('YYYY-MM-DD') + "'"
+    formatted_yesterday_date_of_report = "'" + low_input_date_str + "'"
 
     # Delete existing data of RBRC
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_yesterday_date_of_report};')
+        f'DELETE from ideasg3_occ where {Day_of_Arrival} >= {formatted_yesterday_date_of_report};')
     conn.close()
-    print("DELETE OLD DATA >= !!!", yesterday_date_of_report)
+    print("DELETE OLD DATA >= !!!", formatted_yesterday_date_of_report)
 
     # Add new data of RBRC
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.opera_rbrc_model.insert(), rbrc_list)
+    conn.execute(db_models.ideasg3_occ_model.insert(), occ_list)
     conn.close()
     print("Data imported")
 
@@ -145,13 +142,13 @@ def create_filter(label, archiveLabel):
     return "has:attachment " + filter
 
 
-def OperaCloud_Pms(row):
+def IDeaSG3_Rms(row):
     atica_property_code = row['atica_property_code']
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
 
-    label_array = [f"{propertyCode} RBRC"]
+    label_array = [f"{propertyCode} Occupancy"]
     folder_name = "./reports/"
     messages_array = []
     for label_name in label_array:
@@ -203,7 +200,7 @@ def OperaCloud_Pms(row):
 
                         # Open file in binary write mode
                         file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xml", "wb")
+                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xlsx", "wb")
                         binary_file.write(file_data)
                         binary_file.close()
 
@@ -223,7 +220,7 @@ def OperaCloud_Pms(row):
             for message in messages:
                 saved_messages_ids.append(message["id"])
             archive_label = get_archive_label("Saved")
-            print("####",f"{archive_label['name']} : {archive_label['id']}")
+            print(f"{archive_label['name']} : {archive_label['id']}")
 
             # Apply archive label to saved messages
             label_apply_body = {
@@ -242,97 +239,98 @@ def OperaCloud_Pms(row):
                 print("No messages to save")
 
     # Modification of res report
-    rbrc_file_path = f'{folder_name}{propertyCode}_RBRC.xml'
+    occ_file_path = f'{folder_name}{propertyCode}_Occupancy.xlsx'
 
-    check_rbrc_file = os.path.isfile(rbrc_file_path)
+    check_occ_file = os.path.isfile(occ_file_path)
 
-    if check_rbrc_file:
-        createdAt = "'" + str(arrow.now()) + "'"
-        updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  int(arrow.utcnow().timestamp())
-        updatedAtEpoch =  int(arrow.utcnow().timestamp())
-        # Start RBRC Report
-        cols = ["RESORT","BUSINESS_DATE","CHAR_BUSINESS_DATE","MASTER_VALUE","CF_MASTER_SEQ","GROUP_NAME","ARR_TODAY","NO_DEFINITE_ROOMS",
-        "IN_GUEST","OCC_SINGLE","DOUBLE_OCC","REVENUE",
-        "FB_REV","OTHER_REV","TOTAL_REVENUE","RESORT_ROOM",
-        "PER_OCC","GET_ARR","MULTI_OCC_PER"]
-        rows = []
-
-        # Parsing the XML file
-        xmlparse = Xet.parse(rbrc_file_path)
-        root = xmlparse.getroot()
-
-        date_set = set()
+    if check_occ_file:
+        
+        # Start Occupancy snapshot Report
         try:
-            for i in root[0][0][0]:
-                RESORT = i.find("RESORT").text if(i.find("RESORT")) is not None else ""
-                BUSINESS_DATE = i.find("BUSINESS_DATE").text if(i.find("BUSINESS_DATE")) is not None else ""
-                CHAR_BUSINESS_DATE = i.find("CHAR_BUSINESS_DATE").text if(i.find("CHAR_BUSINESS_DATE")) is not None else ""
-                for k in i.find("LIST_MARKET"):
-                    MASTER_VALUE = k.find("MASTER_VALUE").text if(k.find("MASTER_VALUE") is not None and k.find("MASTER_VALUE").text != "{NULL}")   else ""
-                    CF_MASTER_SEQ = k.find("CF_MASTER_SEQ").text if(k.find("CF_MASTER_SEQ")) is not None else ""
-                    GROUP_NAME  = k.find("GROUP_NAME").text if(k.find("GROUP_NAME") is not None and k.find("GROUP_NAME").text != "Unknown") else ""
-                    for j in k.find("LIST_DETAIL"):
-                        ARR_TODAY = j.find("ARR_TODAY").text if(j.find("ARR_TODAY")) is not None else ""
-                        NO_DEFINITE_ROOMS = j.find("NO_DEFINITE_ROOMS").text if(j.find("NO_DEFINITE_ROOMS")) is not None else ""
-                        IN_GUEST  = j.find("IN_GUEST").text if(j.find("IN_GUEST")) is not None else ""
-                        OCC_SINGLE = j.find("OCC_SINGLE").text if(j.find("OCC_SINGLE")) is not None else ""
-                        DOUBLE_OCC = j.find("DOUBLE_OCC").text if(j.find("DOUBLE_OCC")) is not None else ""
-                        REVENUE = j.find("REVENUE").text if(j.find("REVENUE")) is not None else ""
-                        FB_REV = j.find("FB_REV").text if(j.find("FB_REV")) is not None else ""
-                        OTHER_REV = j.find("OTHER_REV").text if(j.find("OTHER_REV")) is not None else ""
-                        TOTAL_REVENUE  = j.find("TOTAL_REVENUE").text if(j.find("TOTAL_REVENUE")) is not None else ""
-                        RESORT_ROOM = j.find("RESORT_ROOM").text if(j.find("RESORT_ROOM")) is not None else ""
-                        PER_OCC = j.find("PER_OCC").text if(j.find("PER_OCC")) is not None else ""
-                        GET_ARR  = j.find("GET_ARR").text if(j.find("GET_ARR")) is not None else ""
-                        MULTI_OCC_PER  = j.find("MULTI_OCC_PER").text if(j.find("MULTI_OCC_PER")) is not None else ""
-                        rows.append({
-                                "RESORT": RESORT,
-                                "BUSINESS_DATE": BUSINESS_DATE,
-                                "CHAR_BUSINESS_DATE": CHAR_BUSINESS_DATE,
-                                "MASTER_VALUE": MASTER_VALUE,
-                                "CF_MASTER_SEQ": CF_MASTER_SEQ,
-                                "GROUP_NAME": GROUP_NAME,
-                                "ARR_TODAY": ARR_TODAY,
-                                "NO_DEFINITE_ROOMS": NO_DEFINITE_ROOMS,
-                                "IN_GUEST": IN_GUEST,
-                                "OCC_SINGLE": OCC_SINGLE,
-                                "DOUBLE_OCC": DOUBLE_OCC,
-                                "REVENUE": REVENUE,
-                                "FB_REV": FB_REV,
-                                "OTHER_REV": OTHER_REV,
-                                "TOTAL_REVENUE": TOTAL_REVENUE,
-                                "RESORT_ROOM": RESORT_ROOM,
-                                "PER_OCC": PER_OCC,
-                                "GET_ARR": GET_ARR,
-                                "MULTI_OCC_PER": MULTI_OCC_PER})
-                        date_set.add(BUSINESS_DATE)
-                    
-            df = pd.DataFrame(rows, columns=cols)
+        # Parsing the Excel file
+            date_set = set()
+            createdAt = "'" + str(arrow.now()) + "'"
+            updatedAt = "'" + str(arrow.now()) + "'"
+            createdAtEpoch =  int(arrow.utcnow().timestamp())
+            updatedAtEpoch =  int(arrow.utcnow().timestamp())
+            column_mapping = {
+                'Day_of_Week': 1,
+                'Day_of_Arrival': 2,
+                'Special_Event': 2,
+                'Out_of_Order': 2,
+                'Occupancy_On_Books_Current': 2,
+                'Occupancy_On_Books_Change': 3,
+                'Occupancy_Forecast_Current': 2,
+                'Occupancy_Forecast_Change': 2,
+                'Occupancy_Forecast%Current': 1,
+                'Occupancy_Forecast%Change': 1,
+                'Revenue_On_Books(USD)_Current': 1,
+                'Revenue_On_Books(USD)_Change': 1,
+                'Revenue_Forecast(USD)_Current': 1,
+                'Revenue_Forecast(USD)_Change': 1,
+                'ADR_On_Books(USD)_Current': 1,
+                'ADR_On_Books(USD)_Change': 1,
+                'ADR_Forecast(USD)_Current': 1,
+                'ADR_Forecast(USD)_Change': 1,
+                'RevPAR_On_Books(USD)_Current': 1,
+                'RevPAR_On_Books(USD)_Change': 1,
+                'RevPAR_Forecast(USD)_Current': 1,
+                'RevPAR_Forecast(USD)_Change': 1,
+                'Last_Room_Value_For_RC_DLX(USD)_Current': 1,
+                'Last_Room_Value_For_RC_DLX(USD)_Change': 1,
+                'Overbooking_Current': 1,
+                'Overbooking_Change': 1,
+                'BAR_by_Day_for_Room_Class_DLX(USD)_Current': 1,
+                'BAR_by_Day_for_Room_Class_DLX(USD)_Change': 1,
+                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': 1,
+                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': 1,
+            }
+
+            rows = []
+
+            for row in pd.read_excel(occ_file_path, header=None, skiprows=2).values:
+                row_data = {}
+                current_col = 0
+                flag=0
+                for column, num_cols in column_mapping.items():
+                    cell_values = row[current_col:current_col + num_cols]
+                    cell_values = [str(value).replace('nan', '').strip() if pd.notna(value) else '' for value in cell_values]
+                    row_data[column] = ''.join(cell_values)
+                    current_col += num_cols
+                    if(column=='Day_of_Arrival' and row_data[column]!=''):
+                        date_set.add(row_data[column])
+                    if(row_data[column]!=''):
+                        flag=1
+                if(flag==1):
+                    rows.append(row_data)
+            print(date_set)
+            df = pd.DataFrame(rows)
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'])
-            df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
-            df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
-            rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
-            rbrc_result = list(rbrc_result)
+            df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
+
+
+            df = df.reset_index(drop=True)
+            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+            occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = list(occ_result)
         except Exception:
-            rbrc_result = []
-            print("Reservation Data not available")
+            occ_result = []
+            print("Occupancy Data not available")
         
         
         # End RBRC Report
 
-        print("RBRC RESULT")
-        print(rbrc_result)
+        print("Occupancy RESULT", min(date_set))
+        print(occ_result)
 
-        if len(rbrc_result) > 0:
-            bulk_insert_opera_cloud_rbrc(rbrc_result, date_set, propertyCode=propertyCode)
-            print("RBRC DONE")
+        if len(occ_result) > 0:
+            bulk_insert_IDeaSG3_occ(occ_result, min(date_set), propertyCode=propertyCode)
+            print("Occupancy DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
@@ -348,8 +346,8 @@ if __name__ == '__main__':
     service = prep_service()
 
     # Get all property using brand
-    PMS_NAME = "'OperaCloud'"
-    print("SCRIPT STARTED FOR OperaCloud")
+    PMS_NAME = "'IDeaSG3'"
+    print("SCRIPT STARTED FOR IDeaS G3")
     conn = db_config.get_db_connection()
     result = conn.execute(f'SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};')
     conn.close()
@@ -375,7 +373,7 @@ if __name__ == '__main__':
             if EXTERNAL_PROPERTY_CODE is None:
                 EXTERNAL_PROPERTY_CODE = ""
             row = {
-                'atica_property_code': '' + PMS_NAME + '_' + EXTERNAL_PROPERTY_CODE,
+                'atica_property_code': PROPERTY_CODE,
                 'external_property_code': EXTERNAL_PROPERTY_CODE,
                 'gcp_secret': PROPERTY_SECRET,
                 'property_type': PMS_NAME,
@@ -388,7 +386,7 @@ if __name__ == '__main__':
                 "pullDateId": LAST_PULL_DATE_ID
             }
             print("row :: ", row)
-            OperaCloud_Pms(row)
-            print("SCRIPT DONE FOR OperaCloud")
+            IDeaSG3_Rms(row)
+            print("SCRIPT DONE FOR IDeaS G3")
         else:
             print("LAST_PULL_DATE_ID is NULL")

@@ -136,6 +136,11 @@ def BestRev_Pms(row):
         print(f"{atica_property_code} Total Forecast Exported Successfully")
         driver.quit()
 
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  int(arrow.utcnow().timestamp())
+        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+
         print(f"{atica_property_code} Modification of Total Forecast Report")
         new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
         df = pd.read_csv(new_file, engine='python')
@@ -145,8 +150,12 @@ def BestRev_Pms(row):
         df['Stay Date'] = pd.to_datetime(df['Stay Date'])
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
+        df.insert(2, column="createdAt", value=createdAt)
+        df.insert(3, column="updatedAt", value=updatedAt)
+        df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         df['Priority'] = df['Priority'].fillna(0).astype(int)
-        headers = ["propertyCode", "pullDateId", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "BestWesternRate", "RecommendedRate", "RatetoUpload",
+        headers = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "BestWesternRate", "RecommendedRate", "RatetoUpload",
                    "RecommendationStatus", "MarketRate", "AvailableRooms", "TransientCapacity", "TotalForecast_IncludesGroup", "OntheBooks_IncludesGroup",
                    "AverageDailyRate", "RevPAR", "Occupancy_IncludesGroup", "ForecastOccupancy_IncludesGroup"]
         df.to_csv(new_file, header=headers, index=False)
