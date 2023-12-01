@@ -325,8 +325,8 @@ def AutoClerk_Pms(row):
         if check_reservation_file and check_occupancy_file and check_group_block_summary_file:
             createdAt = "'" + str(arrow.now()) + "'"
             updatedAt = "'" + str(arrow.now()) + "'"
-            createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
-            updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
+            createdAtEpoch =  int(arrow.utcnow().timestamp())
+            updatedAtEpoch =  int(arrow.utcnow().timestamp())
             # Start Data Modification Occupancy
             df = pd.read_csv(occupancy_file_path)
             df = df.drop([0, 1, 2, 3, 4, 5])

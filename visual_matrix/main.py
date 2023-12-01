@@ -131,8 +131,8 @@ def VisualMatrix_Pms(row):
                 if access_token is not None:
                     createdAt = "'" + str(arrow.now()) + "'"
                     updatedAt = "'" + str(arrow.now()) + "'"
-                    createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
-                    updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
+                    createdAtEpoch =  int(arrow.utcnow().timestamp())
+                    updatedAtEpoch =  int(arrow.utcnow().timestamp())
                     # Start Front Office Arrival Report
                     report_type = "[Front Office Arrival]"
                     front_office_arrival_params = {

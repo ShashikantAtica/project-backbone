@@ -138,8 +138,8 @@ def BestRev_Pms(row):
 
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
-        updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
+        createdAtEpoch =  int(arrow.utcnow().timestamp())
+        updatedAtEpoch =  int(arrow.utcnow().timestamp())
 
         print(f"{atica_property_code} Modification of Total Forecast Report")
         new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')

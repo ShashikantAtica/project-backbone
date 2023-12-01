@@ -223,8 +223,8 @@ def Choice_Pms(row):
                     # Start Reservation Report
                     createdAt = "'" + str(arrow.now()) + "'"
                     updatedAt = "'" + str(arrow.now()) + "'"
-                    createdAtEpoch =  str(int(arrow.utcnow().timestamp()))
-                    updatedAtEpoch =  str(int(arrow.utcnow().timestamp()))
+                    createdAtEpoch =  int(arrow.utcnow().timestamp())
+                    updatedAtEpoch =  int(arrow.utcnow().timestamp())
                     reservation_dataframe = []
                     start_date = row['res_before']
                     end_date = row['res_after']
