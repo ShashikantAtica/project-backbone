@@ -265,12 +265,20 @@ def IHG_Pms(row):
     check_occupancy_file = os.path.isfile(occupancy_file_path)
 
     if check_occupancy_file and check_reservation_file:
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  int(arrow.utcnow().timestamp())
+        updatedAtEpoch =  int(arrow.utcnow().timestamp())
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
         read.columns = read.columns.str.replace(' ', '', regex=True)
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
+        read.insert(2, column="createdAt", value=createdAt)
+        read.insert(3, column="updatedAt", value=updatedAt)
+        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         read.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
 
         res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
@@ -282,8 +290,12 @@ def IHG_Pms(row):
 
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
+        read.insert(2, column="createdAt", value=createdAt)
+        read.insert(3, column="updatedAt", value=updatedAt)
+        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
 
-        headers_list = ["propertyCode", "pullDateId", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
+        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
                         "MaximumLOS", "MinimumLOS", "ReservationGuaranteeRequired", "24Hourhold", "AverageLeadTime",
                         "AverageLOS", "CancelDue", "CancelorNoShow", "DepositDue", "Deposit", "Groupremaining",
                         "RoomslefttoSell", "SpecialEventSpecialRequirement", "Paceasofdate", "AC", "ActualroomssoldLY",

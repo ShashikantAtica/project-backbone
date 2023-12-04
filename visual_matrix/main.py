@@ -133,6 +133,10 @@ def VisualMatrix_Pms(row):
                     return 0
 
                 if access_token is not None:
+                    createdAt = "'" + str(arrow.now()) + "'"
+                    updatedAt = "'" + str(arrow.now()) + "'"
+                    createdAtEpoch =  int(arrow.utcnow().timestamp())
+                    updatedAtEpoch =  int(arrow.utcnow().timestamp())
                     # Start Front Office Arrival Report
                     report_type = "[Front Office Arrival]"
                     front_office_arrival_params = {
@@ -161,13 +165,17 @@ def VisualMatrix_Pms(row):
                         read = pd.read_excel(filename, skiprows=13)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
-                        new_df = read[['propertyCode', 'pullDateId', 'Guest Name', 'Status', 'Arrive', 'Departs', 'A', 'C', 'Type', 'Rate', 'PKG', 'MOP', 'ADV DEP', 'Share', 'Room']].copy()
+                        read.insert(2, column="createdAt", value=createdAt)
+                        read.insert(3, column="updatedAt", value=updatedAt)
+                        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                        new_df = read[['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Guest Name', 'Status', 'Arrive', 'Departs', 'A', 'C', 'Type', 'Rate', 'PKG', 'MOP', 'ADV DEP', 'Share', 'Room']].copy()
                         new_df.fillna(value=np.nan, inplace=True)
                         new_df.loc[:, 'Arrive'] = pd.to_datetime(new_df['Arrive'], format='%m/%d/%y', errors='coerce').dt.date
                         new_df.loc[:, 'Departs'] = pd.to_datetime(new_df['Departs'], format='%m/%d/%y', errors='coerce').dt.date
                         new_df = new_df.dropna(subset=['Arrive', 'Departs'], how='all')
                         new_df.loc[new_df['Guest Name'].isnull(), 'Guest Name'] = ''
-                        headers = ['propertyCode', 'pullDateId', 'GuestName', 'Status', 'Arrive', 'Departs', 'A', 'C', 'Type', 'Rate', 'PKG', 'MOP', 'ADV_DEP', 'Share', 'Room']
+                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'GuestName', 'Status', 'Arrive', 'Departs', 'A', 'C', 'Type', 'Rate', 'PKG', 'MOP', 'ADV_DEP', 'Share', 'Room']
                         new_df.columns = headers
                         new_df['A'] = new_df['A'].fillna(0).astype(int)
                         new_df['C'] = new_df['C'].fillna(0).astype(int)
@@ -204,11 +212,15 @@ def VisualMatrix_Pms(row):
                         read = pd.read_excel(filename, skiprows=11)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
-                        new_df = read[['propertyCode', 'pullDateId', 'Date', 'Day', 'Maint', 'Non-GTD', 'GTD', 'Non-GTD', 'GTD', 'Alloc', 'ARV',
+                        read.insert(2, column="createdAt", value=createdAt)
+                        read.insert(3, column="updatedAt", value=updatedAt)
+                        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                        new_df = read[['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Date', 'Day', 'Maint', 'Non-GTD', 'GTD', 'Non-GTD', 'GTD', 'Alloc', 'ARV',
                                        'Dep', 'Overs', 'Rms', 'Rms', 'Occ %', 'Rm Rev', 'ADR', 'Par', 'Rooms LY', 'Variance']].copy()
                         new_df['Date'] = pd.to_datetime(new_df['Date'], errors='coerce', format='%m/%d/%y').dt.date
                         new_df = new_df.dropna(subset=['Date'])
-                        headers = ['propertyCode', 'pullDateId', 'Date', 'Day', 'Maint', 'GuestArrivals_Non_GTD', 'GuestArrivals_GTD', 'GroupArrivals_Non_GTD', 'GroupArrivals_GTD', 'GroupAlloc', 'ARV',
+                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Date', 'Day', 'Maint', 'GuestArrivals_Non_GTD', 'GuestArrivals_GTD', 'GroupArrivals_Non_GTD', 'GroupArrivals_GTD', 'GroupAlloc', 'ARV',
                                    'Dep', 'StayOvers', 'AvailRms', 'OccRms', 'OccPer', 'RmRev', 'ADR', 'RevPar', 'ActualRoomsLY', 'OccPerVariance']
                         new_df.columns = headers
                         new_df['ActualRoomsLY'] = new_df['ActualRoomsLY'].fillna(0).astype(int)
