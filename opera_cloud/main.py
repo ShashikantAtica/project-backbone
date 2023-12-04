@@ -28,12 +28,13 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
     LAST_PULL_DATE_ID = None
+    DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
     DB_PULLED_DATE = "'" + str(PULLED_DATE) + "'"
     DB_STATUS = "'INPROGRESS'"
-    query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS}) RETURNING id; '
+    query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status","pmsName") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS},{DB_PMS_NAME}) RETURNING id; '
     conn = db_config.get_db_connection()
     try:
         result = conn.execute(query_string)
@@ -692,7 +693,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
