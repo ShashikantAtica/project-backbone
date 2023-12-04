@@ -75,6 +75,8 @@ def get_secret_from_api(propertyId, platform):
     }
 
     response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        return None
     response_data = response.json()
     response_data['info']['u'] = response_data['info']['username']
     del response_data['info']['username']

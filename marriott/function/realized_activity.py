@@ -93,6 +93,9 @@ def handle_request(request):
     session = None
     try:
         session = get_session(payload['gcp_secret'], payload['external_property_code'], payload['propertyCode'])
+        print("SESSOIN : :", session)
+        if type(session) is Exception:
+            return session
         process_report(session, payload)
 
     except (InvalidRequestException, InvalidReportException, FailedLoginException) as e:
