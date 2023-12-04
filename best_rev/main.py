@@ -1,3 +1,4 @@
+import argparse
 import csv
 import os
 import sys
@@ -7,6 +8,9 @@ import time
 import arrow
 import pandas as pd
 from utils.secrets.SecretManager import get_secret_from_api
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -65,7 +69,9 @@ def BestRev_Pms(row):
         print(f"{atica_property_code} Getting Secret Details")
         username = json_dict['u']
         password = json_dict['p']
-
+        print(username)
+        print(password)
+        quit()
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
@@ -232,49 +238,72 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 if __name__ == '__main__':
-    # Get all property using brand
-    PMS_NAME = "'BestRev'"
-    print("SCRIPT STARTED FOR BestRev")
-    conn = db_config.get_db_connection()
-    result = conn.execute(f'SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};')
-    conn.close()
-    print(result)
-    print("Fetched successfully")
-    for item in result:
+    PMS_NAME = "BestRev"
+    print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
-        PROPERTY_ID = item['id']
-        PROPERTY_CODE = item['propertyCode']
-        EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
-        PROPERTY_SECRET = item['propertySecret']
-        PMS_NAME = item['pmsName']
-        RES_AFTER = item['resAfter']
-        RES_BEFORE = item['resBefore']
-        OCC_AFTER = item['occAfter']
-        OCC_BEFORE = item['occBefore']
-        CURRENT_DATE = arrow.now()
-        PULLED_DATE = CURRENT_DATE.date()
+    propertycode = None
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        args = parser.parse_args()
+        propertycode = args.propertycode
+        print(f"propertycode :: {propertycode}")
+    except:
+        pass
 
-        # Add entry into pull date table
-        LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
+    result = None
+    if propertycode is None:
+        print("All properties run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
+    else:
+        print(f"{propertycode} property run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
 
-        if LAST_PULL_DATE_ID is not None:
-            if EXTERNAL_PROPERTY_CODE is None:
-                EXTERNAL_PROPERTY_CODE = ""
-            row = {
-                'atica_property_code': '' + PMS_NAME + '_' + EXTERNAL_PROPERTY_CODE,
-                'external_property_code': EXTERNAL_PROPERTY_CODE,
-                'gcp_secret': PROPERTY_SECRET,
-                'property_type': PMS_NAME,
-                'current_date': CURRENT_DATE,
-                'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
-                'res_after': CURRENT_DATE.shift(days=+RES_AFTER),
-                'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
-                'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
-                "propertyCode": PROPERTY_CODE,
-                "pullDateId": LAST_PULL_DATE_ID
-            }
-            print("row :: ", row)
-            BestRev_Pms(row)
-            print("SCRIPT DONE FOR BestRev")
-        else:
-            print("LAST_PULL_DATE_ID is NULL")
+    if result is not None and len(result) > 0:
+        print(f"Total Properties :: {len(result)}")
+        for item in result:
+
+            PROPERTY_ID = item['id']
+            PROPERTY_CODE = item['propertyCode']
+            EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
+            PROPERTY_SECRET = item['propertySecret']
+            PMS_NAME = item['pmsName']
+            RES_AFTER = item['resAfter']
+            RES_BEFORE = item['resBefore']
+            OCC_AFTER = item['occAfter']
+            OCC_BEFORE = item['occBefore']
+            CURRENT_DATE = arrow.now()
+            PULLED_DATE = CURRENT_DATE.date()
+
+            # Add entry into pull date table
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
+
+            if LAST_PULL_DATE_ID is not None:
+                row = {
+                    'atica_property_code': '' + PMS_NAME + '_' + PROPERTY_CODE,
+                    'external_property_code': EXTERNAL_PROPERTY_CODE,
+                    'gcp_secret': PROPERTY_SECRET,
+                    'property_type': PMS_NAME,
+                    'current_date': CURRENT_DATE,
+                    'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
+                    'res_after': CURRENT_DATE.shift(days=RES_AFTER),
+                    'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
+                    'occ_after': CURRENT_DATE.shift(days=OCC_AFTER),
+                    "propertyCode": PROPERTY_CODE,
+                    "pullDateId": LAST_PULL_DATE_ID
+                }
+                print("row :: ", row)
+                BestRev_Pms(row)
+            else:
+                print("LAST_PULL_DATE_ID is NULL")
+    else:
+        print(f"Property not available in database!!!")
+    print(f"[{PMS_NAME}] SCRIPT STOP!!!")

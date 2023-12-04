@@ -91,7 +91,9 @@ def process_report(session, payload):
                     'RemDemFixedDiscountTY', 'RemDemFixedDiscountTYPer', 'FixedDiscountTY', 'RemDemFixedDiscountSTLY', 'RemDemFixedDiscountSTLYPer', 'FixedDiscountSTLY',
                     'RoomCollection1HurdleRevenue', 'RoomCollection1TransientOTBTY', 'RoomCollection1TransientOTBSTLY', 'RoomCollection1RemDemTY', 'RoomCollection1RemDemTYPer',
                     'RoomCollection1RemDemSTLY', 'RoomCollection1RemDemSTLYPer', 'RoomCollection2HurdleRevenue', 'RoomCollection2TransientOTBTY', 'RoomCollection2TransientOTBSTLY',
-                    'RoomCollection2RemDemTY', 'RoomCollection2RemDemTYPer', 'RoomCollection2RemDemSTLY', 'RoomCollection2RemDemSTLYPer']
+                    'RoomCollection2RemDemTY', 'RoomCollection2RemDemTYPer', 'RoomCollection2RemDemSTLY', 'RoomCollection2RemDemSTLYPer',
+                    'RoomCollection3HurdleRevenue', 'RoomCollection3TransientOTBTY', 'RoomCollection3TransientOTBSTLY', 'RoomCollection3RemDemTY', 'RoomCollection3RemDemTYPer', 'RoomCollection3RemDemSTLY', 'RoomCollection3RemDemSTLYPer']
+
     read.columns = headers_list
     read['TotalTransientBooked'] = read['TotalTransientBooked'].fillna(0).astype(int)
     read['TotalTransientBookedSTLY'] = read['TotalTransientBookedSTLY'].fillna(0).astype(int)
@@ -114,6 +116,13 @@ def process_report(session, payload):
     read['FixedDiscountSTLY'] = read['FixedDiscountSTLY'].fillna(0).astype(int)
     read['RoomCollection1TransientOTBSTLY'] = read['RoomCollection1TransientOTBSTLY'].fillna(0).astype(int)
     read['RoomCollection2TransientOTBSTLY'] = read['RoomCollection2TransientOTBSTLY'].fillna(0).astype(int)
+    read['RoomCollection3HurdleRevenue'] = read['RoomCollection3HurdleRevenue'].fillna(0).astype(int)
+    read['RoomCollection3TransientOTBTY'] = read['RoomCollection3TransientOTBTY'].fillna(0).astype(int)
+    read['RoomCollection3TransientOTBSTLY'] = read['RoomCollection3TransientOTBSTLY'].fillna(0).astype(int)
+    read['RoomCollection3RemDemTY'] = read['RoomCollection3RemDemTY'].fillna(0).astype(int)
+    read['RoomCollection3RemDemTYPer'] = read['RoomCollection3RemDemTYPer'].fillna(0).astype(int)
+    read['RoomCollection3RemDemSTLY'] = read['RoomCollection3RemDemSTLY'].fillna(0).astype(int)
+    read['RoomCollection3RemDemSTLYPer'] = read['RoomCollection3RemDemSTLYPer'].fillna(0).astype(int)
     read.to_csv(f'{folder_name}{property_code}_Forecast.csv', index=False)
     if os.path.exists(filename):
         os.remove(filename)
@@ -127,6 +136,9 @@ def handle_request(request):
     session = None
     try:
         session = get_session(payload['gcp_secret'], payload['external_property_code'], payload['propertyCode'])
+        print("SESSOIN : :", session)
+        if type(session) is Exception:
+            return session
         process_report(session, payload)
 
     except (InvalidRequestException, InvalidReportException, FailedLoginException) as e:

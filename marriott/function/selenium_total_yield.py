@@ -16,18 +16,20 @@ from selenium.webdriver.chrome.service import Service
 
 
 def get_total_yield_report_url(payload):
-    platform = "PMS"
-    secret = get_secret_dict(payload['propertyCode'], platform)
-    username = secret['u']
-    password = secret['p']
-    external_property_code = payload['external_property_code']
-    platform = payload['forecast_platform']
-    start_date = payload['fore_before']
-
-    folder_name = "./reports/"
-    save_dir = os.path.abspath('reports/')
-    driver = None
     try:
+        platform = "PMS"
+        secret = get_secret_dict(payload['propertyCode'], platform)
+        if secret is None:
+            raise Exception("API response is none")
+        username = secret['u']
+        password = secret['p']
+        external_property_code = payload['external_property_code']
+        platform = payload['forecast_platform']
+        start_date = payload['fore_before']
+
+        folder_name = "./reports/"
+        save_dir = os.path.abspath('reports/')
+        driver = None
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
@@ -70,23 +72,19 @@ def get_total_yield_report_url(payload):
                 raise Exception('Temporary account lock')
 
             soup = bs(content, "html.parser")
+            chlng = soup.find_all('b')
+            formURL = soup.find('form', {'id': 'authenticate', 'method': 'post'})
 
-            print('chart lookup')
-            letters = soup.find_all("div", id=re.compile(r"challenge[\d]"))
-            lookups = [letter.string.strip() for letter in letters]
-            print(lookups)
-            lookup_results = lookup(lookups, external_property_code)
-            print(lookup_results)
+            path = [i.text for i in chlng]
+            path.remove('Printed Grid:')
+            print("path : ", path)
+            lookup_results = lookup(path, external_property_code)
 
-            inp1 = driver.find_element(By.XPATH, '//*[@id="securityCode0"]')
-            inp1.send_keys(lookup_results[0])
+            inputs = driver.find_elements(By.XPATH, '//input[@id="text"]')
+            for i, j in zip(inputs, lookup_results):
+                i.send_keys(j)
 
-            inp2 = driver.find_element(By.XPATH, '//*[@id="securityCode1"]')
-            inp2.send_keys(lookup_results[1])
-
-            inp3 = driver.find_element(By.XPATH, '//*[@id="securityCode2"]')
-            inp3.send_keys(lookup_results[2])
-            driver.find_element(By.ID, 'codeEntrustSubmit').click()
+            driver.find_element(By.XPATH, '//button[@id="sign-on"]').click()
             print("login chart Success")
             time.sleep(15)
 
@@ -140,11 +138,12 @@ def get_total_yield_report_url(payload):
             pivoted_df.columns = headers
             final_df = pivoted_df.iloc[1:]
             final_df.reset_index(drop=True, inplace=True)
-            final_df.loc[:, 'Date'] = pd.to_datetime(final_df['Date'].replace('\n', ' '), format='%a %b %d').dt.strftime(f'%m-%d-{arrow.now().format("YYYY")}')
+            final_df.loc[:, 'Date'] = pd.to_datetime(final_df['Date'].replace('\n', ' '), format='%a %b %d').dt.strftime(f'{arrow.now().format("YYYY")}-%m-%d')
             final_df.to_csv(os.path.join(f'{folder_name}{external_property_code}_Total_Yield.csv'), index=False)
             print("Total Yield Report Modified Successfully")
             if os.path.exists(filepath):
                 os.remove(filepath)
+        return "Success"
             #  Total Yield End
     except Exception as e:
         return e

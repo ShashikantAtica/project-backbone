@@ -1,3 +1,4 @@
+import argparse
 import csv
 import os
 import sys
@@ -8,6 +9,10 @@ from function.forecast import handle_request as forecast_handle_request
 from function.reservation import handle_request as reservation_handle_request
 from function.realized_activity import handle_request as realized_activity_handle_request
 from function.selenium_total_yield import get_total_yield_report_url as total_yield_handle_request
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 from utils.db import db_config
 from utils.db import db_models
 
@@ -41,10 +46,10 @@ def bulk_insert_marriott_res(propertyCode, res_list, res_before, res_after):
 
 def bulk_insert_marriott_fore(propertyCode, fore_list, fore_before, fore_after):
     start_date = "'" + fore_before.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
+    print("fore start_date :: ", start_date)
 
     end_date = "'" + fore_after.format("YYYY-MM-DD") + "'"
-    print("end_date :: ", end_date)
+    print("fore end_date :: ", end_date)
     db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of occ (up to 90 Days)
@@ -59,41 +64,17 @@ def bulk_insert_marriott_fore(propertyCode, fore_list, fore_before, fore_after):
     conn.close()
 
 
-def bulk_insert_marriott_realized_activity(propertyCode, realized_activity_list):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
+def bulk_insert_marriott_realized_activity(propertyCode, realized_activity_list, start_date):
+    date_arrow = arrow.get(start_date)
+    result_date = date_arrow.shift(days=90).format("YYYY-MM-DD")
 
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
+    print("realized start : ", date_arrow.date())
+    print("realized end : ", result_date)
 
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f"""DELETE FROM marriott_realized_activity where "ArrivalDate" between '{start_date.date()}' and '{result_date}' and "propertyCode" = '{propertyCode}';""")
     conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of realized activity
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from marriott_realized_activity where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
 
     print("Data importing...")
     conn = db_config.get_db_connection()
@@ -102,47 +83,18 @@ def bulk_insert_marriott_realized_activity(propertyCode, realized_activity_list)
     print("Data imported")
 
 
-def bulk_insert_marriott_total_yield(propertyCode, total_yield_list):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
+def bulk_insert_marriott_total_yield(propertyCode, total_yield_list, start_date, end_date):
+    print("Yeild start : ", start_date.date())
+    print("Yeild end : ", end_date.date())
 
     conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
+    conn.execute(
+        f"""DELETE FROM marriott_total_yield where "Date" between '{start_date.date()}' and '{end_date.date()}' and "propertyCode" = '{propertyCode}';""")
     conn.close()
 
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of total yield
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from marriott_total_yield where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
-
-    print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.marriott_total_yield_model.insert(), total_yield_list)
     conn.close()
-    print("Data imported")
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
@@ -190,119 +142,160 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def main():
-    # Get all property using brand
-    PMS_NAME = "'Marriott'"
-    print(f"SCRIPT STARTED FOR {PMS_NAME}")
-    conn = db_config.get_db_connection()
-    result = conn.execute(f'SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};')
-    conn.close()
-    print(result)
-    print("Fetched successfully")
-    for item in result:
+    PMS_NAME = "Marriott"
+    print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
-        PROPERTY_ID = item['id']
-        PROPERTY_CODE = item['propertyCode']
-        EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
-        PROPERTY_SECRET = item['propertySecret']
-        PMS_NAME = item['pmsName']
-        RES_AFTER = item['resAfter']
-        RES_BEFORE = item['resBefore']
-        OCC_AFTER = item['occAfter']
-        OCC_BEFORE = item['occBefore']
-        CURRENT_DATE = arrow.now()
-        PULLED_DATE = CURRENT_DATE.date()
+    propertycode = None
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        args = parser.parse_args()
+        propertycode = args.propertycode
+        print(f"propertycode :: {propertycode}")
+    except:
+        pass
 
-        # Add entry into pull date table
-        LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
+    result = None
+    if propertycode is None:
+        print("All properties run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
+    else:
+        print(f"{propertycode} property run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
 
-        if LAST_PULL_DATE_ID is not None:
-            if EXTERNAL_PROPERTY_CODE is None:
-                EXTERNAL_PROPERTY_CODE = ""
-            row = {
-                'atica_property_code': '' + PMS_NAME + '_' + EXTERNAL_PROPERTY_CODE,
-                'external_property_code': EXTERNAL_PROPERTY_CODE,
-                'gcp_secret': PROPERTY_SECRET,
-                'property_type': PMS_NAME,
-                'current_date': CURRENT_DATE,
-                'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
-                'res_after': CURRENT_DATE.shift(days=RES_AFTER),
-                'fore_before': CURRENT_DATE.shift(days=OCC_BEFORE),
-                'fore_after': CURRENT_DATE.shift(days=+OCC_AFTER),
-                "propertyCode": PROPERTY_CODE,
-                "pullDateId": LAST_PULL_DATE_ID,
-                "forecast_platform": "rmsplatform",
-                "chart_pdf_name": "ustx230701-login-grip.pdf",
-                # "otp_number": ""
-            }
-            print("row :: ", row)
+    if result is not None and len(result) > 0:
+        print(f"Total Properties :: {len(result)}")
 
-            forecast_handle_request(row)
-            reservation_handle_request(row)
-            realized_activity_handle_request(row)
-            total_yield_handle_request(row)
-            print(f"SCRIPT DONE FOR {PMS_NAME}")
+        for item in result:
 
-            print(f"Sending Report to Database for {PMS_NAME}")
-            folder_name = "./reports/"
-            propertyCode = row['external_property_code']
+            PROPERTY_ID = item['id']
+            PROPERTY_CODE = item['propertyCode']
+            EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
+            PROPERTY_SECRET = item['propertySecret']
+            PMS_NAME = item['pmsName']
+            RES_AFTER = item['resAfter']
+            RES_BEFORE = item['resBefore']
+            OCC_AFTER = item['occAfter']
+            OCC_BEFORE = item['occBefore']
+            CURRENT_DATE = arrow.now()
+            PULLED_DATE = CURRENT_DATE.date()
 
-            reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
-            forecast_file_path = f'{folder_name}{propertyCode}_Forecast.csv'
-            realized_activity_file_path = f'{folder_name}{propertyCode}_Realized_Activity.csv'
-            total_yield_file_path = f'{folder_name}{propertyCode}_Total_Yield.csv'
+            # Add entry into pull date table
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
 
-            check_reservation_file = os.path.isfile(reservation_file_path)
-            check_forecast_file = os.path.isfile(forecast_file_path)
-            check_realized_activity_file = os.path.isfile(realized_activity_file_path)
-            check_total_yield_file = os.path.isfile(total_yield_file_path)
+            if LAST_PULL_DATE_ID is not None:
+                if EXTERNAL_PROPERTY_CODE is None:
+                    EXTERNAL_PROPERTY_CODE = ""
+                row = {
+                    'atica_property_code': '' + PMS_NAME + '_' + EXTERNAL_PROPERTY_CODE,
+                    'external_property_code': EXTERNAL_PROPERTY_CODE,
+                    'gcp_secret': PROPERTY_SECRET,
+                    'property_type': PMS_NAME,
+                    'current_date': CURRENT_DATE,
+                    'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
+                    'res_after': CURRENT_DATE.shift(days=RES_AFTER),
+                    'fore_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
+                    'fore_after': CURRENT_DATE.shift(days=+OCC_AFTER),
+                    "propertyCode": PROPERTY_CODE,
+                    "pullDateId": LAST_PULL_DATE_ID,
+                    "forecast_platform": "rmsplatform"
+                    # "otp_number": ""
+                }
+                print("row :: ", row)
 
-            error_msg = ""
+                data_forecast = forecast_handle_request(row)
+                if type(data_forecast) is Exception:
+                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=str(data_forecast), IS_ERROR=True)
+                    return 0
 
-            if not check_reservation_file:
-                error_msg = error_msg + " Reservation file - N/A"
+                data_reservation = reservation_handle_request(row)
+                if type(data_reservation) is Exception:
+                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=str(data_reservation), IS_ERROR=True)
+                    return 0
 
-            if not check_forecast_file:
-                error_msg = error_msg + " Forecast file - N/A"
+                data_realized = realized_activity_handle_request(row)
+                if type(data_realized) is Exception:
+                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=str(data_realized), IS_ERROR=True)
+                    return 0
 
-            if not check_realized_activity_file:
-                error_msg = error_msg + " Realized Activity file - N/A"
+                total_yield = total_yield_handle_request(row)
+                if type(total_yield) is Exception:
+                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=str(total_yield), IS_ERROR=True)
+                    return 0
 
-            if not check_total_yield_file:
-                error_msg = error_msg + " Total Yield file - N/A"
+                print(f"SCRIPT DONE FOR {PMS_NAME}")
 
-            if check_forecast_file and check_reservation_file and check_realized_activity_file and check_total_yield_file:
-                # Insert into Database
-                res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
-                res_result = list(res_result)
-                print(len(res_result))
-                bulk_insert_marriott_res(row['propertyCode'], res_result, row['res_before'], row['res_after'])
-                print("RES DONE")
+                print(f"Sending Report to Database for {PMS_NAME}")
+                folder_name = "./reports/"
+                propertyCode = row['external_property_code']
 
-                fore_result = csv.DictReader(open(forecast_file_path, encoding="utf-8"))
-                fore_result = list(fore_result)
-                print(len(fore_result))
-                bulk_insert_marriott_fore(row['propertyCode'], fore_result, row['fore_before'], row['fore_after'])
-                print("FORE DONE")
+                reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
+                forecast_file_path = f'{folder_name}{propertyCode}_Forecast.csv'
+                realized_activity_file_path = f'{folder_name}{propertyCode}_Realized_Activity.csv'
+                total_yield_file_path = f'{folder_name}{propertyCode}_Total_Yield.csv'
 
-                realized_activity_result = csv.DictReader(open(realized_activity_file_path, encoding="utf-8"))
-                realized_activity_result = list(realized_activity_result)
-                print(len(realized_activity_result))
-                bulk_insert_marriott_realized_activity(row['propertyCode'], realized_activity_result)
-                print("REALIZED ACTIVITY DONE")
+                check_reservation_file = os.path.isfile(reservation_file_path)
+                check_forecast_file = os.path.isfile(forecast_file_path)
+                check_realized_activity_file = os.path.isfile(realized_activity_file_path)
+                check_total_yield_file = os.path.isfile(total_yield_file_path)
 
-                total_yield_result = csv.DictReader(open(total_yield_file_path, encoding="utf-8"))
-                total_yield_result = list(total_yield_result)
-                print(len(total_yield_result))
-                bulk_insert_marriott_total_yield(row['propertyCode'], total_yield_result)
-                print("TOTAL YIELD DONE")
+                error_msg = ""
 
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                if not check_reservation_file:
+                    error_msg = error_msg + " Reservation file - N/A"
+
+                if not check_forecast_file:
+                    error_msg = error_msg + " Forecast file - N/A"
+
+                if not check_realized_activity_file:
+                    error_msg = error_msg + " Realized Activity file - N/A"
+
+                if not check_total_yield_file:
+                    error_msg = error_msg + " Total Yield file - N/A"
+
+                if check_forecast_file and check_reservation_file and check_realized_activity_file and check_total_yield_file:
+                    # Insert into Database
+                    res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
+                    res_result = list(res_result)
+                    print(len(res_result))
+                    bulk_insert_marriott_res(row['propertyCode'], res_result, row['res_before'], row['res_after'])
+                    print("RES DONE")
+
+                    fore_result = csv.DictReader(open(forecast_file_path, encoding="utf-8"))
+                    fore_result = list(fore_result)
+                    print(len(fore_result))
+                    bulk_insert_marriott_fore(row['propertyCode'], fore_result, row['fore_before'], row['fore_after'])
+                    print("FORE DONE")
+
+                    realized_activity_result = csv.DictReader(open(realized_activity_file_path, encoding="utf-8"))
+                    realized_activity_result = list(realized_activity_result)
+                    print(len(realized_activity_result))
+                    bulk_insert_marriott_realized_activity(row['propertyCode'], realized_activity_result, row['fore_before'])
+                    print("REALIZED ACTIVITY DONE")
+
+                    total_yield_result = csv.DictReader(open(total_yield_file_path, encoding="utf-8"))
+                    total_yield_result = list(total_yield_result)
+                    print(len(total_yield_result))
+                    bulk_insert_marriott_total_yield(row['propertyCode'], total_yield_result, row['fore_before'], row['fore_after'])
+                    print("TOTAL YIELD DONE")
+
+                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                else:
+                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
             else:
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
-        else:
-            print("LAST_PULL_DATE_ID is NULL")
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="LAST_PULL_DATE_ID is NULL", IS_ERROR=True)
-
+                print("LAST_PULL_DATE_ID is NULL")
+                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="LAST_PULL_DATE_ID is NULL", IS_ERROR=True)
+    else:
+        print(f"Property not available in database!!!")
+    print(f"[{PMS_NAME}] SCRIPT STOP!!!")
 
 if __name__ == "__main__":
     main()
