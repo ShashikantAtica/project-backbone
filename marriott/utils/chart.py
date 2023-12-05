@@ -7,11 +7,12 @@ from dotenv.main import load_dotenv
 
 load_dotenv()
 
-# import warnings
-# warnings.filterwarnings("ignore", category=DeprecationWarning)
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='logfile.log')
 from utils.db import db_config
+
 
 def read_table_from_pdf(path, page):
     try:
@@ -34,26 +35,14 @@ def read_table_from_pdf(path, page):
         return None
 
 
-def fetch_data_from_table():
+def fetch_data_from_table(pms_name):
     try:
-        connection = psycopg2.connect(
-            host='atica-backbone-postgres-db-2.cpzz1aikoilq.us-east-1.rds.amazonaws.com',
-            port=5432,
-            user='postgres',
-            password='backbone',
-            database='atica_dev'
-        )
-        cursor = connection.cursor()
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{pms_name}';""")
+        result = res.fetchall()
+        conn.close()
 
-        query = "SELECT * FROM tbl_properties;"
-        cursor.execute(query)
-
-        rows = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
-
-        return rows
+        return result
 
     except psycopg2.Error as e:
         logging.error(f"Error connecting to the database: {e}")
@@ -95,13 +84,13 @@ def match_filename_with_propertycode(filename, rows):
     return False
 
 
-def multiple_pdf(folder_path, page=1):
+def multiple_pdf(folder_path, page=1, PMS_NAME=""):
     pdf_files = get_pdf_files_in_folder(folder_path)
 
     if not pdf_files:
         logging.warning(f"No PDF files found in the folder: {folder_path}")
     else:
-        rows = fetch_data_from_table()
+        rows = fetch_data_from_table(PMS_NAME)
 
         if rows is not None:
             for pdf_file in pdf_files:
@@ -119,7 +108,7 @@ def multiple_pdf(folder_path, page=1):
 
 if __name__ == '__main__':
     # folder_path = r'C:\test-project-backbone\marriott\utils'
-
+    PMS_NAME = "Marriott"
     PROJECT_PATH = os.environ['PROJECT_PATH']
     folder_path = f"{PROJECT_PATH}\\marriott\\utils"
-    multiple_pdf(folder_path, page=1)
+    multiple_pdf(folder_path, page=1, PMS_NAME=PMS_NAME)
