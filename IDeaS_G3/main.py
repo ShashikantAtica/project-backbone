@@ -24,12 +24,13 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
     LAST_PULL_DATE_ID = None
+    DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
     DB_PULLED_DATE = "'" + str(PULLED_DATE) + "'"
     DB_STATUS = "'INPROGRESS'"
-    query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS}) RETURNING id; '
+    query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status","pmsName") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS},{DB_PMS_NAME}) RETURNING id; '
     conn = db_config.get_db_connection()
     try:
         result = conn.execute(query_string)
@@ -344,49 +345,72 @@ def IDeaSG3_Rms(row):
 if __name__ == '__main__':
 
     service = prep_service()
+    PMS_NAME = "IDeaSG3"
+    print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
-    # Get all property using brand
-    PMS_NAME = "'IDeaSG3'"
-    print("SCRIPT STARTED FOR IDeaS G3")
-    conn = db_config.get_db_connection()
-    result = conn.execute(f'SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};')
-    conn.close()
-    print(result)
-    print("Fetched successfully")
-    for item in result:
-        PROPERTY_ID = item['id']
-        PROPERTY_CODE = item['propertyCode']
-        EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
-        PROPERTY_SECRET = item['propertySecret']
-        PMS_NAME = item['pmsName']
-        RES_AFTER = item['resAfter']
-        RES_BEFORE = item['resBefore']
-        OCC_AFTER = item['occAfter']
-        OCC_BEFORE = item['occBefore']
-        CURRENT_DATE = arrow.now()
-        PULLED_DATE = CURRENT_DATE.date()
+    propertycode = None
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        args = parser.parse_args()
+        propertycode = args.propertycode
+        print(f"propertycode :: {propertycode}")
+    except:
+        pass
 
-        # Add entry into pull date table
-        LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE)
+    result = None
+    if propertycode is None:
+        print("All properties run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
+    else:
+        print(f"{propertycode} property run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
+    
+    if result is not None and len(result) > 0:
+        print(f"Total Properties :: {len(result)}")
+        for item in result:
 
-        if LAST_PULL_DATE_ID is not None:
-            if EXTERNAL_PROPERTY_CODE is None:
-                EXTERNAL_PROPERTY_CODE = ""
-            row = {
-                'atica_property_code': PROPERTY_CODE,
-                'external_property_code': EXTERNAL_PROPERTY_CODE,
-                'gcp_secret': PROPERTY_SECRET,
-                'property_type': PMS_NAME,
-                'current_date': CURRENT_DATE,
-                'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
-                'res_after': CURRENT_DATE.shift(days=RES_AFTER),
-                'occ_before': CURRENT_DATE.shift(days=OCC_BEFORE),
-                'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
-                "propertyCode": PROPERTY_CODE,
-                "pullDateId": LAST_PULL_DATE_ID
-            }
-            print("row :: ", row)
-            IDeaSG3_Rms(row)
-            print("SCRIPT DONE FOR IDeaS G3")
-        else:
-            print("LAST_PULL_DATE_ID is NULL")
+            PROPERTY_ID = item['id']
+            PROPERTY_CODE = item['propertyCode']
+            EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
+            PROPERTY_SECRET = item['propertySecret']
+            PMS_NAME = item['pmsName']
+            RES_AFTER = item['resAfter']
+            RES_BEFORE = item['resBefore']
+            OCC_AFTER = item['occAfter']
+            OCC_BEFORE = item['occBefore']
+            CURRENT_DATE = arrow.now()
+            PULLED_DATE = CURRENT_DATE.date()
+
+            # Add entry into pull date table
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
+
+            if LAST_PULL_DATE_ID is not None:
+                row = {
+                    'atica_property_code': '' + PMS_NAME + '_' + PROPERTY_CODE,
+                    'external_property_code': EXTERNAL_PROPERTY_CODE,
+                    'gcp_secret': PROPERTY_SECRET,
+                    'property_type': PMS_NAME,
+                    'current_date': CURRENT_DATE,
+                    'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
+                    'res_after': CURRENT_DATE.shift(days=RES_AFTER),
+                    'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
+                    'occ_after': CURRENT_DATE.shift(days=OCC_AFTER),
+                    "propertyCode": PROPERTY_CODE,
+                    "pullDateId": LAST_PULL_DATE_ID
+                }
+                print("row :: ", row)
+                IDeaSG3_Rms(row)
+            else:
+                print("LAST_PULL_DATE_ID is NULL")
+    else:
+        print(f"Property not available in database!!!")
+    print(f"[{PMS_NAME}] SCRIPT STOP!!!")
