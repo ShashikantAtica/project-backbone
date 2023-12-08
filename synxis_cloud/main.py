@@ -15,6 +15,8 @@ import sys
 import pathlib
 import pandas as pd
 
+from sqlalchemy.dialects.postgresql import insert
+
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -74,27 +76,112 @@ def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
     end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
-
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
-    reservation = '"Status_Dt"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE from synxis_cloud_reservation where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
-    conn.close()
+    
 
     # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_reservation_model.insert(), res_list)
+    stmt = insert(db_models.synxis_cloud_reservation_model).values(res_list)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['Confirm_No'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Chain': stmt.excluded.Chain,
+            'Brand': stmt.excluded.Brand,
+            'Hotel': stmt.excluded.Hotel,
+            'Confirm_No': stmt.excluded.Confirm_No,
+            'Rez_Status_Desc': stmt.excluded.Rez_Status_Desc,
+            'Status_Dt': stmt.excluded.Status_Dt,
+            'Guest_Nm': stmt.excluded.Guest_Nm,
+            'Channel_Cd': stmt.excluded.Channel_Cd,
+            'Sec_Channel_Desc': stmt.excluded.Sec_Channel_Desc,
+            'Sub_Source': stmt.excluded.Sub_Source,
+            'Sub_Src_CD': stmt.excluded.Sub_Src_CD,
+            'Location': stmt.excluded.Location,
+            'Arrival_Dt': stmt.excluded.Arrival_Dt,
+            'Depart_Dt': stmt.excluded.Depart_Dt,
+            'Nights_Qty': stmt.excluded.Nights_Qty,
+            'Override_Oversell': stmt.excluded.Override_Oversell,
+            'Room_Qty': stmt.excluded.Room_Qty,
+            'Rate_Category_Name': stmt.excluded.Rate_Category_Name,
+            'Rate_Type_Code': stmt.excluded.Rate_Type_Code,
+            'Rez_Avg_Rate_Amt': stmt.excluded.Rez_Avg_Rate_Amt,
+            'Onshore_Rate_Type_Code': stmt.excluded.Onshore_Rate_Type_Code,
+            'Onshore_Rez_Avg_Rate_Amt': stmt.excluded.Onshore_Rez_Avg_Rate_Amt,
+            'Room_Type_Code': stmt.excluded.Room_Type_Code,
+            'Record_Locator': stmt.excluded.Record_Locator,
+            'Booker_Loyalty_Program_Level_List': stmt.excluded.Booker_Loyalty_Program_Level_List,
+            'Loyalty_Type': stmt.excluded.Loyalty_Type,
+            'Loyalty_Program': stmt.excluded.Loyalty_Program,
+            'Loyalty_Number': stmt.excluded.Loyalty_Number,
+            'Loyalty_Level_Code': stmt.excluded.Loyalty_Level_Code,
+            'Loyalty_Level_Name': stmt.excluded.Loyalty_Level_Name,
+            'Loyalty_Points_Payment': stmt.excluded.Loyalty_Points_Payment,
+            'Payment_Typ': stmt.excluded.Payment_Typ,
+            'VCC_Authorization_Amount': stmt.excluded.VCC_Authorization_Amount,
+            'VCC_Currency_Code': stmt.excluded.VCC_Currency_Code,
+            'VCC_Payment_Model': stmt.excluded.VCC_Payment_Model,
+            'VCC_Card_Activation_Start': stmt.excluded.VCC_Card_Activation_Start,
+            'VCC_Card_Activation_End': stmt.excluded.VCC_Card_Activation_End,
+            'Direct_Bill_Account_Number': stmt.excluded.Direct_Bill_Account_Number,
+            'Direct_Bill_Project_Number': stmt.excluded.Direct_Bill_Project_Number,
+            'Total_Points_Pymnt': stmt.excluded.Total_Points_Pymnt,
+            'Points_Refund': stmt.excluded.Points_Refund,
+            'Total_Cash_Pymnt': stmt.excluded.Total_Cash_Pymnt,
+            'Pay_At_Property': stmt.excluded.Pay_At_Property,
+            'Cash_Refund': stmt.excluded.Cash_Refund,
+            'Total_Price_For_Adult': stmt.excluded.Total_Price_For_Adult,
+            'Total_Adult_Occupancy': stmt.excluded.Total_Adult_Occupancy,
+            'Total_Price_For_Child_Age_Group1': stmt.excluded.Total_Price_For_Child_Age_Group1,
+            'Total_Child_Occupancy_For_Age_Group1': stmt.excluded.Total_Child_Occupancy_For_Age_Group1,
+            'Total_Price_For_Child_Age_Group2': stmt.excluded.Total_Price_For_Child_Age_Group2,
+            'Total_Child_Occupancy_For_Age_Group2': stmt.excluded.Total_Child_Occupancy_For_Age_Group2,
+            'Total_Price_For_Child_Age_Group3': stmt.excluded.Total_Price_For_Child_Age_Group3,
+            'Total_Child_Occupancy_For_Age_Group3': stmt.excluded.Total_Child_Occupancy_For_Age_Group3,
+            'Total_Price_For_Child_Age_Group4': stmt.excluded.Total_Price_For_Child_Age_Group4,
+            'Total_Child_Occupancy_For_Age_Group4': stmt.excluded.Total_Child_Occupancy_For_Age_Group4,
+            'Total_Price_For_Child_Age_Group5': stmt.excluded.Total_Price_For_Child_Age_Group5,
+            'Total_Child_Occupancy_For_Age_Group5': stmt.excluded.Total_Child_Occupancy_For_Age_Group5,
+            'Total_Price_For_Child_Unknown_Age_Group': stmt.excluded.Total_Price_For_Child_Unknown_Age_Group,
+            'Total_Child_Occupancy_For_Unknown_Age_Group': stmt.excluded.Total_Child_Occupancy_For_Unknown_Age_Group,
+            'Share_With': stmt.excluded.Share_With,
+            'Channel_Connect_Confirm_NO': stmt.excluded.Channel_Connect_Confirm_NO,
+            'PMS_Confirm_Code': stmt.excluded.PMS_Confirm_Code,
+            'Original_Room_Type_Code': stmt.excluded.Original_Room_Type_Code,
+            'Original_Rm_Typ_Nm': stmt.excluded.Original_Rm_Typ_Nm,
+            'Template_Code': stmt.excluded.Template_Code,
+            'Template_Name': stmt.excluded.Template_Name,
+            'Blacklist_Reason': stmt.excluded.Blacklist_Reason,
+            'Visa_Information': stmt.excluded.Visa_Information,
+            'Installment_Amount': stmt.excluded.Installment_Amount,
+            'Number_of_Installments': stmt.excluded.Number_of_Installments,
+            'Interest_Amount': stmt.excluded.Interest_Amount,
+            'Interest_Rate_Percentage': stmt.excluded.Interest_Rate_Percentage,
+            'Total_Installment_Amount': stmt.excluded.Total_Installment_Amount,
+            'Rate_Credential_ID': stmt.excluded.Rate_Credential_ID,
+            'Trace_Date': stmt.excluded.Trace_Date,
+            'Trace_Completion_Flag': stmt.excluded.Trace_Completion_Flag,
+            'Trace_Completion_Date': stmt.excluded.Trace_Completion_Date,
+            'Trace_Text': stmt.excluded.Trace_Text,
+            'RM_Upgrade_Reason_CD': stmt.excluded.RM_Upgrade_Reason_CD,
+            'Room_Upsell': stmt.excluded.Room_Upsell,
+            'Room_To_Charge': stmt.excluded.Room_To_Charge,
+            'Onhold_Duration': stmt.excluded.Onhold_Duration,
+            'AutoCancel_ReleaseDateTime_ScheduledOrActual': stmt.excluded.AutoCancel_ReleaseDateTime_ScheduledOrActual,
+            'Commission_Cd': stmt.excluded.Commission_Cd,
+            'Comm_Percent_Override_List': stmt.excluded.Comm_Percent_Override_List,
+            'Coupon_Offer': stmt.excluded.Coupon_Offer,
+            'Coupon_Discount_Total': stmt.excluded.Coupon_Discount_Total,
+            'Promotion': stmt.excluded.Promotion,
+            'Promo_Discount': stmt.excluded.Promo_Discount,
+            'Maximum_Discount_Applied': stmt.excluded.Maximum_Discount_Applied,
+            'Paynow_Discount': stmt.excluded.Paynow_Discount,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.close()
     print("Data imported")
 
