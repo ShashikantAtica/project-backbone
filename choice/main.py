@@ -303,7 +303,7 @@ def Choice_Pms(row):
 
                     if not ignore_size_check and len(reservation_binary_data) < 5000:
                         print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
-                        os.remove(filename)
+                        # os.remove(filename)
                     else:
 
                         print(f"[{atica_property_code}]{report_type} Uploading reservations")
@@ -408,7 +408,7 @@ def Choice_Pms(row):
 
                     if not ignore_size_check and len(occupancy_binary_data) < 5000:
                         print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
-                        os.remove(filename)
+                        # os.remove(filename)
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading occupancies")
                         read = pd.read_csv(filename)
@@ -491,7 +491,7 @@ def Choice_Pms(row):
 
                     if not ignore_size_check and len(cancellation_binary_data) < 5000:
                         print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
-                        os.remove(filename)
+                        # os.remove(filename)
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading Cancellation report")
                         read = pd.read_csv(filename)
@@ -660,7 +660,7 @@ def Choice_Pms(row):
 
                     if not ignore_size_check and len(revenue_detail_binary_data) < 5000:
                         print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
-                        os.remove(filename)
+                        # os.remove(filename)
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading Revenue Detail report")
                         read = pd.read_csv(filename)
@@ -751,7 +751,7 @@ def Choice_Pms(row):
 
                     if not ignore_size_check and len(group_pickup_detail_binary_data) < 1000:
                         print(f"[{atica_property_code}]{report_type} Report size < 1 kb not sending, having only header")
-                        os.remove(filename)
+                        # os.remove(filename)
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading Group Pickup Detail report")
                         read = pd.read_csv(filename)
