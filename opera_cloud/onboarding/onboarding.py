@@ -4,7 +4,7 @@ import sys
 
 from bs4 import BeautifulSoup
 
-sys.path.append("..")
+sys.path.append("../../")
 import arrow
 import csv
 import xml.etree.ElementTree as Xet
@@ -92,11 +92,11 @@ def bulk_insert_opera_cloud_arrival(arrival_list):
 def OperaCloud_Pms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
-
+    attachment_format = "../reports"
     # Modification of res report
-    reservation_file_path = f'{propertyCode}_Reservation.xml'
-    occupancy_file_path = f'{propertyCode}_Occupancy.xml'
-    arrival_file_path = f'{propertyCode}_Arrival.xml'
+    reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.xml'
+    occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy.xml'
+    arrival_file_path = f'{attachment_format}/{propertyCode}_Arrival.xml'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_occupancy_file = os.path.isfile(occupancy_file_path)
@@ -178,9 +178,9 @@ def OperaCloud_Pms(row):
             df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
             df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
             df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
-            df.to_csv(f"{propertyCode}_Reservations.csv", index=False)
+            df.to_csv(f"{attachment_format}/{propertyCode}_Reservations.csv", index=False)
 
-            res_result = csv.DictReader(open(f"{propertyCode}_Reservations.csv", encoding="utf-8"))
+            res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservations.csv", encoding="utf-8"))
             res_result = list(res_result)
         except Exception:
             res_result = []
@@ -277,9 +277,9 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
-            df.to_csv(f"{propertyCode}_Occupancy.csv", index=False)
+            df.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
-            occ_result = csv.DictReader(open(f"{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
             occ_result = list(occ_result)
         elif root[0][0][1][1][1].text == 'Forecast':
             for i in root[0][0][1][1][2]:
@@ -357,9 +357,9 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
-            df.to_csv(f"{propertyCode}_Occupancy.csv", index=False)
+            df.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
-            occ_result = csv.DictReader(open(f"{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
             occ_result = list(occ_result)
         else:
             occ_result = []
@@ -397,9 +397,9 @@ def OperaCloud_Pms(row):
         final_df['ARRIVAL'] = pd.to_datetime(final_df['ARRIVAL'])
         final_df['DEPARTURE'] = pd.to_datetime(final_df['DEPARTURE'])
         final_df['BEGIN_DATE'] = pd.to_datetime(final_df['BEGIN_DATE'])
-        final_df.to_csv(f"{propertyCode}_Arrival.csv", index=False)
+        final_df.to_csv(f"{attachment_format}/{propertyCode}_Arrival.csv", index=False)
 
-        arrival_result = csv.DictReader(open(f"{propertyCode}_Arrival.csv", encoding="utf-8"))
+        arrival_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Arrival.csv", encoding="utf-8"))
         arrival_result = list(arrival_result)
         # End Arrival Report
 

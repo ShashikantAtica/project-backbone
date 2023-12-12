@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 
-sys.path.append("..")
+sys.path.append("../../")
 import arrow
 import csv
 import pandas as pd
@@ -78,10 +78,11 @@ def bulk_insert_occ_res(res_list):
 def IHG_Pms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+    attachment_format = "../reports"
 
     # Modification of res report
-    reservation_file_path = f'{propertyCode}_Reservation.xlsx'
-    occupancy_file_path = f'{propertyCode}_Occupancy.xlsx'
+    reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.xlsx'
+    occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy.xlsx'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_occupancy_file = os.path.isfile(occupancy_file_path)
@@ -101,9 +102,9 @@ def IHG_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read.to_csv(f"{propertyCode}_Reservations.csv", index=False)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Reservations.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{propertyCode}_Reservations.csv", encoding="utf-8"))
+        res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservations.csv", encoding="utf-8"))
         res_result = list(res_result)
 
         # Occupancy Data Clean and Insert
@@ -124,9 +125,9 @@ def IHG_Pms(row):
                         "ADR", "BFR", "Groupcommitted", "Groupcontracted", "GroupPickupasofdate", "Grouppickup", "Occ",
                         "OVB", "Paceasofdate1", "Paceasofdate2", "Pickupasofdate", "Pickupasofdate1", "Roomssold",
                         "TotalRoomsCommitted"]
-        read.to_csv(f"{propertyCode}_Occupancy.csv", index=False, header=headers_list)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False, header=headers_list)
 
-        occ_result = csv.DictReader(open(f"{propertyCode}_Occupancy.csv", encoding="utf-8"))
+        occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
         occ_result = list(occ_result)
 
         if len(res_result) > 0 and len(occ_result) > 0:
@@ -165,7 +166,7 @@ if __name__ == '__main__':
     if propertycode is None:
         print("All properties run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};""")
         result = res.fetchall()
         conn.close()
         print("Fetched successfully")
