@@ -213,6 +213,7 @@ def create_filter(label, archiveLabel):
 
 
 def OperaCloud_Pms(row):
+    global archive_label
     atica_property_code = row['atica_property_code']
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
@@ -221,6 +222,7 @@ def OperaCloud_Pms(row):
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy", f"{propertyCode} Arrival"]
     folder_name = "./reports/"
     messages_array = []
+    saved_messages_ids = []
     for label_name in label_array:
         print("label_name :: ", label_name)
         response = service.users().messages().list(userId="me",
@@ -274,15 +276,6 @@ def OperaCloud_Pms(row):
                         binary_file.write(file_data)
                         binary_file.close()
 
-                        # save message asap
-                        archive_label = get_archive_label("Saved")
-                        label_apply_body = {
-                            "addLabelIds": archive_label["id"]
-                        }
-                        response = service.users().messages().modify(userId="me",
-                                                                     id=message["id"],
-                                                                     body=label_apply_body).execute()
-
                     else:
                         print("Attachment format match fail for message ")
 
@@ -292,21 +285,21 @@ def OperaCloud_Pms(row):
             archive_label = get_archive_label("Saved")
             print(f"{archive_label['name']} : {archive_label['id']}")
 
-            # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
-
-            else:
-                print("No messages to save")
+            # # Apply archive label to saved messages
+            # label_apply_body = {
+            #     "addLabelIds": archive_label["id"],
+            #     "ids": saved_messages_ids
+            # }
+            #
+            # if saved_messages_ids:
+            #     response = service.users().messages().batchModify(userId="me",
+            #                                                       body=label_apply_body
+            #                                                       ).execute()
+            #     saved_messages_count = len(saved_messages_ids)
+            #     print(f"Saved label applied to {saved_messages_count} messages.")
+            #
+            # else:
+            #     print("No messages to save")
 
     # Modification of res report
     reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xml'
@@ -636,6 +629,22 @@ def OperaCloud_Pms(row):
             print("ARRIVAL DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+
+            # Apply archive label to saved messages
+            label_apply_body = {
+                "addLabelIds": archive_label["id"],
+                "ids": saved_messages_ids
+            }
+
+            if saved_messages_ids:
+                response = service.users().messages().batchModify(userId="me",
+                                                                  body=label_apply_body
+                                                                  ).execute()
+                saved_messages_count = len(saved_messages_ids)
+                print(f"Saved label applied to {saved_messages_count} messages.")
+
+            else:
+                print("No messages to save")
         else:
             print("File was blank!!!")
             update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
