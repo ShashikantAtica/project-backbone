@@ -153,6 +153,7 @@ def create_filter(label, archiveLabel):
 
 
 def Hotelkey_Pms(row):
+    global archive_label
     atica_property_code = row['atica_property_code']
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
@@ -161,6 +162,7 @@ def Hotelkey_Pms(row):
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
     attachment_format = "./reports"
     messages_array = []
+    saved_messages_ids = []
     for label_name in label_array:
         print("label_name :: ", label_name)
         response = service.users().messages().list(userId="me",
@@ -216,15 +218,6 @@ def Hotelkey_Pms(row):
                                 binary_file.write(file_data)
                                 binary_file.close()
 
-                                # save message asap
-                                archive_label = get_archive_label("Saved")
-                                label_apply_body = {
-                                    "addLabelIds": archive_label["id"]
-                                }
-                                response = service.users().messages().modify(userId="me",
-                                                                             id=message["id"],
-                                                                             body=label_apply_body).execute()
-
                             else:
                                 print("Attachment format match fail for message ")
                 except Exception:
@@ -263,27 +256,26 @@ def Hotelkey_Pms(row):
                         else:
                             print("Attachment format match fail for message ")
 
-            saved_messages_ids = []
             for message in messages:
                 saved_messages_ids.append(message["id"])
             archive_label = get_archive_label("Saved")
             print(f"{archive_label['name']} : {archive_label['id']}")
 
-            # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
-
-            else:
-                print("No messages to save")
+            # # Apply archive label to saved messages
+            # label_apply_body = {
+            #     "addLabelIds": archive_label["id"],
+            #     "ids": saved_messages_ids
+            # }
+            #
+            # if saved_messages_ids:
+            #     response = service.users().messages().batchModify(userId="me",
+            #                                                       body=label_apply_body
+            #                                                       ).execute()
+            #     saved_messages_count = len(saved_messages_ids)
+            #     print(f"Saved label applied to {saved_messages_count} messages.")
+            #
+            # else:
+            #     print("No messages to save")
 
     # Modification of res report
     reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.csv'
@@ -368,6 +360,22 @@ def Hotelkey_Pms(row):
         else:
             print("File was blank!!!")
             update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
+
+            # Apply archive label to saved messages
+            label_apply_body = {
+                "addLabelIds": archive_label["id"],
+                "ids": saved_messages_ids
+            }
+
+            if saved_messages_ids:
+                response = service.users().messages().batchModify(userId="me",
+                                                                  body=label_apply_body
+                                                                  ).execute()
+                saved_messages_count = len(saved_messages_ids)
+                print(f"Saved label applied to {saved_messages_count} messages.")
+
+            else:
+                print("No messages to save")
     else:
         msg = "File Not found!!!"
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
