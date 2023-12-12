@@ -16,6 +16,7 @@ import pathlib
 import pandas as pd
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
@@ -25,7 +26,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
     DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
@@ -70,7 +71,6 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_ihg_res(res_list, propertyCode, res_before, res_after):
-
     start_date = res_before.format("YYYY-MM-DD")
     end_date = res_after.format("YYYY-MM-DD")
     print("start_date :: ", start_date)
@@ -162,15 +162,16 @@ def create_filter(label, archiveLabel):
 
 
 def IHG_Pms(row):
+    global archive_label
     atica_property_code = row['atica_property_code']
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
 
-
     label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy"]
     folder_name = "./reports/"
     messages_array = []
+    saved_messages_ids = []
     for label_name in label_array:
         print("label_name :: ", label_name)
         response = service.users().messages().list(userId="me",
@@ -224,39 +225,29 @@ def IHG_Pms(row):
                         binary_file.write(file_data)
                         binary_file.close()
 
-                        # save message asap
-                        archive_label = get_archive_label("Saved")
-                        label_apply_body = {
-                            "addLabelIds": archive_label["id"]
-                        }
-                        response = service.users().messages().modify(userId="me",
-                                                                     id=message["id"],
-                                                                     body=label_apply_body).execute()
-
                     else:
                         print("Attachment format match fail for message ")
 
-            saved_messages_ids = []
             for message in messages:
                 saved_messages_ids.append(message["id"])
             archive_label = get_archive_label("Saved")
             print(f"{archive_label['name']} : {archive_label['id']}")
 
             # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
-
-            else:
-                print("No messages to save")
+            # label_apply_body = {
+            #     "addLabelIds": archive_label["id"],
+            #     "ids": saved_messages_ids
+            # }
+            #
+            # if saved_messages_ids:
+            #     response = service.users().messages().batchModify(userId="me",
+            #                                                       body=label_apply_body
+            #                                                       ).execute()
+            #     saved_messages_count = len(saved_messages_ids)
+            #     print(f"Saved label applied to {saved_messages_count} messages.")
+            #
+            # else:
+            #     print("No messages to save")
 
     # Modification of res report
     reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xlsx'
@@ -268,8 +259,8 @@ def IHG_Pms(row):
     if check_occupancy_file and check_reservation_file:
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  int(arrow.utcnow().timestamp())
-        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+        createdAtEpoch = int(arrow.utcnow().timestamp())
+        updatedAtEpoch = int(arrow.utcnow().timestamp())
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
@@ -316,6 +307,22 @@ def IHG_Pms(row):
             print("OCC DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+
+            # Save label apply
+            label_apply_body = {
+                "addLabelIds": archive_label["id"],
+                "ids": saved_messages_ids
+            }
+
+            if saved_messages_ids:
+                response = service.users().messages().batchModify(userId="me",
+                                                                  body=label_apply_body
+                                                                  ).execute()
+                saved_messages_count = len(saved_messages_ids)
+                print(f"Saved label applied to {saved_messages_count} messages.")
+
+            else:
+                print("No messages to save")
         else:
             print("File was blank!!!")
             update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
@@ -374,7 +381,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
 
             if LAST_PULL_DATE_ID is not None:
                 row = {

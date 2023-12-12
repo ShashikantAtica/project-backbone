@@ -27,15 +27,8 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list, res_be
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
     reservation = '"Cxl_Date"'
     db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
     # Delete existing data of cancellation list (up to 90 Days)
     conn = db_config.get_db_connection()
@@ -91,22 +84,22 @@ def choice_cancellation(row):
         login_url = "https://www.choiceadvantage.com/choicehotels/sign_in.jsp"
         driver.get(login_url)
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "j_username")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.NAME, "j_username")))
         driver.find_element(By.NAME, "j_username").send_keys(username)
         driver.find_element(By.NAME, "j_password").send_keys(password)
         driver.find_element(By.ID, 'greenButton').click()
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.LINK_TEXT, "Run")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Run")))
         driver.find_element(By.LINK_TEXT, "Run").click()
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.LINK_TEXT, "Reports")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Reports")))
         driver.find_element(By.LINK_TEXT, "Reports").click()
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, "CancellationListReport")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.ID, "CancellationListReport")))
         driver.find_element(By.ID, "CancellationListReport").click()
 
         start_date = row['res_before'].format('M/D/YYYY')
         end_date = row['res_after'].shift(days=-1).format('M/D/YYYY')
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "activityDateType")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.NAME, "activityDateType")))
         select = Select(driver.find_element(By.NAME, 'activityDateType'))
         select.select_by_value('cancel')
         start_date_field = driver.find_element(By.NAME, "startDatePastCurrent")
