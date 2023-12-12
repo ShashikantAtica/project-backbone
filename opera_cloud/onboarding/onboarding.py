@@ -59,41 +59,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_opera_cloud_res(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
-    conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
-    conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from opera_res where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
+def bulk_insert_opera_cloud_res(res_list):
 
     # Add new data of reservation
     print("Data importing...")
@@ -103,42 +69,8 @@ def bulk_insert_opera_cloud_res(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_opera_cloud_occ(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
-    conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
-    conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from opera_occ where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
-
+def bulk_insert_opera_cloud_occ(res_list):
+  
     # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
@@ -147,41 +79,7 @@ def bulk_insert_opera_cloud_occ(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
-    conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
-    conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from opera_arrival where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
+def bulk_insert_opera_cloud_arrival(arrival_list):
 
     # Add new data of reservation
     print("Data importing...")
@@ -513,13 +411,13 @@ def OperaCloud_Pms(row):
         print(arrival_result)
 
         if len(res_result) > 0 and len(occ_result) > 0 and len(arrival_result) > 0:
-            bulk_insert_opera_cloud_res(res_result, propertyCode=propertyCode)
+            bulk_insert_opera_cloud_res(res_result)
             print("RES DONE")
 
-            bulk_insert_opera_cloud_occ(occ_result, propertyCode=propertyCode)
+            bulk_insert_opera_cloud_occ(occ_result)
             print("OCC DONE")
 
-            bulk_insert_opera_cloud_arrival(arrival_result, propertyCode=propertyCode)
+            bulk_insert_opera_cloud_arrival(arrival_result)
             print("ARRIVAL DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)

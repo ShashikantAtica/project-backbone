@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 
@@ -54,41 +55,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_ihg_res(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
-    conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
-    conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from ihg_res where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
+def bulk_insert_ihg_res(res_list):
 
     # Add new data of reservation
     print("Data importing...")
@@ -98,41 +65,7 @@ def bulk_insert_ihg_res(res_list, propertyCode):
     print("Data imported")
 
 
-def bulk_insert_occ_res(res_list, propertyCode):
-    current_date = arrow.now()
-    print("current_date :: ", current_date)
-
-    pulledDateValue = "'" + current_date.format("YYYY-MM-DD") + "'"
-    pulledDate = '"pulledDate"'
-
-    propertyCodeValue = "'" + propertyCode + "'"
-    propertyCode = '"propertyCode"'
-
-    DB_STATUS = "'FINISHED'"
-
-    conn = db_config.get_db_connection()
-    result = conn.execute(
-        f'SELECT * from "tbl_pullDate" where {pulledDate} = {pulledDateValue} and {propertyCode} = {propertyCodeValue} and "status"={DB_STATUS} ORDER BY id DESC LIMIT 1;')
-    conn.close()
-
-    pullDateIdValue = None
-    try:
-        pullDateIdValue = result.first()['id']
-    except:
-        print("result none")
-
-    if pullDateIdValue is not None:
-        pullDateId = '"pullDateId"'
-        pullDateIdValue = "'" + str(pullDateIdValue) + "'"
-
-        # Delete existing data of reservation
-        conn = db_config.get_db_connection()
-        conn.execute(
-            f'DELETE from ihg_occ where {pullDateId} = {pullDateIdValue};')
-        conn.close()
-        print("DELETE OLD DATA!!!", pullDateIdValue)
-    else:
-        print("Not previous data!!!")
+def bulk_insert_occ_res(res_list):
 
     # Add new data of reservation
     print("Data importing...")
@@ -197,10 +130,10 @@ def IHG_Pms(row):
         occ_result = list(occ_result)
 
         if len(res_result) > 0 and len(occ_result) > 0:
-            bulk_insert_ihg_res(res_result, propertyCode=propertyCode)
+            bulk_insert_ihg_res(res_result)
             print("RES DONE")
 
-            bulk_insert_occ_res(occ_result, propertyCode=propertyCode)
+            bulk_insert_occ_res(occ_result)
             print("OCC DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
@@ -216,47 +149,71 @@ if __name__ == '__main__':
 
     # Get all property using brand
     PMS_NAME = "'IHG'"
-    print("SCRIPT STARTED FOR IHG")
-    conn = db_config.get_db_connection()
-    result = conn.execute(f'SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};')
-    conn.close()
-    print(result)
-    print("Fetched successfully")
-    for item in result:
+    print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
-        PROPERTY_ID = item['id']
-        PROPERTY_CODE = item['propertyCode']
-        EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
-        PROPERTY_SECRET = item['propertySecret']
-        PMS_NAME = item['pmsName']
-        RES_AFTER = item['resAfter']
-        RES_BEFORE = item['resBefore']
-        OCC_AFTER = item['occAfter']
-        OCC_BEFORE = item['occBefore']
-        CURRENT_DATE = arrow.now()
-        PULLED_DATE = CURRENT_DATE.date()
+    propertycode = None
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        args = parser.parse_args()
+        propertycode = args.propertycode
+        print(f"propertycode :: {propertycode}")
+    except:
+        pass
 
-        # Add entry into pull date table
-        LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
+    result = None
+    if propertycode is None:
+        print("All properties run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
+    else:
+        print(f"{propertycode} property run")
+        conn = db_config.get_db_connection()
+        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        result = res.fetchall()
+        conn.close()
+        print("Fetched successfully")
 
-        if LAST_PULL_DATE_ID is not None:
-            if EXTERNAL_PROPERTY_CODE is None:
-                EXTERNAL_PROPERTY_CODE = ""
-            row = {
-                'atica_property_code': '' + PMS_NAME + '_' + EXTERNAL_PROPERTY_CODE,
-                'external_property_code': EXTERNAL_PROPERTY_CODE,
-                'gcp_secret': PROPERTY_SECRET,
-                'property_type': PMS_NAME,
-                'current_date': CURRENT_DATE,
-                'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
-                'res_after': CURRENT_DATE.shift(days=RES_AFTER),
-                'occ_before': CURRENT_DATE.shift(days=OCC_BEFORE),
-                'occ_after': CURRENT_DATE.shift(days=+OCC_AFTER),
-                "propertyCode": PROPERTY_CODE,
-                "pullDateId": LAST_PULL_DATE_ID
-            }
-            print("row :: ", row)
-            IHG_Pms(row)
-            print("SCRIPT DONE FOR IHG")
-        else:
-            print("LAST_PULL_DATE_ID is NULL")
+    if result is not None and len(result) > 0:
+        print(f"Total Properties :: {len(result)}")
+        for item in result:
+
+            PROPERTY_ID = item['id']
+            PROPERTY_CODE = item['propertyCode']
+            EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
+            PROPERTY_SECRET = item['propertySecret']
+            PMS_NAME = item['pmsName']
+            RES_AFTER = item['resAfter']
+            RES_BEFORE = item['resBefore']
+            OCC_AFTER = item['occAfter']
+            OCC_BEFORE = item['occBefore']
+            CURRENT_DATE = arrow.now()
+            PULLED_DATE = CURRENT_DATE.date()
+
+            # Add entry into pull date table
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
+
+            if LAST_PULL_DATE_ID is not None:
+                row = {
+                    'atica_property_code': '' + PMS_NAME + '_' + PROPERTY_CODE,
+                    'external_property_code': EXTERNAL_PROPERTY_CODE,
+                    'gcp_secret': PROPERTY_SECRET,
+                    'property_type': PMS_NAME,
+                    'current_date': CURRENT_DATE,
+                    'res_before': CURRENT_DATE.shift(days=-RES_BEFORE),
+                    'res_after': CURRENT_DATE.shift(days=RES_AFTER),
+                    'occ_before': CURRENT_DATE.shift(days=-OCC_BEFORE),
+                    'occ_after': CURRENT_DATE.shift(days=OCC_AFTER),
+                    "propertyCode": PROPERTY_CODE,
+                    "pullDateId": LAST_PULL_DATE_ID
+                }
+                print("row :: ", row)
+                IHG_Pms(row)
+            else:
+                print("LAST_PULL_DATE_ID is NULL")
+    else:
+        print(f"Property not available in database!!!")
+    print(f"[{PMS_NAME}] SCRIPT STOP!!!")
