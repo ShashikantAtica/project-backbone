@@ -3,7 +3,7 @@ import csv
 import os
 import sys
 
-sys.path.append("..")
+sys.path.append("../")
 import time
 import arrow
 import pandas as pd
@@ -150,7 +150,7 @@ def AutoClerk_Pms(row):
             "safebrowsing.enabled": True
         })
 
-        service = Service('../chromedriver.exe')
+        service = Service('chromedriver.exe')
         driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
 
@@ -339,7 +339,7 @@ def AutoClerk_Pms(row):
 
             value_to_delete = 'Date'
             index_to_delete = []
-            index_to_delete = updated_data[updated_data['B/W Joliet Inn & Suites'] == value_to_delete].index
+            index_to_delete = updated_data[updated_data.iloc[:, 0] == value_to_delete].index
 
             # Check if the index is not empty
             delete_rows = []
