@@ -76,7 +76,7 @@ def choice_noshow(row):
         login_url = "https://www.choiceadvantage.com/choicehotels/sign_in.jsp"
         driver.get(login_url)
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "j_username")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.NAME, "j_username")))
         driver.find_element(By.NAME, "j_username").send_keys(username)
         driver.find_element(By.NAME, "j_password").send_keys(password)
         driver.find_element(By.ID, 'greenButton').click()
@@ -86,12 +86,12 @@ def choice_noshow(row):
         WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Reports")))
         driver.find_element(By.LINK_TEXT, "Reports").click()
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, "NoShowReport")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.ID, "NoShowReport")))
         driver.find_element(By.ID, "NoShowReport").click()
 
         start_date = row['res_before'].format('M/D/YYYY')
         end_date = row['res_after'].shift(days=-1).format('M/D/YYYY')
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.NAME, "startDatePastCurrent")))
+        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.NAME, "startDatePastCurrent")))
         
         start_date_field = driver.find_element(By.NAME, "startDatePastCurrent")
         start_date_field.clear()
