@@ -325,11 +325,17 @@ def AutoClerk_Pms(row):
         check_occupancy_file = os.path.isfile(occupancy_file_path)
         check_group_block_summary_file = os.path.isfile(group_block_summary_file_path)
 
-        if check_reservation_file and check_occupancy_file and check_group_block_summary_file:
-            createdAt = "'" + str(arrow.now()) + "'"
-            updatedAt = "'" + str(arrow.now()) + "'"
-            createdAtEpoch =  int(arrow.utcnow().timestamp())
-            updatedAtEpoch =  int(arrow.utcnow().timestamp())
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch =  int(arrow.utcnow().timestamp())
+        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+
+        errorMessage = ""
+        fileCount=0
+
+        if check_occupancy_file:
+
+            fileCount=fileCount+1
             # Start Data Modification Occupancy
             df = pd.read_csv(occupancy_file_path)
             df = df.drop([0, 1, 2, 3, 4, 5])
@@ -370,6 +376,22 @@ def AutoClerk_Pms(row):
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
 
+            # Insert Into Database
+            occ_result = csv.DictReader(open(occupancy_file_path, encoding="utf-8"))
+            occ_result = list(occ_result)
+            print(len(occ_result))
+
+            if len(occ_result) > 0:
+                bulk_insert_auto_clerk_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
+                print("OCC DONE")
+            else:
+                errorMessage = errorMessage + "Occupancy File Was Blank, "
+        else:
+            errorMessage = errorMessage + "Occupancy File Not Found, "
+
+        if check_reservation_file:
+
+            fileCount=fileCount+1
             # Start Data Modification Reservation
             df = pd.read_csv(reservation_file_path)
             df = df[df.columns[:-1]]
@@ -423,6 +445,21 @@ def AutoClerk_Pms(row):
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
+            # Insert Into Database
+            res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
+            res_result = list(res_result)
+            print(len(res_result))
+            if len(res_result) > 0:
+                bulk_insert_auto_clerk_res(propertyCode, res_result, row['res_before'], row['res_after'])
+                print("RES DONE")
+            else:
+                errorMessage = errorMessage + "Reservation File Was Blank, "
+        else:
+            errorMessage = errorMessage + "Reservation File Not Found, "
+            
+        if check_group_block_summary_file:
+            
+            fileCount=fileCount+1
             # Start Group Block Summary Modification
             df = pd.read_csv(group_block_summary_file_path, header=None, skiprows=6, skipfooter=1, engine='python')
             df = df.dropna(axis=0, how='all').dropna(axis=1, how='all')
@@ -444,28 +481,30 @@ def AutoClerk_Pms(row):
             # End Group Block Summary Modification
 
             # Insert Into Database
-            res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
-            res_result = list(res_result)
-            print(len(res_result))
-            bulk_insert_auto_clerk_res(propertyCode, res_result, row['res_before'], row['res_after'])
-            print("RES DONE")
-
-            occ_result = csv.DictReader(open(occupancy_file_path, encoding="utf-8"))
-            occ_result = list(occ_result)
-            print(len(occ_result))
-            bulk_insert_auto_clerk_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
-            print("OCC DONE")
-
             group_block_summary_result = csv.DictReader(open(group_block_summary_file_path, encoding="utf-8"))
             group_block_summary_result = list(group_block_summary_result)
             print(len(group_block_summary_result))
-            bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_result, row['res_before'], row['res_after'])
-            print("GROUP BLOCK SUMMARY DONE")
-
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            if len(group_block_summary_result) > 0:
+                bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary_result, row['res_before'], row['res_after'])
+                print("GROUP BLOCK SUMMARY DONE")
+            else:
+                errorMessage = errorMessage + "Group Block Summary File Was Blank, "
         else:
-            msg = "File Not found!!!"
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+            errorMessage = errorMessage + "Group Block Summary File Not Found, "
+        
+        if (fileCount==3):
+            if(errorMessage==""):
+                update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            else:
+                errorMessage="Partially Successfull:- "+errorMessage
+                update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+        else:
+            if (fileCount==0):
+                errorMessage = "All File Not Found"
+            else:
+                errorMessage="Partially Successfull:- "+errorMessage
+            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+        
     except Exception as e:
         if driver:
             driver.quit()

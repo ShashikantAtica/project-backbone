@@ -310,11 +310,26 @@ def OperaCloud_Pms(row):
     check_occupancy_file = os.path.isfile(occupancy_file_path)
     check_arrival_file = os.path.isfile(arrival_file_path)
 
-    if check_reservation_file and check_occupancy_file and check_arrival_file:
-        createdAt = "'" + str(arrow.now()) + "'"
-        updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  int(arrow.utcnow().timestamp())
-        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+    createdAtEpoch =  int(arrow.utcnow().timestamp())
+    updatedAtEpoch =  int(arrow.utcnow().timestamp())
+
+    errorMessage = ""
+    fileCount=0
+
+    if not check_reservation_file:
+        errorMessage = errorMessage + " Reservation file - N/A"
+
+    if not check_occupancy_file:
+        errorMessage = errorMessage + " Occupancy file - N/A"
+
+    if not check_arrival_file:
+        errorMessage = errorMessage + " Arrival file - N/A"
+
+    if check_reservation_file:
+        
+        fileCount=fileCount+1
         # Start Reservation Report
         cols = ["RESV_NAME_ID", "GUARANTEE_CODE", "RESV_STATUS", "ROOM", "FULL_NAME", "DEPARTURE", "PERSONS",
                 "GROUP_NAME",
@@ -390,11 +405,23 @@ def OperaCloud_Pms(row):
 
             res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
             res_result = list(res_result)
+            
         except Exception:
             res_result = []
             print("Reservation Data not available")
+
+        print("RES RESULT")
+        print(res_result)
+        if len(res_result) > 0:
+            bulk_insert_opera_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
+            print("RES DONE")
+        else:
+            errorMessage = errorMessage + "Reservation File Was Blank, "
         # End Reservation Report
 
+    if check_occupancy_file:
+
+        fileCount=fileCount+1
         # Start Occupancy Report
         cols = ['REVENUE', 'NO_ROOMS', 'IND_DEDUCT_ROOMS', 'IND_NON_DEDUCT_ROOMS', 'GRP_DEDUCT_ROOMS',
                 'GRP_NON_DEDUCT_ROOMS',
@@ -572,8 +599,19 @@ def OperaCloud_Pms(row):
         else:
             occ_result = []
             print("Occupancy Data not available")
+        
+        print("OCC RESULT")
+        print(occ_result)
+        if len(occ_result) > 0:
+            bulk_insert_opera_cloud_occ(occ_result, propertyCode, row['occ_before'], row['occ_after'])
+            print("OCC DONE")
+        else:
+            errorMessage = errorMessage + "Occupancy File Was Blank, "
         # End Occupancy Report
 
+    if check_arrival_file:
+
+        fileCount=fileCount+1
         # Start Arrival Report
         arrival_dataframe = []
 
@@ -609,25 +647,18 @@ def OperaCloud_Pms(row):
 
         arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Arrival.csv", encoding="utf-8"))
         arrival_result = list(arrival_result)
-        # End Arrival Report
 
-        print("RES RESULT")
-        print(res_result)
-        print("OCC RESULT")
-        print(occ_result)
         print("ARRIVAL RESULT")
         print(arrival_result)
-
-        if len(res_result) > 0 and len(occ_result) > 0 and len(arrival_result) > 0:
-            bulk_insert_opera_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
-            print("RES DONE")
-
-            bulk_insert_opera_cloud_occ(occ_result, propertyCode, row['occ_before'], row['occ_after'])
-            print("OCC DONE")
-
+        if len(arrival_result) > 0:
             bulk_insert_opera_cloud_arrival(arrival_result, propertyCode, row['res_before'], row['res_after'])
             print("ARRIVAL DONE")
+        else:
+            errorMessage = errorMessage + "Arrival File Was Blank, "
+        # End Arrival Report
 
+    if (fileCount==3):
+        if(errorMessage==""):
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
 
             # Apply archive label to saved messages
@@ -645,12 +676,16 @@ def OperaCloud_Pms(row):
 
             else:
                 print("No messages to save")
+
         else:
-            print("File was blank!!!")
-            update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
+            errorMessage="Partially Successfull:- "+errorMessage
+            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
-        msg = "File Not found!!!"
-        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        if (fileCount==0):
+            errorMessage = "All File Not Found"
+        else:
+            errorMessage="Partially Successfull:- "+errorMessage
+        update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 
 if __name__ == '__main__':
