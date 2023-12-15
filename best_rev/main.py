@@ -10,6 +10,7 @@ import pandas as pd
 from utils.secrets.SecretManager import get_secret_from_api
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from selenium import webdriver
@@ -106,11 +107,17 @@ def BestRev_Pms(row):
         driver.find_element(By.NAME, "credentials.passcode").send_keys(password)
         driver.find_element(By.XPATH, '//*[@id="form53"]/div[2]/input').click()
 
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//h2[contains(@class, 'name')]")))
-        if "Hello" in driver.page_source:
-            print(f"{atica_property_code} Login Successful")
-        else:
+        try:
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//h2[contains(@class, 'name')]")))
+            if "Hello" in driver.page_source:
+                print(f"{atica_property_code} Login Successful")
+            else:
+                print(f"{atica_property_code} Login Failed")
+                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"{atica_property_code} Login Failed", IS_ERROR=True)
+                return str(f"{atica_property_code} Login Failed")
+        except:
             print(f"{atica_property_code} Login Failed")
+            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"{atica_property_code} Login Failed", IS_ERROR=True)
             return str(f"{atica_property_code} Login Failed")
 
         print(f"{atica_property_code} Getting the Total Forecast Report")
@@ -142,8 +149,8 @@ def BestRev_Pms(row):
 
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  int(arrow.utcnow().timestamp())
-        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+        createdAtEpoch = int(arrow.utcnow().timestamp())
+        updatedAtEpoch = int(arrow.utcnow().timestamp())
 
         print(f"{atica_property_code} Modification of Total Forecast Report")
         new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
@@ -192,7 +199,7 @@ def BestRev_Pms(row):
         update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
     DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
@@ -283,7 +290,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
