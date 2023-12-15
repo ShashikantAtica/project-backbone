@@ -1,9 +1,9 @@
+import sys
+
+sys.path.append("..")
 import argparse
 import csv
 import os
-import sys
-
-sys.path.append("../")
 import time
 import arrow
 import pandas as pd
@@ -19,10 +19,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
 from utils.db import db_models
+
 
 def bulk_insert_auto_clerk_res(propertyCode, res_list, res_before, res_after):
     start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
@@ -30,15 +32,8 @@ def bulk_insert_auto_clerk_res(propertyCode, res_list, res_before, res_after):
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
     reservation = '"DateTime"'
     db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
@@ -60,15 +55,8 @@ def bulk_insert_auto_clerk_occ(propertyCode, occ_list, occ_before, occ_after):
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
     reservation = '"Date"'
     db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
@@ -90,15 +78,8 @@ def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
     reservation = '"Arrive"'
     db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
 
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
@@ -125,7 +106,7 @@ def AutoClerk_Pms(row):
 
     folder_name = f"./reports/{propertyCode}/"
     # save_dir = os.path.abspath('reports/')
-    save_dir = os.path.abspath(f'reports/{propertyCode}/')
+    save_dir = os.path.abspath(f'./reports/{propertyCode}/')
     driver = None
     try:
         print(f"Getting Secret for {atica_property_code}")
@@ -150,7 +131,7 @@ def AutoClerk_Pms(row):
             "safebrowsing.enabled": True
         })
 
-        service = Service('chromedriver.exe')
+        service = Service('../chromedriver.exe')
         driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
 
@@ -371,8 +352,6 @@ def AutoClerk_Pms(row):
             shifted_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             shifted_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
-            shifted_df['UnusedAllotment'] = shifted_df['UnusedAllotment'].fillna(0).astype(int)
-            shifted_df['AvailRooms'] = shifted_df['AvailRooms'].fillna(0).astype(int)
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
 
@@ -441,7 +420,6 @@ def AutoClerk_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            df['room number'] = df['room number'].fillna(0).astype(int)
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
@@ -461,7 +439,7 @@ def AutoClerk_Pms(row):
             
             fileCount=fileCount+1
             # Start Group Block Summary Modification
-            df = pd.read_csv(group_block_summary_file_path, header=None, skiprows=6, skipfooter=1, engine='python')
+            df = pd.read_csv(group_block_summary_file_path, header=None, skiprows=6, skipfooter=1, engine='python', on_bad_lines='skip')
             df = df.dropna(axis=0, how='all').dropna(axis=1, how='all')
             headers = ['GroupBookingName', 'Confirmation', 'Arrive', 'Depart', 'Block', 'P_U', 'Diff', "BlockedRevenue", "PickedUpRevenue", "CutoffDate"]
             df.columns = headers
@@ -474,9 +452,6 @@ def AutoClerk_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            df['Block'] = df['Block'].fillna(0).astype(int)
-            df['P_U'] = df['P_U'].fillna(0).astype(int)
-            df['Diff'] = df['Diff'].fillna(0).astype(int)
             df.to_csv(group_block_summary_file_path, index=False)
             # End Group Block Summary Modification
 
@@ -506,6 +481,7 @@ def AutoClerk_Pms(row):
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
         
     except Exception as e:
+        print(e)
         if driver:
             driver.quit()
         msg = f"[{atica_property_code}] Somethings went wrong."
@@ -514,7 +490,7 @@ def AutoClerk_Pms(row):
         return 0
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
     DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
@@ -606,7 +582,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
@@ -629,4 +605,3 @@ if __name__ == '__main__':
     else:
         print(f"Property not available in database!!!")
     print(f"[{PMS_NAME}] SCRIPT STOP!!!")
-   
