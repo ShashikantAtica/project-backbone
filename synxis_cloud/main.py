@@ -444,6 +444,7 @@ def Synxis_Cloud_Pms(row):
     fileCount=0
 
     if check_reservation_file:
+
         fileCount=fileCount+1
          # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
@@ -493,6 +494,7 @@ def Synxis_Cloud_Pms(row):
         errorMessage = errorMessage + "Reservation File Not Found, "
 
     if check_forecast_file:
+
         fileCount=fileCount+1
         # Forecast Data Clean and Insert
         read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
@@ -516,6 +518,7 @@ def Synxis_Cloud_Pms(row):
         errorMessage = errorMessage + "Forecast File Not Found, "
 
     if check_revenue_file:
+
         fileCount=fileCount+1
         # Revenue Recap Data Clean and Insert
         date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
@@ -549,6 +552,7 @@ def Synxis_Cloud_Pms(row):
         errorMessage = errorMessage + "Revenue File Not Found, "
 
     if check_monthly_file:
+        
         fileCount=fileCount+1
         # Monthly Summary Data Clean and Insert
         read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
@@ -595,6 +599,7 @@ def Synxis_Cloud_Pms(row):
                 print("No messages to save")
                 
         else:
+            errorMessage="Partially Successfull:- "+errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
         if (fileCount==0):
