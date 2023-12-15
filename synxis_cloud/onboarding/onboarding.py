@@ -111,7 +111,6 @@ def SynxisCloud_Pms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
-    #tobe naming of files
     reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.csv' 
     forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
     revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
@@ -167,7 +166,7 @@ def SynxisCloud_Pms(row):
         read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
         #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
         read = read[read['Confirm_No'].str.len() >= 1]
-        read.to_csv(f"{attachment_format}/{propertyCode}_Reservation_Done.csv", index=False)
+        read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
     
         res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
         res_result = list(res_result)
