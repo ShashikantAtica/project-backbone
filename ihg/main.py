@@ -232,22 +232,13 @@ def IHG_Pms(row):
                 saved_messages_ids.append(message["id"])
             archive_label = get_archive_label("Saved")
             print(f"{archive_label['name']} : {archive_label['id']}")
-
-            # Apply archive label to saved messages
-            # label_apply_body = {
-            #     "addLabelIds": archive_label["id"],
-            #     "ids": saved_messages_ids
-            # }
-            #
-            # if saved_messages_ids:
-            #     response = service.users().messages().batchModify(userId="me",
-            #                                                       body=label_apply_body
-            #                                                       ).execute()
-            #     saved_messages_count = len(saved_messages_ids)
-            #     print(f"Saved label applied to {saved_messages_count} messages.")
-            #
-            # else:
-            #     print("No messages to save")
+    res_saved_messages_ids = []
+    occ_saved_messages_ids = []
+    for i in messages_array:
+        if i['label_name'] == 'USGA230502 Reservation':
+            res_saved_messages_ids.append([j['id'] for j in i['messages']])
+        if i['label_name'] == 'USGA230502 Occupancy':
+            occ_saved_messages_ids.append([j['id'] for j in i['messages']])
 
     # Modification of res report
     reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xlsx'
@@ -283,6 +274,18 @@ def IHG_Pms(row):
         res_result = list(res_result)
         if len(res_result) > 0:
             bulk_insert_ihg_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
+
+            # SAVE LABEL APPLY FOR RESERVATION
+            label_apply_body = {
+                "addLabelIds": archive_label["id"],
+                "ids": res_saved_messages_ids[0]
+            }
+
+            response = service.users().messages().batchModify(userId="me",
+                                                              body=label_apply_body
+                                                              ).execute()
+            res_saved_messages_count = len(res_saved_messages_ids)
+            print(f"Saved label applied to reservation {res_saved_messages_count} messages.")
             print("RES DONE")
         else:
             errorMessage = errorMessage + "Reservation File Was Blank, "
@@ -316,13 +319,24 @@ def IHG_Pms(row):
         occ_result = list(occ_result)
         if len(occ_result) > 0:
             bulk_insert_occ_res(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
+
+            # SAVE LABEL APPLY FOR OCCUPANCY
+            label_apply_body = {
+                "addLabelIds": archive_label["id"],
+                "ids": occ_saved_messages_ids[0]
+            }
+
+            response = service.users().messages().batchModify(userId="me",
+                                                              body=label_apply_body
+                                                              ).execute()
+            saved_messages_count = len(occ_saved_messages_ids)
+            print(f"Saved label applied to occupancy {saved_messages_count} messages.")
             print("OCC DONE")
         else:
             errorMessage = errorMessage + "Occupancy File Was Blank, "
     else:
         errorMessage = errorMessage + "Occupancy File Not Found, "
 
-                
     if (fileCount==2):
         if(errorMessage==""):
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
