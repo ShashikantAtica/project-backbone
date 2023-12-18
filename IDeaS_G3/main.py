@@ -314,7 +314,6 @@ def IDeaSG3_Rms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
 
-
             df = df.reset_index(drop=True)
             df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
@@ -325,12 +324,13 @@ def IDeaSG3_Rms(row):
         
         
         # End RBRC Report
-
-        print("Occupancy RESULT", min(date_set))
+        low_input_date_str = min(date_set)
+        low_input_date_str = low_input_date_str[:10]
+        print("Occupancy RESULT", low_input_date_str)
         print(occ_result)
 
         if len(occ_result) > 0:
-            bulk_insert_IDeaSG3_occ(occ_result, min(date_set), propertyCode=propertyCode)
+            bulk_insert_IDeaSG3_occ(occ_result, low_input_date_str, propertyCode=propertyCode)
             print("Occupancy DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
