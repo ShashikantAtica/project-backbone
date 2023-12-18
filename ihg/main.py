@@ -235,9 +235,9 @@ def IHG_Pms(row):
     res_saved_messages_ids = []
     occ_saved_messages_ids = []
     for i in messages_array:
-        if i['label_name'] == 'USGA230502 Reservation':
+        if i['label_name'] == f'{propertyCode} Reservation':
             res_saved_messages_ids.append([j['id'] for j in i['messages']])
-        if i['label_name'] == 'USGA230502 Occupancy':
+        if i['label_name'] == f'{propertyCode} Occupancy':
             occ_saved_messages_ids.append([j['id'] for j in i['messages']])
 
     # Modification of res report
@@ -253,11 +253,11 @@ def IHG_Pms(row):
     updatedAtEpoch = int(arrow.utcnow().timestamp())
 
     errorMessage = ""
-    fileCount=0
+    fileCount = 0
 
     if check_reservation_file:
 
-        fileCount=fileCount+1
+        fileCount = fileCount + 1
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
@@ -293,8 +293,8 @@ def IHG_Pms(row):
         errorMessage = errorMessage + "Reservation File Not Found, "
 
     if check_occupancy_file:
-        
-        fileCount=fileCount+1
+
+        fileCount = fileCount + 1
         # Occupancy Data Clean and Insert
         read = pd.read_excel(occupancy_file_path)
         read['Date'] = pd.to_datetime(read['Date'])
@@ -337,33 +337,17 @@ def IHG_Pms(row):
     else:
         errorMessage = errorMessage + "Occupancy File Not Found, "
 
-    if (fileCount==2):
-        if(errorMessage==""):
+    if fileCount == 2:
+        if errorMessage == "":
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-            # Save label apply
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
-
-            else:
-                print("No messages to save")
-
         else:
-            errorMessage="Partially Successfull:- "+errorMessage
+            errorMessage = "Partially Successfull:- " + errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
-        if (fileCount==0):
+        if fileCount == 0:
             errorMessage = "All File Not Found"
         else:
-            errorMessage="Partially Successfull:- "+errorMessage
+            errorMessage = "Partially Successfull:- " + errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 
