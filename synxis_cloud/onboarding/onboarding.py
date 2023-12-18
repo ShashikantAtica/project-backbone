@@ -56,169 +56,89 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_synxis_cloud_res(res_list):
-
     # Add new data of reservation
-    print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.synxis_cloud_reservation_model).values(res_list)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['Confirm_No'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'Chain': stmt.excluded.Chain,
-            'Brand': stmt.excluded.Brand,
-            'Hotel': stmt.excluded.Hotel,
-            'Confirm_No': stmt.excluded.Confirm_No,
-            'Rez_Status_Desc': stmt.excluded.Rez_Status_Desc,
-            'Status_Dt': stmt.excluded.Status_Dt,
-            'Guest_Nm': stmt.excluded.Guest_Nm,
-            'Channel_Cd': stmt.excluded.Channel_Cd,
-            'Sec_Channel_Desc': stmt.excluded.Sec_Channel_Desc,
-            'Sub_Source': stmt.excluded.Sub_Source,
-            'Sub_Src_CD': stmt.excluded.Sub_Src_CD,
-            'Location': stmt.excluded.Location,
-            'Arrival_Dt': stmt.excluded.Arrival_Dt,
-            'Depart_Dt': stmt.excluded.Depart_Dt,
-            'Nights_Qty': stmt.excluded.Nights_Qty,
-            'Override_Oversell': stmt.excluded.Override_Oversell,
-            'Room_Qty': stmt.excluded.Room_Qty,
-            'Rate_Category_Name': stmt.excluded.Rate_Category_Name,
-            'Rate_Type_Code': stmt.excluded.Rate_Type_Code,
-            'Rez_Avg_Rate_Amt': stmt.excluded.Rez_Avg_Rate_Amt,
-            'Onshore_Rate_Type_Code': stmt.excluded.Onshore_Rate_Type_Code,
-            'Onshore_Rez_Avg_Rate_Amt': stmt.excluded.Onshore_Rez_Avg_Rate_Amt,
-            'Room_Type_Code': stmt.excluded.Room_Type_Code,
-            'Record_Locator': stmt.excluded.Record_Locator,
-            'Booker_Loyalty_Program_Level_List': stmt.excluded.Booker_Loyalty_Program_Level_List,
-            'Loyalty_Type': stmt.excluded.Loyalty_Type,
-            'Loyalty_Program': stmt.excluded.Loyalty_Program,
-            'Loyalty_Number': stmt.excluded.Loyalty_Number,
-            'Loyalty_Level_Code': stmt.excluded.Loyalty_Level_Code,
-            'Loyalty_Level_Name': stmt.excluded.Loyalty_Level_Name,
-            'Loyalty_Points_Payment': stmt.excluded.Loyalty_Points_Payment,
-            'Payment_Typ': stmt.excluded.Payment_Typ,
-            'VCC_Authorization_Amount': stmt.excluded.VCC_Authorization_Amount,
-            'VCC_Currency_Code': stmt.excluded.VCC_Currency_Code,
-            'VCC_Payment_Model': stmt.excluded.VCC_Payment_Model,
-            'VCC_Card_Activation_Start': stmt.excluded.VCC_Card_Activation_Start,
-            'VCC_Card_Activation_End': stmt.excluded.VCC_Card_Activation_End,
-            'Direct_Bill_Account_Number': stmt.excluded.Direct_Bill_Account_Number,
-            'Direct_Bill_Project_Number': stmt.excluded.Direct_Bill_Project_Number,
-            'Total_Points_Pymnt': stmt.excluded.Total_Points_Pymnt,
-            'Points_Refund': stmt.excluded.Points_Refund,
-            'Total_Cash_Pymnt': stmt.excluded.Total_Cash_Pymnt,
-            'Pay_At_Property': stmt.excluded.Pay_At_Property,
-            'Cash_Refund': stmt.excluded.Cash_Refund,
-            'Total_Price_For_Adult': stmt.excluded.Total_Price_For_Adult,
-            'Total_Adult_Occupancy': stmt.excluded.Total_Adult_Occupancy,
-            'Total_Price_For_Child_Age_Group1': stmt.excluded.Total_Price_For_Child_Age_Group1,
-            'Total_Child_Occupancy_For_Age_Group1': stmt.excluded.Total_Child_Occupancy_For_Age_Group1,
-            'Total_Price_For_Child_Age_Group2': stmt.excluded.Total_Price_For_Child_Age_Group2,
-            'Total_Child_Occupancy_For_Age_Group2': stmt.excluded.Total_Child_Occupancy_For_Age_Group2,
-            'Total_Price_For_Child_Age_Group3': stmt.excluded.Total_Price_For_Child_Age_Group3,
-            'Total_Child_Occupancy_For_Age_Group3': stmt.excluded.Total_Child_Occupancy_For_Age_Group3,
-            'Total_Price_For_Child_Age_Group4': stmt.excluded.Total_Price_For_Child_Age_Group4,
-            'Total_Child_Occupancy_For_Age_Group4': stmt.excluded.Total_Child_Occupancy_For_Age_Group4,
-            'Total_Price_For_Child_Age_Group5': stmt.excluded.Total_Price_For_Child_Age_Group5,
-            'Total_Child_Occupancy_For_Age_Group5': stmt.excluded.Total_Child_Occupancy_For_Age_Group5,
-            'Total_Price_For_Child_Unknown_Age_Group': stmt.excluded.Total_Price_For_Child_Unknown_Age_Group,
-            'Total_Child_Occupancy_For_Unknown_Age_Group': stmt.excluded.Total_Child_Occupancy_For_Unknown_Age_Group,
-            'Share_With': stmt.excluded.Share_With,
-            'Channel_Connect_Confirm_NO': stmt.excluded.Channel_Connect_Confirm_NO,
-            'PMS_Confirm_Code': stmt.excluded.PMS_Confirm_Code,
-            'Original_Room_Type_Code': stmt.excluded.Original_Room_Type_Code,
-            'Original_Rm_Typ_Nm': stmt.excluded.Original_Rm_Typ_Nm,
-            'Template_Code': stmt.excluded.Template_Code,
-            'Template_Name': stmt.excluded.Template_Name,
-            'Blacklist_Reason': stmt.excluded.Blacklist_Reason,
-            'Visa_Information': stmt.excluded.Visa_Information,
-            'Installment_Amount': stmt.excluded.Installment_Amount,
-            'Number_of_Installments': stmt.excluded.Number_of_Installments,
-            'Interest_Amount': stmt.excluded.Interest_Amount,
-            'Interest_Rate_Percentage': stmt.excluded.Interest_Rate_Percentage,
-            'Total_Installment_Amount': stmt.excluded.Total_Installment_Amount,
-            'Rate_Credential_ID': stmt.excluded.Rate_Credential_ID,
-            'Trace_Date': stmt.excluded.Trace_Date,
-            'Trace_Completion_Flag': stmt.excluded.Trace_Completion_Flag,
-            'Trace_Completion_Date': stmt.excluded.Trace_Completion_Date,
-            'Trace_Text': stmt.excluded.Trace_Text,
-            'RM_Upgrade_Reason_CD': stmt.excluded.RM_Upgrade_Reason_CD,
-            'Room_Upsell': stmt.excluded.Room_Upsell,
-            'Room_To_Charge': stmt.excluded.Room_To_Charge,
-            'Onhold_Duration': stmt.excluded.Onhold_Duration,
-            'AutoCancel_ReleaseDateTime_ScheduledOrActual': stmt.excluded.AutoCancel_ReleaseDateTime_ScheduledOrActual,
-            'Commission_Cd': stmt.excluded.Commission_Cd,
-            'Comm_Percent_Override_List': stmt.excluded.Comm_Percent_Override_List,
-            'Coupon_Offer': stmt.excluded.Coupon_Offer,
-            'Coupon_Discount_Total': stmt.excluded.Coupon_Discount_Total,
-            'Promotion': stmt.excluded.Promotion,
-            'Promo_Discount': stmt.excluded.Promo_Discount,
-            'Maximum_Discount_Applied': stmt.excluded.Maximum_Discount_Applied,
-            'Paynow_Discount': stmt.excluded.Paynow_Discount,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.close()
-    print("Data imported")
+    try:
+        print("Data importing...")
+        conn = db_config.get_db_connection()
+        conn.execute(db_models.synxis_cloud_reservation_model.insert(), res_list)
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
-def bulk_insert_synxis_cloud_forecast(res_list):
+def bulk_insert_synxis_cloud_forecast(for_list):
     # Add new data of reservation
-    print("Data importing...")
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_forecast_model.insert(), res_list)
-    conn.close()
-    print("Data imported")
+    try:
+        print("Data importing...")
+        conn = db_config.get_db_connection()
+        conn.execute(db_models.synxis_cloud_forecast_model.insert(), for_list)
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
-def bulk_insert_synxis_cloud_revenue_recap(res_list):
+def bulk_insert_synxis_cloud_revenue_recap(rev_list):
     # Add new data of revenue
-    print("Data importing...")
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), res_list)
-    conn.close()
-    print("Data imported")
+    try:
+        print("Data importing...")
+        conn = db_config.get_db_connection()
+        conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), rev_list)
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
-def bulk_insert_synxis_cloud_monthly_summary(res_list):
+def bulk_insert_synxis_cloud_monthly_summary(mon_list):
     # Add new data of reservation
-    print("Data importing...")
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_monthly_summary_model.insert(), res_list)
-    conn.close()
-    print("Data imported")
+    try:
+        print("Data importing...")
+        conn = db_config.get_db_connection()
+        conn.execute(db_models.synxis_cloud_monthly_summary_model.insert(), mon_list)
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def SynxisCloud_Pms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
-
-    reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.csv'
-    forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast.csv'
-    revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue.csv'
-    monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly.csv'
+    reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.csv' 
+    forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
+    revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
+    monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly_Onboarding.csv'
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_forecast_file = os.path.isfile(forecast_file_path)
     check_revenue_file = os.path.isfile(revenue_file_path)
     check_monthly_file = os.path.isfile(monthly_file_path)
 
-    if check_reservation_file and check_forecast_file and check_revenue_file and check_monthly_file:
-        createdAt = "'" + str(arrow.now()) + "'"
-        updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch = int(arrow.utcnow().timestamp())
-        updatedAtEpoch = int(arrow.utcnow().timestamp())
-        # Reservation Data Clean and Insert
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+    createdAtEpoch = int(arrow.utcnow().timestamp())
+    updatedAtEpoch = int(arrow.utcnow().timestamp())
+
+    errorMessage = ""
+    fileCount=0
+
+    if check_reservation_file:
+
+        fileCount=fileCount+1
+         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
         read['Status_Dt'] = pd.to_datetime(read['Status_Dt'])
         read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'])
         read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'])
-        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'])
-        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'])
+        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed')
+        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
@@ -236,11 +156,32 @@ def SynxisCloud_Pms(row):
         read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
         read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
         read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
+        read['Nights_Qty'] = read['Nights_Qty'].fillna(0).astype(int)
+        read['Room_Qty'] = read['Room_Qty'].fillna(0).astype(int)
+        read['Total_Adult_Occupancy'] = read['Total_Adult_Occupancy'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group1'] = read['Total_Child_Occupancy_For_Age_Group1'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group2'] = read['Total_Child_Occupancy_For_Age_Group2'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group3'] = read['Total_Child_Occupancy_For_Age_Group3'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group4'] = read['Total_Child_Occupancy_For_Age_Group4'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group5'] = read['Total_Child_Occupancy_For_Age_Group5'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
+        #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
+        read = read[read['Confirm_No'].str.len() >= 1]
         read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
-
+    
         res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
         res_result = list(res_result)
+        if len(res_result) > 0:
+            bulk_insert_synxis_cloud_res(res_result)
+            print("RES DONE")
+        else:
+            errorMessage = errorMessage + "Reservation File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Reservation File Not Found, "
 
+    if check_forecast_file:
+
+        fileCount=fileCount+1
         # Forecast Data Clean and Insert
         read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
         read['cal_dt'] = pd.to_datetime(read['cal_dt'])
@@ -254,7 +195,17 @@ def SynxisCloud_Pms(row):
 
         fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
         fore_result = list(fore_result)
+        if len(fore_result) > 0:
+            bulk_insert_synxis_cloud_forecast(fore_result)
+            print("FORE DONE")
+        else:
+            errorMessage = errorMessage + "Forecast File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Forecast File Not Found, "
 
+    if check_revenue_file:
+
+        fileCount=fileCount+1
         # Revenue Recap Data Clean and Insert
         date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
         date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
@@ -276,10 +227,19 @@ def SynxisCloud_Pms(row):
         read['Month_To_Date_F_B_total'] = read['Month_To_Date_F_B_total'].fillna(0).astype(float)
         read['Year_To_Date_F_B_Total'] = read['Year_To_Date_F_B_Total'].apply(str).str.replace(',', '').astype(float)
         read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
-
         rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
         rev_result = list(rev_result)
+        if len(rev_result) > 0:
+            bulk_insert_synxis_cloud_revenue_recap(rev_result)
+            print("REV DONE")
+        else:
+            errorMessage = errorMessage + "Revenue File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Revenue File Not Found, "
 
+    if check_monthly_file:
+
+        fileCount=fileCount+1
         # Monthly Summary Data Clean and Insert
         read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
         read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
@@ -290,32 +250,32 @@ def SynxisCloud_Pms(row):
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
-        read['FoodandBeverage'] = read['FoodandBeverage'].fillna(0).astype(int)
+        read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
         read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
 
         monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
         monthly_result = list(monthly_result)
-
-        if len(res_result) > 0 and len(fore_result) > 0 and len(rev_result) > 0 and len(monthly_result) > 0:
-            bulk_insert_synxis_cloud_res(res_result)
-            print("RES DONE")
-
-            bulk_insert_synxis_cloud_forecast(fore_result)
-            print("FORE DONE")
-
-            bulk_insert_synxis_cloud_revenue_recap(rev_result)
-            print("REV DONE")
-
+        
+        if len(monthly_result) > 0:
             bulk_insert_synxis_cloud_monthly_summary(monthly_result)
             print("MONTHLY DONE")
+        else:
+            errorMessage = errorMessage + "Monthly File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Monthly File Not Found, "
 
+    if (fileCount==4):
+        if(errorMessage==""):
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
-            print("File was blank!!!")
-            update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
+            errorMessage="Partially Successfull:- "+errorMessage
+            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
-        msg = "File Not found!!!"
-        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        if (fileCount==0):
+            errorMessage = "All File Not Found"
+        else:
+            errorMessage="Partially Successfull:- "+errorMessage
+        update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 
 if __name__ == '__main__':

@@ -435,18 +435,24 @@ def Synxis_Cloud_Pms(row):
     check_revenue_file = os.path.isfile(revenue_file_path)
     check_monthly_file = os.path.isfile(monthly_file_path)
 
-    if check_reservation_file and check_forecast_file and check_revenue_file and check_monthly_file:
-        createdAt = "'" + str(arrow.now()) + "'"
-        updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch = int(arrow.utcnow().timestamp())
-        updatedAtEpoch = int(arrow.utcnow().timestamp())
-        # Reservation Data Clean and Insert
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+    createdAtEpoch = int(arrow.utcnow().timestamp())
+    updatedAtEpoch = int(arrow.utcnow().timestamp())
+
+    errorMessage = ""
+    fileCount=0
+
+    if check_reservation_file:
+
+        fileCount=fileCount+1
+         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
         read['Status_Dt'] = pd.to_datetime(read['Status_Dt'])
         read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'])
         read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'])
-        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'])
-        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'])
+        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed')
+        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
@@ -464,11 +470,32 @@ def Synxis_Cloud_Pms(row):
         read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
         read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
         read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
+        read['Nights_Qty'] = read['Nights_Qty'].fillna(0).astype(int)
+        read['Room_Qty'] = read['Room_Qty'].fillna(0).astype(int)
+        read['Total_Adult_Occupancy'] = read['Total_Adult_Occupancy'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group1'] = read['Total_Child_Occupancy_For_Age_Group1'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group2'] = read['Total_Child_Occupancy_For_Age_Group2'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group3'] = read['Total_Child_Occupancy_For_Age_Group3'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group4'] = read['Total_Child_Occupancy_For_Age_Group4'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Age_Group5'] = read['Total_Child_Occupancy_For_Age_Group5'].fillna(0).astype(int)
+        read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
+        #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
+        read = read[read['Confirm_No'].str.len() >= 1]
         read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
-
+    
         res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
         res_result = list(res_result)
+        if len(res_result) > 0:
+            bulk_insert_synxis_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
+            print("RES DONE")
+        else:
+            errorMessage = errorMessage + "Reservation File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Reservation File Not Found, "
 
+    if check_forecast_file:
+
+        fileCount=fileCount+1
         # Forecast Data Clean and Insert
         read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
         read['cal_dt'] = pd.to_datetime(read['cal_dt'])
@@ -482,7 +509,17 @@ def Synxis_Cloud_Pms(row):
 
         fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
         fore_result = list(fore_result)
+        if len(fore_result) > 0:
+            bulk_insert_synxis_cloud_forecast(fore_result, propertyCode, row['occ_before'], row['occ_after'])
+            print("FORE DONE")
+        else:
+            errorMessage = errorMessage + "Forecast File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Forecast File Not Found, "
 
+    if check_revenue_file:
+
+        fileCount=fileCount+1
         # Revenue Recap Data Clean and Insert
         date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
         date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
@@ -504,10 +541,19 @@ def Synxis_Cloud_Pms(row):
         read['Month_To_Date_F_B_total'] = read['Month_To_Date_F_B_total'].fillna(0).astype(float)
         read['Year_To_Date_F_B_Total'] = read['Year_To_Date_F_B_Total'].apply(str).str.replace(',', '').astype(float)
         read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
-
         rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
         rev_result = list(rev_result)
+        if len(rev_result) > 0:
+            bulk_insert_synxis_cloud_revenue_recap(rev_result, propertyCode, date)
+            print("REV DONE")
+        else:
+            errorMessage = errorMessage + "Revenue File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Revenue File Not Found, "
 
+    if check_monthly_file:
+        
+        fileCount=fileCount+1
         # Monthly Summary Data Clean and Insert
         read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
         read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
@@ -518,25 +564,22 @@ def Synxis_Cloud_Pms(row):
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
-        read['FoodandBeverage'] = read['FoodandBeverage'].fillna(0).astype(int)
+        read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
         read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
 
         monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
         monthly_result = list(monthly_result)
-
-        if len(res_result) > 0 and len(fore_result) > 0 and len(rev_result) > 0 and len(monthly_result) > 0:
-            bulk_insert_synxis_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
-            print("RES DONE")
-
-            bulk_insert_synxis_cloud_forecast(fore_result, propertyCode, row['occ_before'], row['occ_after'])
-            print("FORE DONE")
-
-            bulk_insert_synxis_cloud_revenue_recap(rev_result, propertyCode, date)
-            print("REV DONE")
-
+        
+        if len(monthly_result) > 0:
             bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode, row['res_before'], row['res_after'])
             print("MONTHLY DONE")
+        else:
+            errorMessage = errorMessage + "Monthly File Was Blank, "
+    else:
+        errorMessage = errorMessage + "Monthly File Not Found, "
 
+    if (fileCount==4):
+        if(errorMessage==""):
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
 
             # Apply archive label to saved messages
@@ -554,12 +597,17 @@ def Synxis_Cloud_Pms(row):
 
             else:
                 print("No messages to save")
+                
         else:
-            print("File was blank!!!")
-            update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
+            errorMessage="Partially Successfull:- "+errorMessage
+            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
-        msg = "File Not found!!!"
-        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        if (fileCount==0):
+            errorMessage = "All File Not Found"
+        else:
+            errorMessage="Partially Successfull:- "+errorMessage
+        update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    
 
 
 if __name__ == '__main__':

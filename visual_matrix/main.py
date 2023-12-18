@@ -237,6 +237,7 @@ def VisualMatrix_Pms(row):
             check_occupancy_file = os.path.isfile(occupancy_file_path)
 
             error_msg = ""
+            fileCount=0
 
             if not check_front_office_arrival_file:
                 error_msg = error_msg + " Front Office Arrival file - N/A"
@@ -244,23 +245,43 @@ def VisualMatrix_Pms(row):
             if not check_occupancy_file:
                 error_msg = error_msg + " Occupancy file - N/A"
 
-            if check_front_office_arrival_file and check_occupancy_file:
-                # Insert into Database
+            if check_front_office_arrival_file:
+
+                fileCount=fileCount+1
                 front_office_arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Front_Office_Arrival.csv", encoding="utf-8"))
                 front_office_arrival_result = list(front_office_arrival_result)
                 print(len(front_office_arrival_result))
-                bulk_insert_visual_matrix_front_office_arrival(propertyCode, front_office_arrival_result, row['res_before'], row['res_after'])
-                print("FRONT OFFICE ARRIVAL DONE")
+                if len(front_office_arrival_result) > 0:
+                    bulk_insert_visual_matrix_front_office_arrival(propertyCode, front_office_arrival_result, row['res_before'], row['res_after'])
+                    print("FRONT OFFICE ARRIVAL DONE")
+                else:
+                    error_msg = error_msg + "Front Office Arrival File Was Blank, "
 
+            if check_occupancy_file:
+
+                fileCount=fileCount+1
                 occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
                 print(len(occ_result))
-                bulk_insert_visual_matrix_occupancy(propertyCode, occ_result, row['occ_before'], row['occ_after'])
-                print("OCC DONE")
+                if len(occ_result) > 0:
+                    bulk_insert_visual_matrix_occupancy(propertyCode, occ_result, row['occ_before'], row['occ_after'])
+                    print("OCC DONE")
+                else:
+                    error_msg = error_msg + "Occupancy File Was Blank, "
 
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            if (fileCount==2):
+                if(error_msg==""):
+                    update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                else:
+                    error_msg="Partially Successfull:- "+error_msg
+                    update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
             else:
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
+                if (fileCount==0):
+                    error_msg = "All File Not Found"
+                else:
+                    error_msg="Partially Successfull:- "+error_msg
+                update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)    
+
         except Exception as e:
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=e, IS_ERROR=True)
 

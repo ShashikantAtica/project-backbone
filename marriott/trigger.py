@@ -249,6 +249,7 @@ def main():
                 check_total_yield_file = os.path.isfile(total_yield_file_path)
 
                 error_msg = ""
+                fileCount=0
 
                 if not check_reservation_file:
                     error_msg = error_msg + " Reservation file - N/A"
@@ -262,34 +263,66 @@ def main():
                 if not check_total_yield_file:
                     error_msg = error_msg + " Total Yield file - N/A"
 
-                if check_forecast_file and check_reservation_file and check_realized_activity_file and check_total_yield_file:
-                    # Insert into Database
+
+                if check_reservation_file:
+
+                    fileCount=fileCount+1
                     res_result = csv.DictReader(open(reservation_file_path, encoding="utf-8"))
                     res_result = list(res_result)
                     print(len(res_result))
-                    bulk_insert_marriott_res(row['propertyCode'], res_result, row['res_before'], row['res_after'])
-                    print("RES DONE")
+                    if len(res_result) > 0:
+                        bulk_insert_marriott_res(row['propertyCode'], res_result, row['res_before'], row['res_after'])
+                        print("RES DONE")
+                    else:
+                        error_msg = error_msg + "Reservation File Was Blank, "
 
+                if check_forecast_file:
+
+                    fileCount=fileCount+1
                     fore_result = csv.DictReader(open(forecast_file_path, encoding="utf-8"))
                     fore_result = list(fore_result)
                     print(len(fore_result))
-                    bulk_insert_marriott_fore(row['propertyCode'], fore_result, row['fore_before'], row['fore_after'])
-                    print("FORE DONE")
+                    if len(fore_result) > 0:
+                        bulk_insert_marriott_fore(row['propertyCode'], fore_result, row['fore_before'], row['fore_after'])
+                        print("FORE DONE")
+                    else:
+                        error_msg = error_msg + "Forecast File Was Blank, "
 
+                if check_realized_activity_file:
+
+                    fileCount=fileCount+1
                     realized_activity_result = csv.DictReader(open(realized_activity_file_path, encoding="utf-8"))
                     realized_activity_result = list(realized_activity_result)
                     print(len(realized_activity_result))
-                    bulk_insert_marriott_realized_activity(row['propertyCode'], realized_activity_result, row['fore_before'])
-                    print("REALIZED ACTIVITY DONE")
+                    if len(realized_activity_result) > 0:
+                        bulk_insert_marriott_realized_activity(row['propertyCode'], realized_activity_result, row['fore_before'])
+                        print("REALIZED ACTIVITY DONE")
+                    else:
+                        error_msg = error_msg + "Realized Activity File Was Blank, "
 
+                if check_total_yield_file:
+                    
+                    fileCount=fileCount+1
                     total_yield_result = csv.DictReader(open(total_yield_file_path, encoding="utf-8"))
                     total_yield_result = list(total_yield_result)
                     print(len(total_yield_result))
-                    bulk_insert_marriott_total_yield(row['propertyCode'], total_yield_result, row['fore_before'], row['fore_after'])
-                    print("TOTAL YIELD DONE")
+                    if len(total_yield_result) > 0:
+                        bulk_insert_marriott_total_yield(row['propertyCode'], total_yield_result, row['fore_before'], row['fore_after'])
+                        print("TOTAL YIELD DONE")
+                    else:
+                        error_msg = error_msg + "Total Yeild File Was Blank, "
 
-                    update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                if (fileCount==4):
+                    if(error_msg==""):
+                        update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                    else:
+                        error_msg="Partially Successfull:- "+error_msg
+                        update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
                 else:
+                    if (fileCount==0):
+                        error_msg = "All File Not Found"
+                    else:
+                        error_msg="Partially Successfull:- "+error_msg
                     update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
             else:
                 print("LAST_PULL_DATE_ID is NULL")

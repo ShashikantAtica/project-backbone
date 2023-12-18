@@ -784,6 +784,7 @@ def Choice_Pms(row):
             check_group_pickup_detail_file = os.path.isfile(group_pickup_detail_file_path)
 
             error_msg = ""
+            fileCount=0
 
             if not check_reservation_file:
                 error_msg = error_msg + " Reservation file - N/A"
@@ -803,47 +804,92 @@ def Choice_Pms(row):
             if not check_group_pickup_detail_file:
                 error_msg = error_msg + " Group Pickup Detail file - N/A"
 
-            if check_reservation_file and check_occupancy_file and check_cancellation_file and check_revenue_file and check_revenue_detail_file and check_group_pickup_detail_file:
-                # Insert into Database
+            if check_reservation_file:
+
+                fileCount=fileCount+1
                 res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv", encoding="utf-8"))
                 res_result = list(res_result)
                 print(len(res_result))
-                bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
-                print("RES DONE")
+                if len(res_result) > 0:
+                    bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
+                    print("RES DONE")
+                else:
+                    error_msg = error_msg + "RES File Was Blank, "
 
+            if check_occupancy_file:
+
+                fileCount=fileCount+1
                 occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
                 print(len(occ_result))
-                bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
-                print("OCC DONE")
+                if len(occ_result) > 0:
+                    bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
+                    print("OCC DONE")
+                else:
+                    error_msg = error_msg + "OCC File Was Blank, "
 
+            if check_cancellation_file:
+
+                fileCount=fileCount+1
                 cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv", encoding="utf-8"))
                 cancel_result = list(cancel_result)
                 print(len(cancel_result))
-                bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
-                print("CANCELLATION DONE")
+                if len(cancel_result) > 0:
+                    bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
+                    print("CANCELLATION DONE")
+                else:
+                    error_msg = error_msg + "CANCELLATION File Was Blank, "
 
+            if check_revenue_file:
+
+                fileCount=fileCount+1
                 revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv", encoding="utf-8"))
                 revenue_result = list(revenue_result)
                 print(len(revenue_result))
-                bulk_insert_choice_revenue(propertyCode, revenue_result)
-                print("REVENUE DONE")
+                if len(revenue_result) > 0:
+                    bulk_insert_choice_revenue(propertyCode, revenue_result)
+                    print("REVENUE DONE")
+                else:
+                    error_msg = error_msg + "REVENUE File Was Blank, "
 
+            if check_revenue_detail_file:
+
+                fileCount=fileCount+1
                 revenue_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue_Detail.csv", encoding="utf-8"))
                 revenue_detail_result = list(revenue_detail_result)
                 print(len(revenue_detail_result))
-                bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_result, row['res_before'], row['res_after'])
-                print("REVENUE DETAIL DONE")
+                if len(revenue_detail_result) > 0:
+                    bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_result, row['res_before'], row['res_after'])
+                    print("REVENUE DETAIL DONE")
+                else:
+                    error_msg = error_msg + "REVENUE DETAIL File Was Blank, "
 
+            if check_group_pickup_detail_file:
+                
+                fileCount=fileCount+1
                 group_pickup_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Group_Pickup_Detail.csv", encoding="utf-8"))
                 group_pickup_detail_result = list(group_pickup_detail_result)
                 print(len(group_pickup_detail_result))
-                bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['res_before'], row['res_after'])
-                print("GROUP PICKUP DETAIL DONE")
+                if len(group_pickup_detail_result) > 0:
+                    bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['res_before'], row['res_after'])
+                    print("GROUP PICKUP DETAIL DONE")
+                else:
+                    error_msg = error_msg + "GROUP PICKUP DETAIL File Was Blank, "
 
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            if (fileCount==6):
+                if(error_msg==""):
+                    update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                else:
+                    error_msg="Partially Successfull:- "+error_msg
+                    update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
             else:
-                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
+                if (fileCount==0):
+                    error_msg = "All File Not Found"
+                else:
+                    error_msg="Partially Successfull:- "+error_msg
+                update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
+
+                
         except Exception as e:
             print(e)
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)
