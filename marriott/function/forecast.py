@@ -74,55 +74,85 @@ def process_report(session, payload):
     filename = f'{folder_name}{property_code}_Forecast.xlsx'
     open(filename, "wb").write(csv)
     read = pd.read_excel(filename, skiprows=8)
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+
+    columns = ['ArrivalDate', 'ArrivalDay', 'WEindicator', 'Capacity', 'DaysOut', 'SysRemDem', 'RemDemSTLY', 'AppliedRemDem', 'UserOverride',
+               'Event', 'OYv2TotalHotelOccupancy', 'TotalAvailableTransientSupply', 'TotalTransientBooked', 'TotalTransientBookedSTLY', 'AdditionalDemand', 'AdditionalDemandSTLY',
+               'TotalTransientDemand', 'TotalTransientDemandSTLY', 'AllotmentForecast', 'AllotmentRoomsSold', 'OutofOrder', 'GroupRoomBlockAuthorized', 'GroupBooked',
+               'OYv2GroupProj', 'ContractRoomBlockAuthorized', 'ContractBooked', 'OYv2ContractProj', 'ComplimentaryBookedTY', 'RemDemPremiumRetailTY', 'RemDemPremiumRetailTYPer',
+               'PremiumRetailTY', 'RemDemPremiumRetailSTLY', 'RemDemPremiumRetailSTLYPer', 'PremiumRetailSTLY', 'RemDemStandardRetailTY', 'RemDemStandardRetailTYPer',
+               'StandardRetailTY', 'RemDemStandardRetailSTLY', 'RemDemStandardRetailSTLYPer', 'StandardRetailSTLY', 'RemDemSpecialCorporateLRATY', 'RemDemSpecialCorporateLRATYPer',
+               'SpecialCorporateLRATY', 'RemDemSpecialCorporateLRASTLY', 'RemDemSpecialCorporateLRASTLYPer', 'SpecialCorporateLRASTLY', 'RemDemRewardRedemptionTY',
+               'RemDemRewardRedemptionTYPer', 'RewardRedemptionTY', 'RemDemRewardRedemptionSTLY', 'RemDemRewardRedemptionSTLYPer', 'RewardRedemptionSTLY', 'RemDemPolicyDrivenTY',
+               'RemDemPolicyDrivenTYPer', 'PolicyDrivenTY', 'RemDemPolicyDrivenSTLY', 'RemDemPolicyDrivenSTLYPer', 'PolicyDrivenSTLY', 'RemDemGovtMilitaryTY',
+               'RemDemGovtMilitaryTYPer', 'GovtMilitaryTY', 'RemDemGovtMilitarySTLY', 'RemDemGovtMilitarySTLYPer', 'GovtMilitarySTLY', 'RemDemRetailTiedDiscountTY',
+               'RemDemRetailTiedDiscountTYPer', 'RetailTiedDiscountTY', 'RemDemRetailTiedDiscountSTLY', 'RemDemRetailTiedDiscountSTLYPer', 'RetailTiedDiscountSTLY',
+               'RemDemFixedDiscountTY', 'RemDemFixedDiscountTYPer', 'FixedDiscountTY', 'RemDemFixedDiscountSTLY', 'RemDemFixedDiscountSTLYPer', 'FixedDiscountSTLY',
+               'RoomCollection1HurdleRevenue', 'RoomCollection1TransientOTBTY', 'RoomCollection1TransientOTBSTLY', 'RoomCollection1RemDemTY', 'RoomCollection1RemDemTYPer',
+               'RoomCollection1RemDemSTLY', 'RoomCollection1RemDemSTLYPer', 'RoomCollection2HurdleRevenue', 'RoomCollection2TransientOTBTY', 'RoomCollection2TransientOTBSTLY',
+               'RoomCollection2RemDemTY', 'RoomCollection2RemDemTYPer', 'RoomCollection2RemDemSTLY', 'RoomCollection2RemDemSTLYPer',
+               'RoomCollection3HurdleRevenue', 'RoomCollection3TransientOTBTY', 'RoomCollection3TransientOTBSTLY', 'RoomCollection3RemDemTY', 'RoomCollection3RemDemTYPer', 'RoomCollection3RemDemSTLY', 'RoomCollection3RemDemSTLYPer']
+
+    compairing_columns = ['Arrival Date', 'Arrival Day', 'WE indicator  ', 'Capacity', 'Days Out',
+                          'Sys Rem Dem', 'Rem Dem STLY', 'Applied Rem Dem', 'User Override',
+                          'Event', 'OYv2 Total Hotel Occupancy',
+                          'Total Available Transient Supply', 'Total Transient Booked',
+                          'Total Transient Booked STLY', 'Additional Demand',
+                          'Additional Demand STLY', 'Total Transient Demand',
+                          'Total Transient Demand STLY', 'Allotment Forecast',
+                          'Allotment Rooms Sold', 'Out of Order', 'Group Room Block Authorized',
+                          'Group Booked', 'OYv2 Group Proj', 'Contract Room Block Authorized',
+                          'Contract Booked', 'OYv2 Contract Proj', 'Complimentary Booked TY',
+                          'Rem Dem Premium Retail TY #', 'Rem Dem Premium Retail TY %',
+                          'Premium Retail TY', 'Rem Dem Premium Retail STLY #',
+                          'Rem Dem Premium Retail STLY %', 'Premium Retail STLY',
+                          'Rem Dem Standard Retail TY #', 'Rem Dem Standard Retail TY %',
+                          'Standard Retail TY', 'Rem Dem Standard Retail STLY #',
+                          'Rem Dem Standard Retail STLY %', 'Standard Retail STLY',
+                          'Rem Dem Special Corporate (LRA) TY #',
+                          'Rem Dem Special Corporate (LRA) TY %', 'Special Corporate (LRA) TY',
+                          'Rem Dem Special Corporate (LRA) STLY #',
+                          'Rem Dem Special Corporate (LRA) STLY %',
+                          'Special Corporate (LRA) STLY', 'Rem Dem Reward Redemption TY #',
+                          'Rem Dem Reward Redemption TY %', 'Reward Redemption TY',
+                          'Rem Dem Reward Redemption STLY #', 'Rem Dem Reward Redemption STLY %',
+                          'Reward Redemption STLY', 'Rem Dem Policy Driven TY #',
+                          'Rem Dem Policy Driven TY %', 'Policy Driven TY',
+                          'Rem Dem Policy Driven STLY #', 'Rem Dem Policy Driven STLY %',
+                          'Policy Driven STLY', 'Rem Dem Govt/Military TY #',
+                          'Rem Dem Govt/Military TY %', 'Govt/Military TY',
+                          'Rem Dem Govt/Military STLY #', 'Rem Dem Govt/Military STLY %',
+                          'Govt/Military STLY', 'Rem Dem Retail Tied Discount  TY #',
+                          'Rem Dem Retail Tied Discount  TY %', 'Retail Tied Discount  TY',
+                          'Rem Dem Retail Tied Discount  STLY #',
+                          'Rem Dem Retail Tied Discount  STLY %', 'Retail Tied Discount  STLY',
+                          'Rem Dem Fixed Discount TY #', 'Rem Dem Fixed Discount TY %',
+                          'Fixed Discount TY', 'Rem Dem Fixed Discount STLY #',
+                          'Rem Dem Fixed Discount STLY %', 'Fixed Discount STLY',
+                          'Room Collection 1 Hurdle Revenue',
+                          'Room Collection 1 Transient OTB TY',
+                          'Room Collection 1 Transient OTB STLY', 'Room Collection 1 Rem DemTY #',
+                          'Room Collection 1 Rem Dem TY %', 'Room Collection 1 Rem Dem STLY #',
+                          'Room Collection 1 Rem Dem STLY %', 'Room Collection 2 Hurdle Revenue',
+                          'Room Collection 2 Transient OTB TY',
+                          'Room Collection 2 Transient OTB STLY', 'Room Collection 2 Rem DemTY #',
+                          'Room Collection 2 Rem Dem TY %', 'Room Collection 2 Rem Dem STLY #',
+                          'Room Collection 2 Rem Dem STLY %', 'Room Collection 3 Hurdle Revenue',
+                          'Room Collection 3 Transient OTB TY',
+                          'Room Collection 3 Transient OTB STLY', 'Room Collection 3 Rem DemTY #',
+                          'Room Collection 3 Rem Dem TY %', 'Room Collection 3 Rem Dem STLY #',
+                          'Room Collection 3 Rem Dem STLY %']
+    for column in compairing_columns:
+        if column not in read.columns:
+            read[column] = 0
+
+    read.columns = columns
     read.insert(0, column="propertyCode", value=payload['propertyCode'])
     read.insert(1, column="pullDateId", value=payload['pullDateId'])
-    read['Arrival Date'] = pd.to_datetime(read['Arrival Date']).dt.date
-    headers_list = ['propertyCode', 'pullDateId', 'ArrivalDate', 'ArrivalDay', 'WEindicator', 'Capacity', 'DaysOut', 'SysRemDem', 'RemDemSTLY', 'AppliedRemDem', 'UserOverride',
-                    'Event', 'OYv2TotalHotelOccupancy', 'TotalAvailableTransientSupply', 'TotalTransientBooked', 'TotalTransientBookedSTLY', 'AdditionalDemand', 'AdditionalDemandSTLY',
-                    'TotalTransientDemand', 'TotalTransientDemandSTLY', 'AllotmentForecast', 'AllotmentRoomsSold', 'OutofOrder', 'GroupRoomBlockAuthorized', 'GroupBooked',
-                    'OYv2GroupProj', 'ContractRoomBlockAuthorized', 'ContractBooked', 'OYv2ContractProj', 'ComplimentaryBookedTY', 'RemDemPremiumRetailTY', 'RemDemPremiumRetailTYPer',
-                    'PremiumRetailTY', 'RemDemPremiumRetailSTLY', 'RemDemPremiumRetailSTLYPer', 'PremiumRetailSTLY', 'RemDemStandardRetailTY', 'RemDemStandardRetailTYPer',
-                    'StandardRetailTY', 'RemDemStandardRetailSTLY', 'RemDemStandardRetailSTLYPer', 'StandardRetailSTLY', 'RemDemSpecialCorporateLRATY', 'RemDemSpecialCorporateLRATYPer',
-                    'SpecialCorporateLRATY', 'RemDemSpecialCorporateLRASTLY', 'RemDemSpecialCorporateLRASTLYPer', 'SpecialCorporateLRASTLY', 'RemDemRewardRedemptionTY',
-                    'RemDemRewardRedemptionTYPer', 'RewardRedemptionTY', 'RemDemRewardRedemptionSTLY', 'RemDemRewardRedemptionSTLYPer', 'RewardRedemptionSTLY', 'RemDemPolicyDrivenTY',
-                    'RemDemPolicyDrivenTYPer', 'PolicyDrivenTY', 'RemDemPolicyDrivenSTLY', 'RemDemPolicyDrivenSTLYPer', 'PolicyDrivenSTLY', 'RemDemGovtMilitaryTY',
-                    'RemDemGovtMilitaryTYPer', 'GovtMilitaryTY', 'RemDemGovtMilitarySTLY', 'RemDemGovtMilitarySTLYPer', 'GovtMilitarySTLY', 'RemDemRetailTiedDiscountTY',
-                    'RemDemRetailTiedDiscountTYPer', 'RetailTiedDiscountTY', 'RemDemRetailTiedDiscountSTLY', 'RemDemRetailTiedDiscountSTLYPer', 'RetailTiedDiscountSTLY',
-                    'RemDemFixedDiscountTY', 'RemDemFixedDiscountTYPer', 'FixedDiscountTY', 'RemDemFixedDiscountSTLY', 'RemDemFixedDiscountSTLYPer', 'FixedDiscountSTLY',
-                    'RoomCollection1HurdleRevenue', 'RoomCollection1TransientOTBTY', 'RoomCollection1TransientOTBSTLY', 'RoomCollection1RemDemTY', 'RoomCollection1RemDemTYPer',
-                    'RoomCollection1RemDemSTLY', 'RoomCollection1RemDemSTLYPer', 'RoomCollection2HurdleRevenue', 'RoomCollection2TransientOTBTY', 'RoomCollection2TransientOTBSTLY',
-                    'RoomCollection2RemDemTY', 'RoomCollection2RemDemTYPer', 'RoomCollection2RemDemSTLY', 'RoomCollection2RemDemSTLYPer',
-                    'RoomCollection3HurdleRevenue', 'RoomCollection3TransientOTBTY', 'RoomCollection3TransientOTBSTLY', 'RoomCollection3RemDemTY', 'RoomCollection3RemDemTYPer', 'RoomCollection3RemDemSTLY', 'RoomCollection3RemDemSTLYPer']
-
-    read.columns = headers_list
-    read['TotalTransientBooked'] = read['TotalTransientBooked'].fillna(0).astype(int)
-    read['TotalTransientBookedSTLY'] = read['TotalTransientBookedSTLY'].fillna(0).astype(int)
-    read['ComplimentaryBookedTY'] = read['ComplimentaryBookedTY'].fillna(0).astype(int)
-    read['PremiumRetailTY'] = read['PremiumRetailTY'].fillna(0).astype(int)
-    read['PremiumRetailSTLY'] = read['PremiumRetailSTLY'].fillna(0).astype(int)
-    read['StandardRetailTY'] = read['StandardRetailTY'].fillna(0).astype(int)
-    read['StandardRetailSTLY'] = read['StandardRetailSTLY'].fillna(0).astype(int)
-    read['SpecialCorporateLRATY'] = read['SpecialCorporateLRATY'].fillna(0).astype(int)
-    read['SpecialCorporateLRASTLY'] = read['SpecialCorporateLRASTLY'].fillna(0).astype(int)
-    read['RewardRedemptionTY'] = read['RewardRedemptionTY'].fillna(0).astype(int)
-    read['RewardRedemptionSTLY'] = read['RewardRedemptionSTLY'].fillna(0).astype(int)
-    read['PolicyDrivenTY'] = read['PolicyDrivenTY'].fillna(0).astype(int)
-    read['PolicyDrivenSTLY'] = read['PolicyDrivenSTLY'].fillna(0).astype(int)
-    read['GovtMilitaryTY'] = read['GovtMilitaryTY'].fillna(0).astype(int)
-    read['GovtMilitarySTLY'] = read['GovtMilitarySTLY'].fillna(0).astype(int)
-    read['RetailTiedDiscountTY'] = read['RetailTiedDiscountTY'].fillna(0).astype(int)
-    read['RetailTiedDiscountSTLY'] = read['RetailTiedDiscountSTLY'].fillna(0).astype(int)
-    read['FixedDiscountTY'] = read['FixedDiscountTY'].fillna(0).astype(int)
-    read['FixedDiscountSTLY'] = read['FixedDiscountSTLY'].fillna(0).astype(int)
-    read['RoomCollection1TransientOTBSTLY'] = read['RoomCollection1TransientOTBSTLY'].fillna(0).astype(int)
-    read['RoomCollection2TransientOTBSTLY'] = read['RoomCollection2TransientOTBSTLY'].fillna(0).astype(int)
-    read['RoomCollection3HurdleRevenue'] = read['RoomCollection3HurdleRevenue'].fillna(0).astype(int)
-    read['RoomCollection3TransientOTBTY'] = read['RoomCollection3TransientOTBTY'].fillna(0).astype(int)
-    read['RoomCollection3TransientOTBSTLY'] = read['RoomCollection3TransientOTBSTLY'].fillna(0).astype(int)
-    read['RoomCollection3RemDemTY'] = read['RoomCollection3RemDemTY'].fillna(0).astype(int)
-    read['RoomCollection3RemDemTYPer'] = read['RoomCollection3RemDemTYPer'].fillna(0).astype(int)
-    read['RoomCollection3RemDemSTLY'] = read['RoomCollection3RemDemSTLY'].fillna(0).astype(int)
-    read['RoomCollection3RemDemSTLYPer'] = read['RoomCollection3RemDemSTLYPer'].fillna(0).astype(int)
+    read.insert(2, column="createdAt", value=createdAt)
+    read.insert(3, column="updatedAt", value=updatedAt)
+    read['ArrivalDate'] = pd.to_datetime(read['ArrivalDate']).dt.date
     read.to_csv(f'{folder_name}{property_code}_Forecast.csv', index=False)
     if os.path.exists(filename):
         os.remove(filename)
