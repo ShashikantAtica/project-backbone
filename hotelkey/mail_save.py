@@ -294,6 +294,7 @@ def Hotelkey_Pms(row):
 
     if check_reservation_file:
         
+        fileCount = fileCount + 1
         # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=1, engine='python')
         read = read[(read['Status'] == 'Book')]
@@ -332,6 +333,7 @@ def Hotelkey_Pms(row):
 
     if check_occupancy_file:
 
+        fileCount = fileCount + 1
         # Forecast Data Clean and Insert
         read = pd.read_csv(occupancy_file_path)
         read['Date'] = pd.to_datetime(read['Date'])
