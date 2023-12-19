@@ -84,11 +84,12 @@ def bulk_insert_opera_cloud_rbrc(rbrc_list, date_set, propertyCode):
     print("yesterday_date_in_report :: ", yesterday_date_of_report)
 
     formatted_yesterday_date_of_report = "'" + yesterday_date_of_report.format('YYYY-MM-DD') + "'"
+    db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of RBRC
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_yesterday_date_of_report};')
+        f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_yesterday_date_of_report} and "propertyCode" = {db_propertyCode};')
     conn.close()
     print("DELETE OLD DATA >= !!!", yesterday_date_of_report)
 
@@ -333,7 +334,7 @@ def OperaCloud_Pms(row):
         # End RBRC Report
 
         print("RBRC RESULT")
-        print(rbrc_result)
+        # print(rbrc_result) #This can be uncommented to test/see the result of parsed data
 
         if len(rbrc_result) > 0:
             bulk_insert_opera_cloud_rbrc(rbrc_result, date_set, propertyCode=propertyCode)

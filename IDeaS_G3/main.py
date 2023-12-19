@@ -77,11 +77,12 @@ def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
     print("lowest_date_in_report :: ", low_input_date_str)
 
     formatted_yesterday_date_of_report = "'" + low_input_date_str + "'"
+    db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of RBRC
     conn = db_config.get_db_connection()
     conn.execute(
-        f'DELETE from ideasg3_occ where {Day_of_Arrival} >= {formatted_yesterday_date_of_report};')
+        f'DELETE from ideasg3_occ where {Day_of_Arrival} >= {formatted_yesterday_date_of_report} and "propertyCode" = {db_propertyCode};')
     conn.close()
     print("DELETE OLD DATA >= !!!", formatted_yesterday_date_of_report)
 
@@ -304,7 +305,6 @@ def IDeaSG3_Rms(row):
                         flag=1
                 if(flag==1):
                     rows.append(row_data)
-            print(date_set)
             df = pd.DataFrame(rows)
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
@@ -327,7 +327,7 @@ def IDeaSG3_Rms(row):
         low_input_date_str = min(date_set)
         low_input_date_str = low_input_date_str[:10]
         print("Occupancy RESULT", low_input_date_str)
-        print(occ_result)
+        # print(occ_result) #This can be uncommented to test/see the result of parsed data
 
         if len(occ_result) > 0:
             bulk_insert_IDeaSG3_occ(occ_result, low_input_date_str, propertyCode=propertyCode)
