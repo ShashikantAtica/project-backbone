@@ -283,7 +283,7 @@ def VisualMatrix_Pms(row):
                 update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)    
 
         except Exception as e:
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=e, IS_ERROR=True)
+            update_into_pulldate(pullDateId, ERROR_NOTE=e, IS_ERROR=True)
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
