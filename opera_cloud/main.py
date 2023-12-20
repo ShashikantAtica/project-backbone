@@ -211,6 +211,25 @@ def create_filter(label, archiveLabel):
     filter += " label:" + label
     return "has:attachment " + filter
 
+def label_messege_saver(label_name, messages_array, track_label_nomsg_set):
+    print("label_name :: ", label_name)
+    response = service.users().messages().list(userId="me",
+                                                q=create_filter(label_name, "Saved")
+                                                ).execute()
+    if 'messages' in response:
+        messages = response['messages']
+        item = {
+            "label_name": label_name,
+            "messages": messages
+        }
+        messages_array.append(item)
+
+    else:
+        msg = f"No new messages for {label_name} label"
+        print(msg)
+        track_label_nomsg_set.add(label_name)
+        return 0
+
 
 def OperaCloud_Pms(row):
     global archive_label
@@ -223,83 +242,82 @@ def OperaCloud_Pms(row):
     folder_name = "./reports/"
     messages_array = []
     saved_messages_ids = []
+    track_label_nomsg_set = set()
+    
+    file_paths = [
+        f'{folder_name}{propertyCode}_Reservation.xml',
+        f'{folder_name}{propertyCode}_Occupancy.xml',
+        f'{folder_name}{propertyCode}_Arrival.xml',
+        f'{folder_name}{propertyCode}_Reservations.csv',
+        f'{folder_name}{propertyCode}_Occupancy.csv',
+        f'{folder_name}{propertyCode}_Arrival.csv'
+    ]
+
+    for file_path in file_paths:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
     for label_name in label_array:
-        print("label_name :: ", label_name)
-        response = service.users().messages().list(userId="me",
-                                                   q=create_filter(label_name, "Saved")
-                                                   ).execute()
-        if 'messages' in response:
-            messages = response['messages']
-            item = {
-                "label_name": label_name,
-                "messages": messages
-            }
-            messages_array.append(item)
+        label_messege_saver(label_name, messages_array, track_label_nomsg_set)
 
-        else:
-            msg = f"No new messages for {label_name} label"
-            print(msg)
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
-            return 0
-    if len(label_array) == len(messages_array):
-        for item in messages_array:
-            messages = item["messages"]
-            label_name = item["label_name"]
-            # get first message only
-            message = messages[0]
-            a_message = service.users().messages().get(userId="me",
-                                                       id=message["id"]
-                                                       ).execute()
+    for item in messages_array:
+        messages = item["messages"]
+        label_name = item["label_name"]
+        # get first message only
+        message = messages[0]
+        a_message = service.users().messages().get(userId="me",
+                                                    id=message["id"]
+                                                    ).execute()
 
-            for part in a_message['payload']['parts']:
-                save_flag = True
-                if part['filename']:
+        for part in a_message['payload']['parts']:
+            save_flag = True
+            if part['filename']:
 
-                    print("save flag : ", save_flag)
-                    if save_flag:
-                        if 'data' in part['body']:
-                            file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
-                        else:
-                            attachment_id = part['body']['attachmentId']
-                            attachment = service.users().messages().attachments().get(userId="me",
-                                                                                      messageId=message["id"],
-                                                                                      id=attachment_id).execute()
-                            data = attachment['data']
-                            file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
-
-                        print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
-                        # file_data
-
-                        # Open file in binary write mode
-                        file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xml", "wb")
-                        binary_file.write(file_data)
-                        binary_file.close()
-
+                print("save flag : ", save_flag)
+                if save_flag:
+                    if 'data' in part['body']:
+                        file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
                     else:
-                        print("Attachment format match fail for message ")
+                        attachment_id = part['body']['attachmentId']
+                        attachment = service.users().messages().attachments().get(userId="me",
+                                                                                    messageId=message["id"],
+                                                                                    id=attachment_id).execute()
+                        data = attachment['data']
+                        file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
 
-            saved_messages_ids = []
-            for message in messages:
-                saved_messages_ids.append(message["id"])
-            archive_label = get_archive_label("Saved")
-            print(f"{archive_label['name']} : {archive_label['id']}")
+                    print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
+                    # file_data
 
-            # # Apply archive label to saved messages
-            # label_apply_body = {
-            #     "addLabelIds": archive_label["id"],
-            #     "ids": saved_messages_ids
-            # }
-            #
-            # if saved_messages_ids:
-            #     response = service.users().messages().batchModify(userId="me",
-            #                                                       body=label_apply_body
-            #                                                       ).execute()
-            #     saved_messages_count = len(saved_messages_ids)
-            #     print(f"Saved label applied to {saved_messages_count} messages.")
-            #
-            # else:
-            #     print("No messages to save")
+                    # Open file in binary write mode
+                    file_name = label_name.split(" ")[1]
+                    binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xml", "wb")
+                    binary_file.write(file_data)
+                    binary_file.close()
+
+                else:
+                    print("Attachment format match fail for message ")
+
+        saved_messages_ids = []
+        for message in messages:
+            saved_messages_ids.append(message["id"])
+        archive_label = get_archive_label("Saved")
+        print(f"{archive_label['name']} : {archive_label['id']}")
+
+        # # Apply archive label to saved messages
+        # label_apply_body = {
+        #     "addLabelIds": archive_label["id"],
+        #     "ids": saved_messages_ids
+        # }
+        #
+        # if saved_messages_ids:
+        #     response = service.users().messages().batchModify(userId="me",
+        #                                                       body=label_apply_body
+        #                                                       ).execute()
+        #     saved_messages_count = len(saved_messages_ids)
+        #     print(f"Saved label applied to {saved_messages_count} messages.")
+        #
+        # else:
+        #     print("No messages to save")
 
     # Modification of res report
     reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xml'
@@ -319,13 +337,25 @@ def OperaCloud_Pms(row):
     fileCount=0
 
     if not check_reservation_file:
-        errorMessage = errorMessage + " Reservation file - N/A"
+        res_labelname=f"{propertyCode} Reservation"
+        if res_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {res_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Reservation file - N/A"
 
     if not check_occupancy_file:
-        errorMessage = errorMessage + " Occupancy file - N/A"
+        occ_labelname=f"{propertyCode} Occupancy"
+        if occ_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {occ_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Occupancy file - N/A"
 
     if not check_arrival_file:
-        errorMessage = errorMessage + " Arrival file - N/A"
+        arr_labelname=f"{propertyCode} Arrival"
+        if arr_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {arr_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Arrival file - N/A"
 
     if check_reservation_file:
         
@@ -411,7 +441,7 @@ def OperaCloud_Pms(row):
             print("Reservation Data not available")
 
         print("RES RESULT")
-        print(res_result)
+        # print(res_result) #This can be uncommented to test/see the result of parsed data
         if len(res_result) > 0:
             bulk_insert_opera_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
             print("RES DONE")
@@ -601,7 +631,7 @@ def OperaCloud_Pms(row):
             print("Occupancy Data not available")
         
         print("OCC RESULT")
-        print(occ_result)
+        # print(occ_result) #This can be uncommented to test/see the result of parsed data
         if len(occ_result) > 0:
             bulk_insert_opera_cloud_occ(occ_result, propertyCode, row['occ_before'], row['occ_after'])
             print("OCC DONE")
@@ -649,40 +679,43 @@ def OperaCloud_Pms(row):
         arrival_result = list(arrival_result)
 
         print("ARRIVAL RESULT")
-        print(arrival_result)
+        # print(arrival_result) #This can be uncommented to test/see the result of parsed data
         if len(arrival_result) > 0:
             bulk_insert_opera_cloud_arrival(arrival_result, propertyCode, row['res_before'], row['res_after'])
             print("ARRIVAL DONE")
         else:
             errorMessage = errorMessage + "Arrival File Was Blank, "
         # End Arrival Report
+            
+    if len(track_label_nomsg_set) != 3:
+    # Apply archive label to saved messages
+        label_apply_body = {
+            "addLabelIds": archive_label["id"],
+            "ids": saved_messages_ids
+        }
 
-    if (fileCount==3):
-        if(errorMessage==""):
+        if saved_messages_ids:
+            response = service.users().messages().batchModify(userId="me",
+                                                                body=label_apply_body
+                                                                ).execute()
+            saved_messages_count = len(saved_messages_ids)
+            print(f"Saved label applied to {saved_messages_count} messages.")
+
+        else:
+            print("No messages to save")
+
+    if fileCount == 3:
+        if errorMessage == "":
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-
-            # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
-
-            else:
-                print("No messages to save")
-
         else:
             errorMessage="Partially Successfull:- "+errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
-        if (fileCount==0):
-            errorMessage = "All File Not Found"
+        if fileCount == 0:
+            if len(track_label_nomsg_set) == 3:
+                errorMessage = "No new messages for all label"
+            else:
+                errorMessage = "All File Not Found"
         else:
             errorMessage="Partially Successfull:- "+errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
