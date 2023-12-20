@@ -687,8 +687,6 @@ if __name__ == '__main__':
     if result is not None and len(result) > 0:
         print(f"Total Properties :: {len(result)}")
         for item in result:
-            if(item['propertyCode']!='US000003'):
-                continue
 
             PROPERTY_ID = item['id']
             PROPERTY_CODE = item['propertyCode']
