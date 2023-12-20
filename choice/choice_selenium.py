@@ -88,12 +88,9 @@ def choice_cancellation(row):
         driver.find_element(By.NAME, "j_username").send_keys(username)
         driver.find_element(By.NAME, "j_password").send_keys(password)
         driver.find_element(By.ID, 'greenButton').click()
+        time.sleep(5)
 
-        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Run")))
-        driver.find_element(By.LINK_TEXT, "Run").click()
-        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Reports")))
-        driver.find_element(By.LINK_TEXT, "Reports").click()
-
+        driver.get("https://www.choiceadvantage.com/choicehotels/ReportViewStart.init")
         WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.ID, "CancellationListReport")))
         driver.find_element(By.ID, "CancellationListReport").click()
 
@@ -129,8 +126,8 @@ def choice_cancellation(row):
         df.dropna(inplace=True, how="all")
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  int(arrow.utcnow().timestamp())
-        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+        createdAtEpoch = int(arrow.utcnow().timestamp())
+        updatedAtEpoch = int(arrow.utcnow().timestamp())
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
         df.insert(2, column="createdAt", value=createdAt)
@@ -190,7 +187,7 @@ def choice_cancellation(row):
         return 0
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
     DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
@@ -282,7 +279,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_selenium")
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME + "_selenium")
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
