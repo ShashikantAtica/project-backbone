@@ -88,6 +88,7 @@ def choice_cancellation(row):
         driver.find_element(By.NAME, "j_username").send_keys(username)
         driver.find_element(By.NAME, "j_password").send_keys(password)
         driver.find_element(By.ID, 'greenButton').click()
+        time.sleep(5)
 
         driver.get("https://www.choiceadvantage.com/choicehotels/ReportViewStart.init")
         WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.ID, "CancellationListReport")))
