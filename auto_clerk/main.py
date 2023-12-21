@@ -103,18 +103,28 @@ def AutoClerk_Pms(row):
 
     username = None
     password = None
-
-    folder_name = f"./reports/{propertyCode}/"
-    # save_dir = os.path.abspath('reports/')
-    save_dir = os.path.abspath(f'./reports/{propertyCode}/')
-    driver = None
     try:
         print(f"Getting Secret for {atica_property_code}")
         json_dict = get_secret_from_api(propertyCode, platform)
         print("res ::")
         username = json_dict['u']
         password = json_dict['p']
+    except Exception:
+        msg = f"[{atica_property_code}] secret fetch failed due to bad json"
+        print(msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        return 0
 
+    if username is None or password is None:
+        msg = f"[{atica_property_code}] username and password is wrong!!!"
+        print(msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+
+    folder_name = f"./reports/{propertyCode}/"
+    # save_dir = os.path.abspath('reports/')
+    save_dir = os.path.abspath(f'./reports/{propertyCode}/')
+    driver = None
+    try:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
