@@ -252,7 +252,7 @@ def AutoClerk_Pms(row):
 
             while not os.path.exists(filepath):
                 time.sleep(1)
-            time.sleep(7)
+            time.sleep(10)
 
             new_file_name = os.path.join(save_dir,
                                          f"result_{Res_Start_date.format('M-D-YY')} to {Res_Start_date.format('M-D-YY')}.csv")
