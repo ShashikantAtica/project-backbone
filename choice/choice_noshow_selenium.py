@@ -80,12 +80,9 @@ def choice_noshow(row):
         driver.find_element(By.NAME, "j_username").send_keys(username)
         driver.find_element(By.NAME, "j_password").send_keys(password)
         driver.find_element(By.ID, 'greenButton').click()
+        time.sleep(5)
 
-        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Run")))
-        driver.find_element(By.LINK_TEXT, "Run").click()
-        WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.LINK_TEXT, "Reports")))
-        driver.find_element(By.LINK_TEXT, "Reports").click()
-
+        driver.get("https://www.choiceadvantage.com/choicehotels/ReportViewStart.init")
         WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.ID, "NoShowReport")))
         driver.find_element(By.ID, "NoShowReport").click()
 
@@ -186,7 +183,7 @@ def choice_noshow(row):
             df.to_csv(f"{folder_name}{propertyCode}_Noshow.csv", index=False)
             Noshow_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Noshow.csv", encoding="utf-8"))
             Noshow_result = list(Noshow_result)
-            print(Noshow_result)
+            # print(Noshow_result) #This can be uncommented to test/see the result of parsed data
             
             print(f"{atica_property_code} Choice noshow report pulled successfully")
 
