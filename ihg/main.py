@@ -160,6 +160,25 @@ def create_filter(label, archiveLabel):
     filter += " label:" + label
     return "has:attachment " + filter
 
+def label_messege_saver(label_name, messages_array, track_label_nomsg_set):
+    print("label_name :: ", label_name)
+    response = service.users().messages().list(userId="me",
+                                                q=create_filter(label_name, "Saved")
+                                                ).execute()
+    if 'messages' in response:
+        messages = response['messages']
+        item = {
+            "label_name": label_name,
+            "messages": messages
+        }
+        messages_array.append(item)
+
+    else:
+        msg = f"No new messages for {label_name} label"
+        print(msg)
+        track_label_nomsg_set.add(label_name)
+        return 0
+
 
 def IHG_Pms(row):
     global archive_label
@@ -172,73 +191,79 @@ def IHG_Pms(row):
     folder_name = "./reports/"
     messages_array = []
     saved_messages_ids = []
+    track_label_nomsg_set = set()
+
+    file_paths = [
+        f"{folder_name}{propertyCode}_Occupancy.csv",
+        f"{folder_name}{propertyCode}_Reservations.csv",
+        f'{folder_name}{propertyCode}_Occupancy.xlsx',
+        f'{folder_name}{propertyCode}_Reservation.xlsx'
+    ]
+
+    for file_path in file_paths:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
     for label_name in label_array:
-        print("label_name :: ", label_name)
-        response = service.users().messages().list(userId="me",
-                                                   q=create_filter(label_name, "Saved")
-                                                   ).execute()
-        if 'messages' in response:
-            messages = response['messages']
-            item = {
-                "label_name": label_name,
-                "messages": messages
-            }
-            messages_array.append(item)
+        label_messege_saver(label_name, messages_array, track_label_nomsg_set)
+    
+    for item in messages_array:
+        messages = item["messages"]
+        label_name = item["label_name"]
+        # get first message only
+        message = messages[0]
+        a_message = service.users().messages().get(userId="me",
+                                                    id=message["id"]
+                                                    ).execute()
 
-        else:
-            msg = f"No new messages for {label_name} label"
-            print(msg)
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
-            return 0
-    if len(label_array) == len(messages_array):
-        for item in messages_array:
-            messages = item["messages"]
-            label_name = item["label_name"]
-            # get first message only
-            message = messages[0]
-            a_message = service.users().messages().get(userId="me",
-                                                       id=message["id"]
-                                                       ).execute()
+        for part in a_message['payload']['parts']:
+            save_flag = True
+            if part['filename']:
 
-            for part in a_message['payload']['parts']:
-                save_flag = True
-                if part['filename']:
-
-                    print("save flag : ", save_flag)
-                    if save_flag:
-                        if 'data' in part['body']:
-                            file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
-                        else:
-                            attachment_id = part['body']['attachmentId']
-                            attachment = service.users().messages().attachments().get(userId="me",
-                                                                                      messageId=message["id"],
-                                                                                      id=attachment_id).execute()
-                            data = attachment['data']
-                            file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
-
-                        print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
-                        # file_data
-
-                        # Open file in binary write mode
-                        file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xlsx", "wb")
-                        binary_file.write(file_data)
-                        binary_file.close()
-
+                print("save flag : ", save_flag)
+                if save_flag:
+                    if 'data' in part['body']:
+                        file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
                     else:
-                        print("Attachment format match fail for message ")
+                        attachment_id = part['body']['attachmentId']
+                        attachment = service.users().messages().attachments().get(userId="me",
+                                                                                    messageId=message["id"],
+                                                                                    id=attachment_id).execute()
+                        data = attachment['data']
+                        file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
 
-            for message in messages:
-                saved_messages_ids.append(message["id"])
-            archive_label = get_archive_label("Saved")
-            print(f"{archive_label['name']} : {archive_label['id']}")
-    res_saved_messages_ids = []
-    occ_saved_messages_ids = []
-    for i in messages_array:
-        if i['label_name'] == f'{propertyCode} Reservation':
-            res_saved_messages_ids.append([j['id'] for j in i['messages']])
-        if i['label_name'] == f'{propertyCode} Occupancy':
-            occ_saved_messages_ids.append([j['id'] for j in i['messages']])
+                    print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
+                    # file_data
+
+                    # Open file in binary write mode
+                    file_name = label_name.split(" ")[1]
+                    binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xlsx", "wb")
+                    binary_file.write(file_data)
+                    binary_file.close()
+
+                else:
+                    print("Attachment format match fail for message ")
+
+        for message in messages:
+            saved_messages_ids.append(message["id"])
+        archive_label = get_archive_label("Saved")
+        print(f"{archive_label['name']} : {archive_label['id']}")
+
+        # Apply archive label to saved messages
+        # label_apply_body = {
+        #     "addLabelIds": archive_label["id"],
+        #     "ids": saved_messages_ids
+        # }
+        #
+        # if saved_messages_ids:
+        #     response = service.users().messages().batchModify(userId="me",
+        #                                                       body=label_apply_body
+        #                                                       ).execute()
+        #     saved_messages_count = len(saved_messages_ids)
+        #     print(f"Saved label applied to {saved_messages_count} messages.")
+        #
+        # else:
+        #     print("No messages to save")
 
     # Modification of res report
     reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xlsx'
@@ -253,11 +278,25 @@ def IHG_Pms(row):
     updatedAtEpoch = int(arrow.utcnow().timestamp())
 
     errorMessage = ""
-    fileCount = 0
+    fileCount=0
+
+    if not check_reservation_file:
+        res_labelname=f"{propertyCode} Reservation"
+        if res_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {res_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Reservation file - N/A"
+
+    if not check_occupancy_file:
+        occ_labelname=f"{propertyCode} Occupancy"
+        if occ_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {occ_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Occupancy file - N/A"
 
     if check_reservation_file:
 
-        fileCount = fileCount + 1
+        fileCount=fileCount+1
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
@@ -274,27 +313,13 @@ def IHG_Pms(row):
         res_result = list(res_result)
         if len(res_result) > 0:
             bulk_insert_ihg_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
-
-            # SAVE LABEL APPLY FOR RESERVATION
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": res_saved_messages_ids[0]
-            }
-
-            response = service.users().messages().batchModify(userId="me",
-                                                              body=label_apply_body
-                                                              ).execute()
-            res_saved_messages_count = len(res_saved_messages_ids)
-            print(f"Saved label applied to reservation {res_saved_messages_count} messages.")
             print("RES DONE")
         else:
             errorMessage = errorMessage + "Reservation File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Reservation File Not Found, "
 
     if check_occupancy_file:
-
-        fileCount = fileCount + 1
+        
+        fileCount=fileCount+1
         # Occupancy Data Clean and Insert
         read = pd.read_excel(occupancy_file_path)
         read['Date'] = pd.to_datetime(read['Date'])
@@ -319,35 +344,43 @@ def IHG_Pms(row):
         occ_result = list(occ_result)
         if len(occ_result) > 0:
             bulk_insert_occ_res(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
-
-            # SAVE LABEL APPLY FOR OCCUPANCY
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": occ_saved_messages_ids[0]
-            }
-
-            response = service.users().messages().batchModify(userId="me",
-                                                              body=label_apply_body
-                                                              ).execute()
-            saved_messages_count = len(occ_saved_messages_ids)
-            print(f"Saved label applied to occupancy {saved_messages_count} messages.")
             print("OCC DONE")
         else:
             errorMessage = errorMessage + "Occupancy File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Occupancy File Not Found, "
 
+    if len(track_label_nomsg_set) != 2:
+    # Apply archive label to saved messages
+        label_apply_body = {
+            "addLabelIds": archive_label["id"],
+            "ids": saved_messages_ids
+        }
+
+        if saved_messages_ids:
+            response = service.users().messages().batchModify(userId="me",
+                                                                body=label_apply_body
+                                                                ).execute()
+            saved_messages_count = len(saved_messages_ids)
+            print(f"Saved label applied to {saved_messages_count} messages.")
+
+        else:
+            print("No messages to save")
+
+                
     if fileCount == 2:
         if errorMessage == "":
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+
         else:
-            errorMessage = "Partially Successfull:- " + errorMessage
+            errorMessage="Partially Successfull:- "+errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
         if fileCount == 0:
-            errorMessage = "All File Not Found"
+            if len(track_label_nomsg_set) == 2:
+                errorMessage = "No new messages for all label"
+            else:
+                errorMessage = "All File Not Found"
         else:
-            errorMessage = "Partially Successfull:- " + errorMessage
+            errorMessage="Partially Successfull:- "+errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 

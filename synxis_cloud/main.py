@@ -298,6 +298,26 @@ def create_filter(label, archiveLabel):
     filter += " label:" + label
     return "has:attachment " + filter
 
+def label_messege_saver(label_name, messages_array, track_label_nomsg_set):
+    print("label_name :: ", label_name)
+    response = service.users().messages().list(userId="me",
+                                                q=create_filter(label_name, "Saved")
+                                                ).execute()
+    if 'messages' in response:
+        messages = response['messages']
+        item = {
+            "label_name": label_name,
+            "messages": messages
+        }
+        messages_array.append(item)
+
+    else:
+        msg = f"No new messages for {label_name} label"
+        print(msg)
+        track_label_nomsg_set.add(label_name)
+        return 0
+
+
 
 def Synxis_Cloud_Pms(row):
     global archive_label
@@ -310,74 +330,46 @@ def Synxis_Cloud_Pms(row):
     attachment_format = "./reports"
     messages_array = []
     saved_messages_ids = []
+    track_label_nomsg_set = set()
+
+    file_paths = [
+        f'{attachment_format}/{propertyCode}_Reservation.csv',
+        f'{attachment_format}/{propertyCode}_Forecast.csv',
+        f'{attachment_format}/{propertyCode}_Revenue.csv',
+        f'{attachment_format}/{propertyCode}_Monthly.csv'
+    ]
+
+    for file_path in file_paths:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
     for label_name in label_array:
-        print("label_name :: ", label_name)
-        response = service.users().messages().list(userId="me",
-                                                   q=create_filter(label_name, "Saved")
-                                                   ).execute()
-        if 'messages' in response:
-            messages = response['messages']
-            item = {
-                "label_name": label_name,
-                "messages": messages
-            }
-            messages_array.append(item)
+        label_messege_saver(label_name, messages_array, track_label_nomsg_set)
+        
+    
+    for item in messages_array:
+        messages = item["messages"]
+        label_name = item["label_name"]
+        # get first message only
+        message = messages[0]
+        a_message = service.users().messages().get(userId="me",
+                                                    id=message["id"]
+                                                    ).execute()
 
-        else:
-            msg = f"No new messages for {label_name} label"
-            print(msg)
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
-            return 0
-    if len(label_array) == len(messages_array):
-        for item in messages_array:
-            messages = item["messages"]
-            label_name = item["label_name"]
-            # get first message only
-            message = messages[0]
-            a_message = service.users().messages().get(userId="me",
-                                                       id=message["id"]
-                                                       ).execute()
-
-            for part in a_message['payload']['parts']:
-                try:
-                    print("Saving with New Way")
-                    for sub_part in part['parts']:
-                        save_flag = True
-                        if sub_part['filename']:
-                            if save_flag:
-                                if 'data' in sub_part['body']:
-                                    file_data = base64.urlsafe_b64decode(sub_part['body']['data'].encode('UTF-8'))
-                                else:
-                                    attachment_id = sub_part['body']['attachmentId']
-                                    attachment = service.users().messages().attachments().get(userId="me",
-                                                                                              messageId=message["id"],
-                                                                                              id=attachment_id).execute()
-                                    data = attachment['data']
-                                    file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
-
-                                print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
-                                # file_data
-
-                                # Open file in binary write mode
-                                file_name = label_name.split(" ")[1]
-                                print(file_name)
-                                binary_file = open(f"{attachment_format}/{propertyCode}_{file_name}.csv", "wb")
-                                binary_file.write(file_data)
-                                binary_file.close()
-
-                            else:
-                                print("Attachment format match fail for message ")
-                except Exception:
+        for part in a_message['payload']['parts']:
+            try:
+                print("Saving with New Way")
+                for sub_part in part['parts']:
                     save_flag = True
-                    if part['filename']:
+                    if sub_part['filename']:
                         if save_flag:
-                            if 'data' in part['body']:
-                                file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
+                            if 'data' in sub_part['body']:
+                                file_data = base64.urlsafe_b64decode(sub_part['body']['data'].encode('UTF-8'))
                             else:
-                                attachment_id = part['body']['attachmentId']
+                                attachment_id = sub_part['body']['attachmentId']
                                 attachment = service.users().messages().attachments().get(userId="me",
-                                                                                          messageId=message["id"],
-                                                                                          id=attachment_id).execute()
+                                                                                            messageId=message["id"],
+                                                                                            id=attachment_id).execute()
                                 data = attachment['data']
                                 file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
 
@@ -391,38 +383,64 @@ def Synxis_Cloud_Pms(row):
                             binary_file.write(file_data)
                             binary_file.close()
 
-                            # save message asap
-                            archive_label = get_archive_label("Saved")
-                            label_apply_body = {
-                                "addLabelIds": archive_label["id"]
-                            }
-                            response = service.users().messages().modify(userId="me",
-                                                                         id=message["id"],
-                                                                         body=label_apply_body).execute()
-
                         else:
                             print("Attachment format match fail for message ")
+            except Exception:
+                save_flag = True
+                if part['filename']:
+                    if save_flag:
+                        if 'data' in part['body']:
+                            file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
+                        else:
+                            attachment_id = part['body']['attachmentId']
+                            attachment = service.users().messages().attachments().get(userId="me",
+                                                                                        messageId=message["id"],
+                                                                                        id=attachment_id).execute()
+                            data = attachment['data']
+                            file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
 
-            for message in messages:
-                saved_messages_ids.append(message["id"])
-            archive_label = get_archive_label("Saved")
-            print(f"{archive_label['name']} : {archive_label['id']}")
+                        print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
+                        # file_data
 
-            # # Apply archive label to saved messages
-            # label_apply_body = {
-            #     "addLabelIds": archive_label["id"],
-            #     "ids": saved_messages_ids
-            # }
-            #
-            # if saved_messages_ids:
-            #     response = service.users().messages().batchModify(userId="me",
-            #                                                       body=label_apply_body
-            #                                                       ).execute()
-            #     saved_messages_count = len(saved_messages_ids)
-            #     print(f"Saved label applied to {saved_messages_count} messages.")
-            #
-            # else:
-            #     print("No messages to save")
+                        # Open file in binary write mode
+                        file_name = label_name.split(" ")[1]
+                        print(file_name)
+                        binary_file = open(f"{attachment_format}/{propertyCode}_{file_name}.csv", "wb")
+                        binary_file.write(file_data)
+                        binary_file.close()
+
+                        # save message asap
+                        archive_label = get_archive_label("Saved")
+                        label_apply_body = {
+                            "addLabelIds": archive_label["id"]
+                        }
+                        response = service.users().messages().modify(userId="me",
+                                                                        id=message["id"],
+                                                                        body=label_apply_body).execute()
+
+                    else:
+                        print("Attachment format match fail for message ")
+
+        for message in messages:
+            saved_messages_ids.append(message["id"])
+        archive_label = get_archive_label("Saved")
+        print(f"{archive_label['name']} : {archive_label['id']}")
+
+        # # Apply archive label to saved messages
+        # label_apply_body = {
+        #     "addLabelIds": archive_label["id"],
+        #     "ids": saved_messages_ids
+        # }
+        #
+        # if saved_messages_ids:
+        #     response = service.users().messages().batchModify(userId="me",
+        #                                                       body=label_apply_body
+        #                                                       ).execute()
+        #     saved_messages_count = len(saved_messages_ids)
+        #     print(f"Saved label applied to {saved_messages_count} messages.")
+        #
+        # else:
+        #     print("No messages to save")
 
     # Modification of res report
     reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.csv'
@@ -442,6 +460,34 @@ def Synxis_Cloud_Pms(row):
 
     errorMessage = ""
     fileCount=0
+
+    if not check_reservation_file:
+        res_labelname=f"{propertyCode} Reservation"
+        if res_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {res_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Reservation file - N/A"
+
+    if not check_forecast_file:
+        for_labelname=f"{propertyCode} Forecast"
+        if for_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {for_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Forecast file - N/A"
+    
+    if not check_revenue_file:
+        rev_labelname=f"{propertyCode} Revenue"
+        if rev_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {rev_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Revenue file - N/A"
+
+    if not check_monthly_file:
+        mon_labelname=f"{propertyCode} Monthly"
+        if mon_labelname in track_label_nomsg_set:
+            errorMessage = errorMessage + f"No new messages for {mon_labelname} label, "
+        else:
+            errorMessage = errorMessage + " Monthly file - N/A"
 
     if check_reservation_file:
 
@@ -490,8 +536,6 @@ def Synxis_Cloud_Pms(row):
             print("RES DONE")
         else:
             errorMessage = errorMessage + "Reservation File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Reservation File Not Found, "
 
     if check_forecast_file:
 
@@ -514,8 +558,6 @@ def Synxis_Cloud_Pms(row):
             print("FORE DONE")
         else:
             errorMessage = errorMessage + "Forecast File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Forecast File Not Found, "
 
     if check_revenue_file:
 
@@ -548,8 +590,6 @@ def Synxis_Cloud_Pms(row):
             print("REV DONE")
         else:
             errorMessage = errorMessage + "Revenue File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Revenue File Not Found, "
 
     if check_monthly_file:
         
@@ -575,35 +615,36 @@ def Synxis_Cloud_Pms(row):
             print("MONTHLY DONE")
         else:
             errorMessage = errorMessage + "Monthly File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Monthly File Not Found, "
 
-    if (fileCount==4):
-        if(errorMessage==""):
-            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+    if len(track_label_nomsg_set) != 4:
+    # Apply archive label to saved messages
+        label_apply_body = {
+            "addLabelIds": archive_label["id"],
+            "ids": saved_messages_ids
+        }
 
-            # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
+        if saved_messages_ids:
+            response = service.users().messages().batchModify(userId="me",
+                                                                body=label_apply_body
+                                                                ).execute()
+            saved_messages_count = len(saved_messages_ids)
+            print(f"Saved label applied to {saved_messages_count} messages.")
 
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
+        else:
+            print("No messages to save")
 
-            else:
-                print("No messages to save")
-                
+    if fileCount == 4:
+        if errorMessage == "":
+            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False) 
         else:
             errorMessage="Partially Successfull:- "+errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     else:
-        if (fileCount==0):
-            errorMessage = "All File Not Found"
+        if fileCount == 0:
+            if len(track_label_nomsg_set) == 4:
+                errorMessage = "No new messages for all label"
+            else:
+                errorMessage = "All File Not Found"
         else:
             errorMessage="Partially Successfull:- "+errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
