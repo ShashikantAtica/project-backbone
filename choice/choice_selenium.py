@@ -136,6 +136,7 @@ def choice_cancellation(row):
         df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         df['Account'] = df['Account'].fillna(0).astype(int)
         df['Nights'] = df['Nights'].fillna(0).astype(int)
+        df.insert(6, column="uniqueKey", value=df["Account"].astype(str))            
 
         output_df = pd.DataFrame(columns=df.columns)
 

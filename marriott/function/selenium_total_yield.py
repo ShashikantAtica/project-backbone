@@ -125,6 +125,11 @@ def get_total_yield_report_url(payload):
             print("Total Yield Report Exported Successfully")
             driver.quit()
 
+            createdAt = "'" + str(arrow.now()) + "'"
+            updatedAt = "'" + str(arrow.now()) + "'"
+            createdAtEpoch =  int(arrow.utcnow().timestamp())
+            updatedAtEpoch =  int(arrow.utcnow().timestamp())
+
             print("Total Yield Report Modification")
             df = pd.read_excel(filepath, header=None, skiprows=5)
             pivoted_df = df.T
@@ -132,14 +137,21 @@ def get_total_yield_report_url(payload):
             pivoted_df.iloc[0, 0] = "Date"
             pivoted_df.insert(0, column="propertyCode", value=payload['propertyCode'])
             pivoted_df.insert(1, column="pullDateId", value=payload['pullDateId'])
-            headers = ["propertyCode", "pullDateId", "Date", "Sleeping_Room_Occ_Per", "Function_Space_Occ_Per", "Sleeping_Rooms_Projected", "Transient", "inContract",
+            pivoted_df.insert(2, column="createdAt", value=createdAt)
+            pivoted_df.insert(3, column="updatedAt", value=updatedAt)
+            pivoted_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            pivoted_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            # pivoted_df.insert(6, column="uniqueKey", value=pivoted_df["propertyCode"].astype(str) + "_" + pivoted_df['Date'].astype(str)) 
+            headers = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "Date", "Sleeping_Room_Occ_Per", "Function_Space_Occ_Per", "Sleeping_Rooms_Projected", "Transient", "inContract",
                        "Definite", "Tentative_1", "Tentative_2", "Hold", "Prospect", "To_Be_s", "Out_of_Order_Rooms",
                        "MARSHA_Booked_Group", "MARSHA_Blocked_Group", "Group_Restrictions_Hotel", "Restriction_Threshold_Hotel"]
             pivoted_df.columns = headers
             final_df = pivoted_df.iloc[1:]
             final_df.reset_index(drop=True, inplace=True)
             final_df.loc[:, 'Date'] = pd.to_datetime(final_df['Date'].replace('\n', ' '), format='%a %b %d').dt.strftime(f'{arrow.now().format("YYYY")}-%m-%d')
+            final_df.insert(6, column="uniqueKey", value=final_df["propertyCode"].astype(str) + "_" + final_df['Date'].astype(str)) 
             final_df.to_csv(os.path.join(f'{folder_name}{external_property_code}_Total_Yield.csv'), index=False)
+
             print("Total Yield Report Modified Successfully")
             if os.path.exists(filepath):
                 os.remove(filepath)

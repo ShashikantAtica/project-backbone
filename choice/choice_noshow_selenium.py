@@ -164,7 +164,7 @@ def choice_noshow(row):
             update_into_pulldate(pullDateId, ERROR_NOTE=f"{atica_property_code} Data is mismatched for Account-Auth_status", IS_ERROR=True)
         else:
             # account, created_at, updated_at, property_code, auth_status
-            cols = ["propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch","ACCOUNT","AUTH_STATUS"]
+            cols = ["propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch","uniqueKey","ACCOUNT","AUTH_STATUS"]
             rows = []
                     
             print("Number of auth_status : ",len(auth_status), "Number of account : ", len(account))
@@ -176,6 +176,7 @@ def choice_noshow(row):
                         "updatedAt": "'" + str(arrow.now()) + "'",
                         "createdAtEpoch" : int(arrow.utcnow().timestamp()),
                         "updatedAtEpoch" : int(arrow.utcnow().timestamp()),
+                        "uniqueKey" : account[x],
                         "ACCOUNT": account[x],
                         "AUTH_STATUS": auth_status[x]})
                 
