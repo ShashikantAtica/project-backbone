@@ -58,12 +58,17 @@ def BestRev_Pms(row):
         atica_property_code = row['atica_property_code']
         pullDateId = row['pullDateId']
         propertyCode = row['propertyCode']
+        external_property_code = row['external_property_code']
         platform = "RMS"
 
-        save_dir = os.path.abspath(f'reports/')
+        save_dir = os.path.abspath('reports/')
+        folder_name = "./reports/"
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-        folder_name = "./reports/"
+
+        total_forecast_file_path = f'{folder_name}{propertyCode}_TotalForecast.csv'
+        if os.path.exists(total_forecast_file_path):
+            os.remove(total_forecast_file_path)
 
         print(f"Getting Secret for {atica_property_code}")
         json_dict = get_secret_from_api(propertyCode, platform)
@@ -83,7 +88,8 @@ def BestRev_Pms(row):
             "download.default_directory": save_dir,
             "download.prompt_for_download": False,
             "download.directory_upgrade": True,
-            "safebrowsing.enabled": True
+            "safebrowsing.enabled": True,
+            "download.default_filename": "default_filename.csv"
         })
 
         service = Service('../chromedriver.exe')
@@ -108,7 +114,8 @@ def BestRev_Pms(row):
         driver.find_element(By.XPATH, '//*[@id="form53"]/div[2]/input').click()
 
         try:
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//h2[contains(@class, 'name')]")))
+            WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, "//h2[contains(@class, 'name')]")))
             if "Hello" in driver.page_source:
                 print(f"{atica_property_code} Login Successful")
             else:
@@ -123,27 +130,33 @@ def BestRev_Pms(row):
         print(f"{atica_property_code} Getting the Total Forecast Report")
 
         driver.get('https://bestrev.bwhhotelgroup.com/my-view/metrics')
-        time.sleep(20)
+        time.sleep(25)
         driver.find_element(By.ID, "outlined-select").click()
         time.sleep(2)
         driver.find_element(By.XPATH, "//span[text()='All days - Next 365 days']").click()
 
         print(f"{atica_property_code} Exporting Total Forecast Report")
-        time.sleep(20)
+
+        time.sleep(30)
         driver.find_element(By.CSS_SELECTOR, 'a[href^="blob:"] button[aria-label="export"]').click()
-        time.sleep(5)
 
-        previous_forecast_path = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
-        if os.path.exists(previous_forecast_path):
-            os.remove(previous_forecast_path)
-
+        file_present = False
+        presence = False
+        while not presence:
+            files = os.listdir(save_dir)
+            if len(files) > 0:
+                presence = True
+                break
         files = os.listdir(save_dir)
+        while not file_present:
+            for file in files:
+                if os.path.exists(file.startswith(external_property_code + '_metrics')):
+                    file_present = True
+                    downloaded_file = os.path.join(save_dir, file)
+                    os.replace(downloaded_file, os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv'))
+                    print("File renamed")
+                    break
 
-        for file in files:
-            if file.endswith('.csv'):
-                downloaded_file = os.path.join(save_dir, file)
-                new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
-                os.rename(downloaded_file, new_file)
         print(f"{atica_property_code} Total Forecast Exported Successfully")
         driver.quit()
 
@@ -166,8 +179,11 @@ def BestRev_Pms(row):
         df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         df['Priority'] = df['Priority'].fillna(0).astype(int)
-        headers = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "BestWesternRate", "RecommendedRate", "RatetoUpload",
-                   "RecommendationStatus", "MarketRate", "AvailableRooms", "TransientCapacity", "TotalForecast_IncludesGroup", "OntheBooks_IncludesGroup",
+        headers = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "Alert",
+                   "Priority", "StayDate", "DayofWeek", "Favorite", "BestWesternRate", "RecommendedRate",
+                   "RatetoUpload",
+                   "RecommendationStatus", "MarketRate", "AvailableRooms", "TransientCapacity",
+                   "TotalForecast_IncludesGroup", "OntheBooks_IncludesGroup",
                    "AverageDailyRate", "RevPAR", "Occupancy_IncludesGroup", "ForecastOccupancy_IncludesGroup"]
         df.to_csv(new_file, header=headers, index=False)
         print(f"{atica_property_code} Total Forecast Report Modified Successfully")
@@ -183,7 +199,8 @@ def BestRev_Pms(row):
 
         if check_total_forecast_file:
             # Insert into Database
-            total_forecast_result = csv.DictReader(open(f"{folder_name}{propertyCode}_TotalForecast.csv", encoding="utf-8"))
+            total_forecast_result = csv.DictReader(
+                open(f"{folder_name}{propertyCode}_TotalForecast.csv", encoding="utf-8"))
             total_forecast_result = list(total_forecast_result)
             print(len(total_forecast_result))
             fore_start_date = arrow.now().format("YYYY-MM-DD")
@@ -268,7 +285,8 @@ if __name__ == '__main__':
     else:
         print(f"{propertycode} property run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        res = conn.execute(
+            f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
         result = res.fetchall()
         conn.close()
         print("Fetched successfully")
