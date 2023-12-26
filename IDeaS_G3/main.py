@@ -320,7 +320,7 @@ def IDeaSG3_Rms(row):
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
-
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['Day_of_Arrival'].astype(str)) 
             df = df.reset_index(drop=True)
             df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
