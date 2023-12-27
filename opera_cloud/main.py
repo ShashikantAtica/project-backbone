@@ -428,6 +428,7 @@ def OperaCloud_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            df.insert(6, column="uniqueKey", value=df["RESV_NAME_ID"].astype(str))
             df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
             df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
             df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
@@ -542,6 +543,7 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['CHAR_CONSIDERED_DATE'].astype(str)) 
             df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
 
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
@@ -622,6 +624,7 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['CHAR_CONSIDERED_DATE'].astype(str)) 
             df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
 
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
@@ -667,6 +670,7 @@ def OperaCloud_Pms(row):
         final_df.insert(3, column="updatedAt", value=updatedAt)
         final_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         final_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        final_df.insert(6, column="uniqueKey", value=final_df["RESV_NAME_ID"].astype(str))
         final_df['UPDATE_DATE'] = pd.to_datetime(final_df['UPDATE_DATE'])
         final_df['TRUNC_BEGIN'] = pd.to_datetime(final_df['TRUNC_BEGIN'])
         final_df['TRUNC_END'] = pd.to_datetime(final_df['TRUNC_END'])

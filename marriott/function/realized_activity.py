@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+import arrow
 
 sys.path.append("..")
 
@@ -67,6 +68,11 @@ def process_report(session, payload):
     start_date = payload['fore_before']
     folder_name = "./reports/"
 
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+    createdAtEpoch =  int(arrow.utcnow().timestamp())
+    updatedAtEpoch =  int(arrow.utcnow().timestamp())
+
     # Realized Activity Start
     realized_activity_report = get_realized_activity_report(session, property_code, payload['forecast_platform'], start_date)
     filename = f'{folder_name}{property_code}_Realized_Activity.xls'
@@ -74,8 +80,13 @@ def process_report(session, payload):
     read = pd.read_excel(filename, skipfooter=7)
     read.insert(0, column="propertyCode", value=payload['propertyCode'])
     read.insert(1, column="pullDateId", value=payload['pullDateId'])
+    read.insert(2, column="createdAt", value=createdAt)
+    read.insert(3, column="updatedAt", value=updatedAt)
+    read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+    read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
     read['Arrival Date'] = pd.to_datetime(read['Arrival Date']).dt.date
-    headers_list = ["propertyCode", "pullDateId", "ArrivalDate", "DOW", "EV_LO", "TransSold", "GroupSold", "TotalRoomsSold_Num",
+    read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Arrival Date'].astype(str)) 
+    headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "ArrivalDate", "DOW", "EV_LO", "TransSold", "GroupSold", "TotalRoomsSold_Num",
                     "TotalRoomsSold_Occ_Per", "ArvlAddlDem", "NoShows_Tran", "NoShows_Grp", "Cancels_TranRMS", "Cancels_TranLOS",
                     "Cancels_TranTotal", "Cancels_Grp", "SameDayCheck_ins", "UnexpectedStaythroughs_Tran", "UnexpectedStaythroughs_Grp",
                     "EarlyCheck_outs_Tran", "EarlyCheck_outs_Grp"]

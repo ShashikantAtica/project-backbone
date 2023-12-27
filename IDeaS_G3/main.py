@@ -289,8 +289,15 @@ def IDeaSG3_Rms(row):
             }
 
             rows = []
+            skip_rows = 2
+            for idx, row in enumerate(pd.read_excel(occ_file_path, header=None).values):
+                if 'Day of Week' in str(row[0]):
+                    skip_rows = idx + 2
+                    break
+            
+            print("## Skip Rows: ", skip_rows)
 
-            for row in pd.read_excel(occ_file_path, header=None, skiprows=2).values:
+            for row in pd.read_excel(occ_file_path, header=None, skiprows=skip_rows).values:
                 row_data = {}
                 current_col = 0
                 flag=0
@@ -313,7 +320,7 @@ def IDeaSG3_Rms(row):
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
-
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['Day_of_Arrival'].astype(str)) 
             df = df.reset_index(drop=True)
             df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))

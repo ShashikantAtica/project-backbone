@@ -1,5 +1,6 @@
 import json
 import os
+import arrow
 
 import pandas as pd
 from dotenv.main import load_dotenv
@@ -25,6 +26,11 @@ def process_report(session, payload):
     start_date = payload['res_before']
     end_date = payload['res_after']
 
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+    createdAtEpoch =  int(arrow.utcnow().timestamp())
+    updatedAtEpoch =  int(arrow.utcnow().timestamp())
+
     # Read report URL from JSON file
 
     load_dotenv()
@@ -49,9 +55,13 @@ def process_report(session, payload):
     read = pd.read_excel(filename)
     read.insert(0, column="propertyCode", value=payload['propertyCode'])
     read.insert(1, column="pullDateId", value=payload['pullDateId'])
+    read.insert(2, column="createdAt", value=createdAt)
+    read.insert(3, column="updatedAt", value=updatedAt)
+    read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+    read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
     read['Stay Date'] = pd.to_datetime(read['Stay Date']).dt.date
     read['Booking Date'] = pd.to_datetime(read['Booking Date']).dt.date
-    headers_list = ['propertyCode', 'pullDateId', 'StayYearCalendar', 'StayYYYYMM', 'CustomWDWE', 'StayDOWText', 'StayDate', 'ArrivalIndicator', 'BookingDate',
+    headers_list = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'StayYearCalendar', 'StayYYYYMM', 'CustomWDWE', 'StayDOWText', 'StayDate', 'ArrivalIndicator', 'BookingDate',
                     'AVPName', 'BrandName', 'HtlComparableText', 'PropertyCountryRegion', 'HotelTypeName', 'ManagementType', 'MARSHACode', 'PublicClusterName',
                     'GlobalRegionName', 'GlobalDivision', 'MarketCategory', 'MarketSegmentNameforReport', 'MarketPrfxNameforReport', 'RateProgramCode',
                     'RateProgramName', 'RateProgramTier', 'RateCategoryCode', 'MarketCode', 'OpportunityNum', 'QuoteNum', 'LengthofAccomLOA',

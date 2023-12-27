@@ -108,6 +108,7 @@ def IHG_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        read.insert(6, column="uniqueKey", value=read["ConfirmationNumber"].astype(str))
         read.to_csv(f"{attachment_format}{propertyCode}_Reservations.csv", index=False)
 
         res_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Reservations.csv", encoding="utf-8"))
@@ -133,8 +134,10 @@ def IHG_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str)) 
 
-        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
+
+        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
                         "MaximumLOS", "MinimumLOS", "ReservationGuaranteeRequired", "24Hourhold", "AverageLeadTime",
                         "AverageLOS", "CancelDue", "CancelorNoShow", "DepositDue", "Deposit", "Groupremaining",
                         "RoomslefttoSell", "SpecialEventSpecialRequirement", "Paceasofdate", "AC", "ActualroomssoldLY",

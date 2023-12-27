@@ -340,7 +340,8 @@ def Hotelkey_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
+        read.insert(6, column="uniqueKey", value=read["Res #"].astype(str))
+        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
                   'Group', 'RateCode', 'Product', 'AssignedProduct', 'Rate', 'TaxInc', 'ProjectedRevenue', 'TotalWithoutTax', 'PayMth', 'PaymentsTaken',
                   'DepositsScheduled', 'BalanceDue', 'CreationDate', 'CreationUser', 'CP', 'CPName', 'Blank']
         read.columns = header
@@ -370,7 +371,8 @@ def Hotelkey_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
+        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str)) 
+        header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
                   'SD', 'OccOTB', 'OccPYClose', 'OccPYVar', 'ADROTB', 'ADRPYClose', 'ADRPYVar', 'DiscPer', 'Price1', 'LT1', 'Per1', 'RM1', 'Price2', 'LT2', 'Per2',
                   'RM2', 'Price3', 'LT3', 'Per3', 'RM3', 'Price4', 'LT4', 'Per4', 'RM4']
         read.columns = header
