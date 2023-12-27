@@ -180,8 +180,10 @@ def BestRev_Pms(row):
         df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         df.insert(6, column="uniqueKey", value=df['propertyCode'].astype(str) + "_" + df['Stay Date'].astype(str))            
         df['Priority'] = df['Priority'].fillna(0).astype(int)
+
         headers = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "Alert", "Priority", "StayDate", "DayofWeek", "Favorite", "BestWesternRate", "RecommendedRate", "RatetoUpload",
                    "RecommendationStatus", "MarketRate", "AvailableRooms", "TransientCapacity", "TotalForecast_IncludesGroup", "OntheBooks_IncludesGroup","AverageDailyRate", "RevPAR", "Occupancy_IncludesGroup", "ForecastOccupancy_IncludesGroup"]
+
         df.to_csv(new_file, header=headers, index=False)
         print(f"{atica_property_code} Total Forecast Report Modified Successfully")
 
