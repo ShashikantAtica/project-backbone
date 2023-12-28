@@ -316,6 +316,7 @@ def Choice_Pms(row):
                         read.insert(3, column="updatedAt", value=updatedAt)
                         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                        read.insert(6, column="uniqueKey", value=read["Account"].astype(str))       
                         read['Arrive'] = pd.to_datetime(read['Arrive'], format="%m/%d/%y")
                         read['Depart'] = pd.to_datetime(read['Depart'], format="%m/%d/%y")
                         read['Reserve Date'] = pd.to_datetime(read['Reserve Date'], format="%m/%d/%y")
@@ -323,7 +324,7 @@ def Choice_Pms(row):
                         read['CRS Conf. No'] = read['CRS Conf. No'].fillna(0).astype(int)
                         read['Room'] = read['Room'].fillna(0).astype(int)
 
-                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Account', 'GuestName', 'Arrive', 'Depart', 'Nights', 'Status',
+                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Account', 'GuestName', 'Arrive', 'Depart', 'Nights', 'Status',
                                    'Rate', 'RateCode', 'Type', 'Room', 'Source', 'CRSConfNo', 'GTD', 'ReserveDate', 'User',
                                    'SharedAccount', 'TrackCode', 'Package', 'CancellationDate', 'CXLUserID']
                         read.to_csv(filename, header=headers, index=False)
@@ -420,9 +421,11 @@ def Choice_Pms(row):
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                         try:
                             read['﻿IDS_DATE'] = pd.to_datetime(read['﻿IDS_DATE'], format="%m/%d/%y")
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['﻿IDS_DATE'].astype(str))            
                         except Exception:
                             read['IDS_DATE'] = pd.to_datetime(read['IDS_DATE'], format="%m/%d/%y")
-                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'IDS_DATE', 'Day', 'Rooms', 'OOO', 'StayOver', 'Arrivals',
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['IDS_DATE'].astype(str)) 
+                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'IDS_DATE', 'Day', 'Rooms', 'OOO', 'StayOver', 'Arrivals',
                                    'DueOut', 'Available', 'GroupBlock', 'GroupPickedUp', 'TransNGTD', 'TransGTD', 'Occupied',
                                    'OccPercent', 'RoomRev', 'RevPAR', 'ADR', 'Ppl']
                         read.to_csv(filename, header=headers, index=False)
@@ -672,10 +675,12 @@ def Choice_Pms(row):
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                         try:
                             read['﻿IDS_DATE_DAY'] = pd.to_datetime(read['﻿IDS_DATE_DAY'], format="%m/%d/%y - %a")
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['﻿IDS_DATE_DAY'].astype(str) + "_" + read['Rate Code'].astype(str))            
                         except Exception:
                             read['IDS_DATE_DAY'] = pd.to_datetime(read['IDS_DATE_DAY'], format="%m/%d/%y - %a")
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['IDS_DATE_DAY'].astype(str) + "_" + read['Rate Code'].astype(str))            
                         read['%Room Nights'] = read['%Room Nights'].fillna(0).astype(int)
-                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "IDS_DATE_DAY", "RateCode", "RoomNights", "RoomNightsPer", "RoomRevenue", "RoomRevenuePer", "DailyAVG"]
+                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "IDS_DATE_DAY", "RateCode", "RoomNights", "RoomNightsPer", "RoomRevenue", "RoomRevenuePer", "DailyAVG"]
                         read.to_csv(filename, index=False, header=headers_list)
                     # End Revenue By Rate Code Detail Report
 
@@ -763,7 +768,10 @@ def Choice_Pms(row):
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                         read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'], format="%m/%d/%y")
                         read['Block Date'] = pd.to_datetime(read['Block Date'], format="%m/%d/%y")
-                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
+                        # read = read.dropna(subset=['Block Date']) #to drop all rows with null block date
+                        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read["Group Name"].astype(str) + "_" + read["Fixed Cut Off Date"].astype(str) + "_" + read["Room Type"].astype(str) + "_" + read["Block Date"].astype(str))
+                        
+                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
                                         "RoomType", "BlockDate", "OriginalBlock", "CurrentBlock", "GuaranteedArrivalsPickedUp", "NonGuaranteedArrivalsPickedUp",
                                         "TotalPickedUp", "RoomsNotPickedUp", "Revenue", "ADR"]
                         read.to_csv(filename, index=False, header=headers_list)

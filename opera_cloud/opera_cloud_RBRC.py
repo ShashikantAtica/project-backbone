@@ -323,6 +323,7 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'])
             df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))            
             df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
             rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
             rbrc_result = list(rbrc_result)

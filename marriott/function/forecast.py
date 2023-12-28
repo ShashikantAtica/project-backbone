@@ -76,6 +76,8 @@ def process_report(session, payload):
     read = pd.read_excel(filename, skiprows=8)
     createdAt = "'" + str(arrow.now()) + "'"
     updatedAt = "'" + str(arrow.now()) + "'"
+    createdAtEpoch =  int(arrow.utcnow().timestamp())
+    updatedAtEpoch =  int(arrow.utcnow().timestamp())
 
     columns = ['ArrivalDate', 'ArrivalDay', 'WEindicator', 'Capacity', 'DaysOut', 'SysRemDem', 'RemDemSTLY', 'AppliedRemDem', 'UserOverride',
                'Event', 'OYv2TotalHotelOccupancy', 'TotalAvailableTransientSupply', 'TotalTransientBooked', 'TotalTransientBookedSTLY', 'AdditionalDemand', 'AdditionalDemandSTLY',
@@ -152,7 +154,10 @@ def process_report(session, payload):
     read.insert(1, column="pullDateId", value=payload['pullDateId'])
     read.insert(2, column="createdAt", value=createdAt)
     read.insert(3, column="updatedAt", value=updatedAt)
+    read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+    read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
     read['ArrivalDate'] = pd.to_datetime(read['ArrivalDate']).dt.date
+    read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['ArrivalDate'].astype(str)) 
     read.to_csv(f'{folder_name}{property_code}_Forecast.csv', index=False)
     if os.path.exists(filename):
         os.remove(filename)

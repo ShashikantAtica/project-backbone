@@ -220,7 +220,8 @@ def VisualMatrix_Pms(row):
                                        'Dep', 'Overs', 'Rms', 'Rms', 'Occ %', 'Rm Rev', 'ADR', 'Par', 'Rooms LY', 'Variance']].copy()
                         new_df['Date'] = pd.to_datetime(new_df['Date'], errors='coerce', format='%m/%d/%y').dt.date
                         new_df = new_df.dropna(subset=['Date'])
-                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'Date', 'Day', 'Maint', 'GuestArrivals_Non_GTD', 'GuestArrivals_GTD', 'GroupArrivals_Non_GTD', 'GroupArrivals_GTD', 'GroupAlloc', 'ARV',
+                        new_df.insert(6, column="uniqueKey", value=new_df["propertyCode"].astype(str) + "_" + new_df['Date'].astype(str))
+                        headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Date', 'Day', 'Maint', 'GuestArrivals_Non_GTD', 'GuestArrivals_GTD', 'GroupArrivals_Non_GTD', 'GroupArrivals_GTD', 'GroupAlloc', 'ARV',
                                    'Dep', 'StayOvers', 'AvailRms', 'OccRms', 'OccPer', 'RmRev', 'ADR', 'RevPar', 'ActualRoomsLY', 'OccPerVariance']
                         new_df.columns = headers
                         new_df['ActualRoomsLY'] = new_df['ActualRoomsLY'].fillna(0).astype(int)

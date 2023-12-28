@@ -167,6 +167,7 @@ def SynxisCloud_Pms(row):
         read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
         #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
         read = read[read['Confirm_No'].str.len() >= 1]
+        read.insert(6, column="uniqueKey", value=read['Confirm_No'].astype(str))
         read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
     
         res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
@@ -191,6 +192,7 @@ def SynxisCloud_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['cal_dt'].astype(str))
         read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
 
         fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
@@ -218,6 +220,7 @@ def SynxisCloud_Pms(row):
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         read.insert(6, column="Date", value=date)
         read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
+        read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
         read['F_B'] = read['F_B'].fillna(0).astype(int)
         read['Other'] = read['Other'].fillna(0).astype(int)
         read['Month_To_Date_F_B'] = read['Month_To_Date_F_B'].fillna(0).astype(int)
@@ -249,6 +252,7 @@ def SynxisCloud_Pms(row):
         read.insert(3, column="updatedAt", value=updatedAt)
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['BUSINESS_DT'].astype(str))
         read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
         read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
         read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)

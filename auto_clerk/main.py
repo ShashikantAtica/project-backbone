@@ -362,6 +362,7 @@ def AutoClerk_Pms(row):
             shifted_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             shifted_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
+            shifted_df.insert(6, column="uniqueKey", value=shifted_df["propertyCode"].astype(str) + "_" + shifted_df["Date"].astype(str))            
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
 
@@ -391,6 +392,7 @@ def AutoClerk_Pms(row):
                 'updatedAt',
                 'createdAtEpoch',
                 'updatedAtEpoch',
+                'uniqueKey',
                 'DateTime',
                 'Status',
                 'MyhmsConf',
@@ -430,6 +432,7 @@ def AutoClerk_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            df.insert(6, column="uniqueKey", value=shifted_df["MyhmsConf"].astype(str))
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
@@ -462,6 +465,7 @@ def AutoClerk_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            df.insert(6, column="uniqueKey", value=df["Confirmation"].astype(str))
             df.to_csv(group_block_summary_file_path, index=False)
             # End Group Block Summary Modification
 
