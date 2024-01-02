@@ -3,6 +3,7 @@ import os
 import sys
 
 from bs4 import BeautifulSoup
+from sqlalchemy import text
 
 sys.path.append("../../")
 import arrow
@@ -23,8 +24,9 @@ def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
     query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status","pmsName") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS},{DB_PMS_NAME}) RETURNING id; '
     conn = db_config.get_db_connection()
     try:
-        result = conn.execute(query_string)
-        LAST_PULL_DATE_ID = result.fetchone()['id']
+        result = conn.execute(text(query_string))
+        conn.commit()
+        LAST_PULL_DATE_ID = result.fetchone()
         print(LAST_PULL_DATE_ID)
         conn.close()
         print("Added successfully!!!")
@@ -32,7 +34,7 @@ def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
         conn.close()
         error_message = str(e)
         print(error_message)
-    return LAST_PULL_DATE_ID
+    return str(list(LAST_PULL_DATE_ID)[0])
 
 
 def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
@@ -51,6 +53,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
     conn = db_config.get_db_connection()
     try:
         conn.execute(query_string)
+        conn.commit()
         conn.close()
         print("Updated successfully!!!")
     except Exception as e:
@@ -65,6 +68,7 @@ def bulk_insert_opera_cloud_res(res_list):
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.opera_res_model.insert(), res_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -75,6 +79,7 @@ def bulk_insert_opera_cloud_occ(occ_list):
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.opera_occ_model.insert(), occ_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -85,6 +90,7 @@ def bulk_insert_opera_cloud_arrival(arrival_list):
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.opera_arrival_model.insert(), arrival_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -93,6 +99,7 @@ def bulk_insert_opera_cloud_rbrc(rbrc_list):
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.opera_rbrc_model.insert(), rbrc_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -205,6 +212,7 @@ def OperaCloud_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            df.insert(6, column="uniqueKey", value=df["RESV_NAME_ID"].astype(str))
             df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
             df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
             df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
@@ -319,6 +327,7 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['CHAR_CONSIDERED_DATE'].astype(str)) 
             df.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
             occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
@@ -399,6 +408,7 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
             df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['CHAR_CONSIDERED_DATE'].astype(str)) 
             df.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
             occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
@@ -451,6 +461,7 @@ def OperaCloud_Pms(row):
         final_df.insert(3, column="updatedAt", value=updatedAt)
         final_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         final_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+        final_df.insert(6, column="uniqueKey", value=final_df["RESV_NAME_ID"].astype(str))
         final_df['UPDATE_DATE'] = pd.to_datetime(final_df['UPDATE_DATE'])
         final_df['TRUNC_BEGIN'] = pd.to_datetime(final_df['TRUNC_BEGIN'])
         final_df['TRUNC_END'] = pd.to_datetime(final_df['TRUNC_END'])
@@ -539,6 +550,7 @@ def OperaCloud_Pms(row):
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'])
             df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))            
             df.to_csv(f"{attachment_format}/{propertyCode}_RBRC.csv", index=False)
             rbrc_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_RBRC.csv", encoding="utf-8"))
             rbrc_result = list(rbrc_result)
@@ -591,21 +603,25 @@ if __name__ == '__main__':
     if propertycode is None:
         print("All properties run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';"""))
         result = res.fetchall()
+        columns = res.keys()
+        results_as_dict = [dict(zip(columns, row)) for row in result]
         conn.close()
         print("Fetched successfully")
     else:
         print(f"{propertycode} property run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';"""))
         result = res.fetchall()
+        columns = res.keys()
+        results_as_dict = [dict(zip(columns, row)) for row in result]
         conn.close()
         print("Fetched successfully")
 
-    if result is not None and len(result) > 0:
-        print(f"Total Properties :: {len(result)}")
-        for item in result:
+    if results_as_dict is not None and len(results_as_dict) > 0:
+        print(f"Total Properties :: {len(results_as_dict)}")
+        for item in results_as_dict:
 
             PROPERTY_ID = item['id']
             PROPERTY_CODE = item['propertyCode']
