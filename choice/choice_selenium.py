@@ -94,6 +94,16 @@ def choice_cancellation(row):
         time.sleep(5)
 
         driver.get("https://www.choiceadvantage.com/choicehotels/ReportViewStart.init")
+
+        try:
+            WebDriverWait(driver, 5).until(EC.alert_is_present())
+            error_msg = "PopUp issue found"
+            update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
+            driver.quit()
+            print("alert Exists in page")
+        except:
+            print("alert does not Exist in page")
+
         WebDriverWait(driver, 40).until(EC.visibility_of_element_located((By.ID, "CancellationListReport")))
         driver.find_element(By.ID, "CancellationListReport").click()
 
