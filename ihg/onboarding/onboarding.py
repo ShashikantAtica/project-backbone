@@ -2,6 +2,8 @@ import argparse
 import os
 import sys
 
+from sqlalchemy import text
+
 sys.path.append("../../")
 import arrow
 import csv
@@ -11,7 +13,7 @@ from utils.db import db_config
 from utils.db import db_models
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
     DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
@@ -20,8 +22,9 @@ def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
     query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status","pmsName") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS},{DB_PMS_NAME}) RETURNING id; '
     conn = db_config.get_db_connection()
     try:
-        result = conn.execute(query_string)
-        LAST_PULL_DATE_ID = result.fetchone()['id']
+        result = conn.execute(text(query_string))
+        conn.commit()
+        LAST_PULL_DATE_ID = result.fetchone()
         print(LAST_PULL_DATE_ID)
         conn.close()
         print("Added successfully!!!")
@@ -29,7 +32,7 @@ def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
         conn.close()
         error_message = str(e)
         print(error_message)
-    return LAST_PULL_DATE_ID
+    return str(list(LAST_PULL_DATE_ID)[0])
 
 
 def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
@@ -46,7 +49,8 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
     query_string = f'UPDATE "tbl_pullDate" SET status={DB_STATUS}, "updatedAt"={DB_UPDATED_AT}, "errorNote"={DB_ERROR_NOTE} WHERE "id"={DB_LAST_PULL_DATE_ID};'
     conn = db_config.get_db_connection()
     try:
-        conn.execute(query_string)
+        conn.execute(text(query_string))
+        conn.commit()
         conn.close()
         print("Updated successfully!!!")
     except Exception as e:
@@ -61,6 +65,7 @@ def bulk_insert_ihg_res(res_list):
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.ihg_res_model.insert(), res_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -71,6 +76,7 @@ def bulk_insert_occ_res(occ_list):
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.ihg_occ_model.insert(), occ_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -191,21 +197,25 @@ if __name__ == '__main__':
     if propertycode is None:
         print("All properties run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = {PMS_NAME};""")
+        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';"""))
         result = res.fetchall()
+        columns = res.keys()
+        results_as_dict = [dict(zip(columns, row)) for row in result]
         conn.close()
         print("Fetched successfully")
     else:
         print(f"{propertycode} property run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';"""))
         result = res.fetchall()
+        columns = res.keys()
+        results_as_dict = [dict(zip(columns, row)) for row in result]
         conn.close()
         print("Fetched successfully")
 
-    if result is not None and len(result) > 0:
-        print(f"Total Properties :: {len(result)}")
-        for item in result:
+    if results_as_dict is not None and len(results_as_dict) > 0:
+        print(f"Total Properties :: {len(results_as_dict)}")
+        for item in results_as_dict:
 
             PROPERTY_ID = item['id']
             PROPERTY_CODE = item['propertyCode']

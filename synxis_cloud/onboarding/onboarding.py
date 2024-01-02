@@ -93,6 +93,7 @@ def bulk_insert_synxis_cloud_revenue_recap(rev_list):
         print("Data importing...")
         conn = db_config.get_db_connection()
         conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), rev_list)
+        conn.commit()
         conn.close()
         print("Data imported")
     except Exception as e:
@@ -325,9 +326,9 @@ if __name__ == '__main__':
         conn.close()
         print("Fetched successfully")
 
-    if result is not None and len(result) > 0:
-        print(f"Total Properties :: {len(result)}")
-        for item in result:
+    if results_as_dict is not None and len(results_as_dict) > 0:
+        print(f"Total Properties :: {len(results_as_dict)}")
+        for item in results_as_dict:
 
             PROPERTY_ID = item['id']
             PROPERTY_CODE = item['propertyCode']
