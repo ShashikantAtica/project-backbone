@@ -1,5 +1,7 @@
 import sys
 
+from sqlalchemy import text
+
 sys.path.append("..")
 import argparse
 import csv
@@ -32,19 +34,17 @@ def bulk_insert_auto_clerk_res(propertyCode, res_list, res_before, res_after):
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    reservation = '"DateTime"'
-    db_propertyCode = "'" + propertyCode + "'"
-
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE from auto_clerk_res where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    conn.execute(text(f"""DELETE from auto_clerk_res where "DateTime" between {start_date} and {end_date} and "propertyCode" = '{propertyCode}';"""))
+    conn.commit()
     conn.close()
 
     # Add new data of reservation (up to 90 Days)
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.auto_clerk_res_model.insert(), res_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -55,19 +55,17 @@ def bulk_insert_auto_clerk_occ(propertyCode, occ_list, occ_before, occ_after):
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    reservation = '"Date"'
-    db_propertyCode = "'" + propertyCode + "'"
-
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE from auto_clerk_occ where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    conn.execute(text(f"""DELETE from auto_clerk_occ where "Date" between {start_date} and {end_date} and "propertyCode" = '{propertyCode}';"""))
+    conn.commit()
     conn.close()
 
     # Add new data of occ (up to 90 Days)
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.auto_clerk_occ_model.insert(), occ_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -78,19 +76,17 @@ def bulk_insert_auto_clerk_group_block_summary(propertyCode, group_block_summary
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
-    reservation = '"Arrive"'
-    db_propertyCode = "'" + propertyCode + "'"
-
     # Delete existing data of reservation (up to 90 Days)
     conn = db_config.get_db_connection()
-    conn.execute(
-        f'DELETE from auto_clerk_group_block_summary where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};')
+    conn.execute(text(f"""DELETE from auto_clerk_group_block_summary where "Arrive" between {start_date} and {end_date} and "propertyCode" = '{propertyCode}';"""))
+    conn.commit()
     conn.close()
 
     # Add new data of occ (up to 90 Days)
     print("Data importing...")
     conn = db_config.get_db_connection()
     conn.execute(db_models.auto_clerk_group_block_summary_model.insert(), group_block_summary_list)
+    conn.commit()
     conn.close()
     print("Data imported")
 
@@ -318,15 +314,15 @@ def AutoClerk_Pms(row):
 
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
-        createdAtEpoch =  int(arrow.utcnow().timestamp())
-        updatedAtEpoch =  int(arrow.utcnow().timestamp())
+        createdAtEpoch = int(arrow.utcnow().timestamp())
+        updatedAtEpoch = int(arrow.utcnow().timestamp())
 
         errorMessage = ""
-        fileCount=0
+        fileCount = 0
 
         if check_occupancy_file:
 
-            fileCount=fileCount+1
+            fileCount = fileCount + 1
             # Start Data Modification Occupancy
             df = pd.read_csv(occupancy_file_path)
             df = df.drop([0, 1, 2, 3, 4, 5])
@@ -362,7 +358,7 @@ def AutoClerk_Pms(row):
             shifted_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             shifted_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
-            shifted_df.insert(6, column="uniqueKey", value=shifted_df["propertyCode"].astype(str) + "_" + shifted_df["Date"].astype(str))            
+            shifted_df.insert(6, column="uniqueKey", value=shifted_df["propertyCode"].astype(str) + "_" + shifted_df["Date"].astype(str))
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
 
@@ -381,7 +377,7 @@ def AutoClerk_Pms(row):
 
         if check_reservation_file:
 
-            fileCount=fileCount+1
+            fileCount = fileCount + 1
             # Start Data Modification Reservation
             df = pd.read_csv(reservation_file_path)
             df = df[df.columns[:-1]]
@@ -432,7 +428,7 @@ def AutoClerk_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            df.insert(6, column="uniqueKey", value=shifted_df["MyhmsConf"].astype(str))
+            df.insert(6, column="uniqueKey", value=df["Myhms Conf"].astype(str))
             df.to_csv(reservation_file_path, index=False, header=columns)
             # End Data Modification Reservation
 
@@ -447,10 +443,10 @@ def AutoClerk_Pms(row):
                 errorMessage = errorMessage + "Reservation File Was Blank, "
         else:
             errorMessage = errorMessage + "Reservation File Not Found, "
-            
+
         if check_group_block_summary_file:
-            
-            fileCount=fileCount+1
+
+            fileCount = fileCount + 1
             # Start Group Block Summary Modification
             df = pd.read_csv(group_block_summary_file_path, header=None, skiprows=6, skipfooter=1, engine='python', on_bad_lines='skip')
             df = df.dropna(axis=0, how='all').dropna(axis=1, how='all')
@@ -480,20 +476,20 @@ def AutoClerk_Pms(row):
                 errorMessage = errorMessage + "Group Block Summary File Was Blank, "
         else:
             errorMessage = errorMessage + "Group Block Summary File Not Found, "
-        
-        if (fileCount==3):
-            if(errorMessage==""):
+
+        if (fileCount == 3):
+            if (errorMessage == ""):
                 update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
-                errorMessage="Partially Successfull:- "+errorMessage
+                errorMessage = "Partially Successfull:- " + errorMessage
                 update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
         else:
-            if (fileCount==0):
+            if (fileCount == 0):
                 errorMessage = "All File Not Found"
             else:
-                errorMessage="Partially Successfull:- "+errorMessage
+                errorMessage = "Partially Successfull:- " + errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
-        
+
     except Exception as e:
         print(e)
         if driver:
@@ -506,23 +502,21 @@ def AutoClerk_Pms(row):
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
-    DB_PMS_NAME = "'" + PMS_NAME + "'"
-    DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
-    DB_PULLED_DATE = "'" + str(PULLED_DATE) + "'"
-    DB_STATUS = "'INPROGRESS'"
-    query_string = f'INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status","pmsName") VALUES ({DB_PROPERTY_CODE}, {DB_PULLED_DATE}, {DB_STATUS},{DB_PMS_NAME}) RETURNING id; '
+
+    query_string = f"""INSERT INTO "tbl_pullDate" ("propertyCode", "pulledDate", "status","pmsName") VALUES ('{PROPERTY_CODE}', '{str(PULLED_DATE)}', 'INPROGRESS','{PMS_NAME}') RETURNING id; """
+    print("query_string : ", query_string)
     conn = db_config.get_db_connection()
     try:
-        result = conn.execute(query_string)
-        LAST_PULL_DATE_ID = result.fetchone()['id']
-        print(LAST_PULL_DATE_ID)
+        result = conn.execute(text(query_string))
+        conn.commit()
+        LAST_PULL_DATE_ID = result.fetchone()
         conn.close()
         print("Added successfully!!!")
     except Exception as e:
         conn.close()
         error_message = str(e)
         print(error_message)
-    return LAST_PULL_DATE_ID
+    return str(list(LAST_PULL_DATE_ID)[0])
 
 
 def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
@@ -533,13 +527,11 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         DB_STATUS = "'FAILED'"
     else:
         DB_STATUS = "'FINISHED'"
-    DB_ERROR_NOTE = "'" + str(ERROR_NOTE) + "'"
-    DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
-    DB_LAST_PULL_DATE_ID = "'" + str(LAST_PULL_DATE_ID) + "'"
-    query_string = f'UPDATE "tbl_pullDate" SET status={DB_STATUS}, "updatedAt"={DB_UPDATED_AT}, "errorNote"={DB_ERROR_NOTE} WHERE "id"={DB_LAST_PULL_DATE_ID};'
+    query_string = f"""UPDATE "tbl_pullDate" SET status={DB_STATUS}, "updatedAt"='{str(arrow.now())}', "errorNote"='{str(ERROR_NOTE)}' WHERE "id"='{str(LAST_PULL_DATE_ID)}';"""
     conn = db_config.get_db_connection()
     try:
-        conn.execute(query_string)
+        conn.execute(text(query_string))
+        conn.commit()
         conn.close()
         print("Updated successfully!!!")
     except Exception as e:
@@ -567,22 +559,26 @@ if __name__ == '__main__':
     if propertycode is None:
         print("All properties run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';""")
+        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';"""))
         result = res.fetchall()
+        columns = res.keys()
+        results_as_dict = [dict(zip(columns, row)) for row in result]
         conn.close()
         print("Fetched successfully")
     else:
         print(f"{propertycode} property run")
         conn = db_config.get_db_connection()
-        res = conn.execute(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';""")
+        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';"""))
         result = res.fetchall()
+        columns = res.keys()
+        results_as_dict = [dict(zip(columns, row)) for row in result]
         conn.close()
         print("Fetched successfully")
 
-    if result is not None and len(result) > 0:
-        print(f"Total Properties :: {len(result)}")
-        for item in result:
-
+    if results_as_dict is not None and len(results_as_dict) > 0:
+        print(f"Total Properties :: {len(results_as_dict)}")
+        for item in results_as_dict:
+            print("item : ", item)
             PROPERTY_ID = item['id']
             PROPERTY_CODE = item['propertyCode']
             EXTERNAL_PROPERTY_CODE = item['externalPropertyCode']
@@ -597,7 +593,6 @@ if __name__ == '__main__':
 
             # Add entry into pull date table
             LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
-
             if LAST_PULL_DATE_ID is not None:
                 row = {
                     'atica_property_code': '' + PMS_NAME + '_' + PROPERTY_CODE,
