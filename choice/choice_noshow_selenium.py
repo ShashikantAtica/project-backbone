@@ -29,7 +29,7 @@ def bulk_insert_choice_noshow(propertyCode, Noshow_result):
 # log(n)*M indexing check.
     conn = db_config.get_db_connection()
     stmt = insert(db_models.choice_noshow_model).values(Noshow_result)
-    stmt = stmt.on_conflict_do_nothing(index_elements=['ACCOUNT'])
+    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
     # Execute the insert statement
     conn.execute(stmt)
     conn.commit()

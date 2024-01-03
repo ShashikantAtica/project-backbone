@@ -88,7 +88,7 @@ def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
     stmt = insert(db_models.synxis_cloud_reservation_model).values(res_list)
     conn.commit()
     stmt = stmt.on_conflict_do_update(
-        index_elements=['Confirm_No'],
+        index_elements=['uniqueKey'],
         set_={
             'pullDateId': stmt.excluded.pullDateId,
             'updatedAt': stmt.excluded.updatedAt,
