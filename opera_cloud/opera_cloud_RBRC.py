@@ -76,24 +76,21 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_opera_cloud_rbrc(rbrc_list, date_set, propertyCode):
+def bulk_insert_opera_cloud_rbrc(rbrc_list, lowest_input_date_str, propertyCode):
 
     BUSINESS_DATE = '"BUSINESS_DATE"'
 
-    input_date_str = min(date_set)
-    input_datetime = arrow.get(input_date_str, 'DD-MMM-YY')
-    yesterday_date_of_report = input_datetime.format('YYYY-MM-DD')
-    print("yesterday_date_in_report :: ", yesterday_date_of_report)
+    print("lowest_input_date in report :: ", lowest_input_date_str)
 
-    formatted_yesterday_date_of_report = "'" + yesterday_date_of_report.format('YYYY-MM-DD') + "'"
+    formatted_lowest_input_date_str = "'" + lowest_input_date_str.format('YYYY-MM-DD') + "'"
     db_propertyCode = "'" + propertyCode + "'"
 
     # Delete existing data of RBRC
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_yesterday_date_of_report} and "propertyCode" = {db_propertyCode};'))
+    conn.execute(text(f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_lowest_input_date_str} and "propertyCode" = {db_propertyCode};'))
     conn.commit()
     conn.close()
-    print("DELETE OLD DATA >= !!!", yesterday_date_of_report)
+    print("DELETED OLD DATA >= !!!", formatted_lowest_input_date_str)
 
     # Add new data of RBRC
     print("Data importing...")
@@ -315,7 +312,6 @@ def OperaCloud_Pms(row):
                                 "PER_OCC": PER_OCC,
                                 "GET_ARR": GET_ARR,
                                 "MULTI_OCC_PER": MULTI_OCC_PER})
-                        date_set.add(BUSINESS_DATE)
                     
             df = pd.DataFrame(rows, columns=cols)
             df.insert(0, column="propertyCode", value=propertyCode)
@@ -324,9 +320,10 @@ def OperaCloud_Pms(row):
             df.insert(3, column="updatedAt", value=updatedAt)
             df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'])
+            df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE']).dt.strftime('%Y-%m-%d')
             df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
-            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))            
+            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))
+            date_set = set(df['BUSINESS_DATE'])       
             df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
             rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
             rbrc_result = list(rbrc_result)
@@ -341,7 +338,7 @@ def OperaCloud_Pms(row):
         # print(rbrc_result) #This can be uncommented to test/see the result of parsed data
 
         if len(rbrc_result) > 0:
-            bulk_insert_opera_cloud_rbrc(rbrc_result, date_set, propertyCode=propertyCode)
+            bulk_insert_opera_cloud_rbrc(rbrc_result, min(date_set), propertyCode=propertyCode)
             print("RBRC DONE")
 
             update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
