@@ -323,7 +323,8 @@ def OperaCloud_Pms(row):
             df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE']).dt.strftime('%Y-%m-%d')
             df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
             df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))
-            date_set = set(df['BUSINESS_DATE'])       
+            date_set = set(df['BUSINESS_DATE'])
+            date_set.discard(pd.NaT) #to avoid any null value in set that can be minimum of set
             df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
             rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
             rbrc_result = list(rbrc_result)
