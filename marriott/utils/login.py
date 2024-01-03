@@ -3,6 +3,8 @@ import re
 import sys
 import ast
 
+from sqlalchemy import text
+
 sys.path.append("..")
 import arrow
 from utils.secrets.SecretManager import get_secret_from_api as get_secret_dict
@@ -51,10 +53,13 @@ def lookup(challenges, propertyCode):
 
     query_string = f'SELECT marriott_json FROM public.tbl_properties where "externalPropertyCode" = {propertyCode};'
     conn = db_config.get_db_connection()
-    result = conn.execute(query_string)
+    res = conn.execute(text(query_string))
+    result = res.fetchall()
+    columns = res.keys()
+    results_as_dict = [dict(zip(columns, row)) for row in result]
     conn.close()
     chart = []
-    for i in result:
+    for i in results_as_dict:
         chart.append(i['marriott_json'])
 
     chart_dict = ast.literal_eval(chart[0])
