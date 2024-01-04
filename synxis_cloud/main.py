@@ -192,9 +192,9 @@ def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_forecast(res_list, propertyCode, occ_before, occ_after):
-    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
+def bulk_insert_synxis_cloud_forecast(res_list, propertyCode, min_date, max_date):
+    start_date = "'" + min_date + "'"
+    end_date = "'" + max_date + "'"
 
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
@@ -234,9 +234,9 @@ def bulk_insert_synxis_cloud_revenue_recap(res_list, propertyCode, report_date):
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_monthly_summary(res_list, propertyCode, res_before, res_after):
-    start_date = arrow.now().span('month')[0].format("YYYY-MM-DD")
-    end_date = arrow.now().ceil('month').format("YYYY-MM-DD")
+def bulk_insert_synxis_cloud_monthly_summary(res_list, propertyCode, min_date, max_date):
+    start_date = min_date
+    end_date = max_date
     print("start_date :: ", start_date)
     print("end_date :: ", end_date)
 
@@ -549,10 +549,11 @@ def Synxis_Cloud_Pms(row):
 
     if check_forecast_file:
 
+        date_set_forecast=set()
         fileCount=fileCount+1
         # Forecast Data Clean and Insert
         read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
-        read['cal_dt'] = pd.to_datetime(read['cal_dt'])
+        read['cal_dt'] = pd.to_datetime(read['cal_dt']).dt.strftime('%Y-%m-%d')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
@@ -560,12 +561,14 @@ def Synxis_Cloud_Pms(row):
         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['cal_dt'].astype(str)) 
+        date_set_forecast = set(read['cal_dt'])
+        date_set_forecast.discard(pd.NaT)
         read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
 
         fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
         fore_result = list(fore_result)
         if len(fore_result) > 0:
-            bulk_insert_synxis_cloud_forecast(fore_result, propertyCode, row['occ_before'], row['occ_after'])
+            bulk_insert_synxis_cloud_forecast(fore_result, propertyCode, min(date_set_forecast), max(date_set_forecast))
             print("FORE DONE")
         else:
             errorMessage = errorMessage + "Forecast File Was Blank, "
@@ -605,10 +608,11 @@ def Synxis_Cloud_Pms(row):
 
     if check_monthly_file:
         
+        date_set_monthly=set()
         fileCount=fileCount+1
         # Monthly Summary Data Clean and Insert
         read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
-        read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
+        read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)").dt.strftime('%Y-%m-%d')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
@@ -618,13 +622,15 @@ def Synxis_Cloud_Pms(row):
         read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['BUSINESS_DT'].astype(str)) 
         read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
         read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
+        date_set_monthly = set(read['BUSINESS_DT'])
+        date_set_monthly.discard(pd.NaT)
         read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
 
         monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
         monthly_result = list(monthly_result)
         
         if len(monthly_result) > 0:
-            bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode, row['res_before'], row['res_after'])
+            bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode, min(date_set_monthly), max(date_set_monthly))
             print("MONTHLY DONE")
         else:
             errorMessage = errorMessage + "Monthly File Was Blank, "

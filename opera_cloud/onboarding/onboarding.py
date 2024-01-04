@@ -45,14 +45,13 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         DB_STATUS = "'FAILED'"
     else:
         DB_STATUS = "'FINISHED'"
-
     DB_ERROR_NOTE = "'" + str(ERROR_NOTE) + "'"
     DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
     DB_LAST_PULL_DATE_ID = "'" + str(LAST_PULL_DATE_ID) + "'"
     query_string = f'UPDATE "tbl_pullDate" SET status={DB_STATUS}, "updatedAt"={DB_UPDATED_AT}, "errorNote"={DB_ERROR_NOTE} WHERE "id"={DB_LAST_PULL_DATE_ID};'
     conn = db_config.get_db_connection()
     try:
-        conn.execute(query_string)
+        conn.execute(text(query_string))
         conn.commit()
         conn.close()
         print("Updated successfully!!!")
