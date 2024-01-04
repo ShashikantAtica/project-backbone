@@ -337,9 +337,9 @@ def Hotelkey_Pms(row):
         read = read[read['Arrival\nDate'].isin(values) == False]
         read = read[read['Depart\nDate'].isin(values) == False]
         read = read[read['Creation Date'].isin(values) == False]
-        read['Arrival\nDate'] = pd.to_datetime(read['Arrival\nDate'])
-        read['Depart\nDate'] = pd.to_datetime(read['Depart\nDate'])
-        read['Creation Date'] = pd.to_datetime(read['Creation Date'])
+        read['Arrival\nDate'] = pd.to_datetime(read['Arrival\nDate'], format="mixed", errors='coerce')
+        read['Depart\nDate'] = pd.to_datetime(read['Depart\nDate'], format="mixed", errors='coerce')
+        read['Creation Date'] = pd.to_datetime(read['Creation Date'], format="mixed", errors='coerce')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)

@@ -357,7 +357,7 @@ def AutoClerk_Pms(row):
             shifted_df.insert(3, column="updatedAt", value=updatedAt)
             shifted_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             shifted_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            shifted_df['Date'] = pd.to_datetime(shifted_df['Date'])
+            shifted_df['Date'] = pd.to_datetime(shifted_df['Date'], format='mixed', errors='coerce')
             shifted_df.insert(6, column="uniqueKey", value=shifted_df["propertyCode"].astype(str) + "_" + shifted_df["Date"].astype(str))
             shifted_df.to_csv(occupancy_file_path, index=False)
             # End Data Modification Occupancy
@@ -420,8 +420,8 @@ def AutoClerk_Pms(row):
                 'drivingLicence'
             ]
             df['Date/Time'] = pd.to_datetime(df["Date/Time"]).dt.date
-            df['arrival date'] = pd.to_datetime(df['arrival date'])
-            df['departure date'] = pd.to_datetime(df['departure date'])
+            df['arrival date'] = pd.to_datetime(df['arrival date'], format='mixed', errors='coerce')
+            df['departure date'] = pd.to_datetime(df['departure date'], format='mixed', errors='coerce')
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
