@@ -133,7 +133,9 @@ def choice_cancellation(row):
         time.sleep(5)
         driver.quit()
 
-        df = pd.read_csv(f'{folder_name}report.csv', skiprows=1)
+        df = pd.read_csv(f'{folder_name}report.csv')
+        df = df.drop('Company', axis=1)
+        df = df.drop('Group', axis=1)
         new_column_names = ["Account", "Guest_Name", "Arrival_Group", "Nights", "Rate_Plan", "GTD", "Source", "Rm_Type", "Cxl_Code", "Cxl_Date", "Cxl_Clk"]
         df.columns = new_column_names
         df.dropna(inplace=True, how="all")
@@ -149,7 +151,7 @@ def choice_cancellation(row):
         df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
         df['Account'] = df['Account'].fillna(0).astype(int)
         df['Nights'] = df['Nights'].fillna(0).astype(int)
-        df.insert(6, column="uniqueKey", value=df["Account"].astype(str))            
+        df.insert(6, column="uniqueKey", value=df["Account"].astype(str))
 
         output_df = pd.DataFrame(columns=df.columns)
 
