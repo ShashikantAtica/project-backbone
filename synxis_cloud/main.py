@@ -503,11 +503,11 @@ def Synxis_Cloud_Pms(row):
         fileCount=fileCount+1
          # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
-        read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
-        read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed')
-        read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed')
-        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed')
-        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed')
+        read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed', errors='coerce')
+        read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed', errors='coerce')
+        read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed', errors='coerce')
+        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed', errors='coerce')
+        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed', errors='coerce')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)
@@ -553,7 +553,7 @@ def Synxis_Cloud_Pms(row):
         fileCount=fileCount+1
         # Forecast Data Clean and Insert
         read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
-        read['cal_dt'] = pd.to_datetime(read['cal_dt']).dt.strftime('%Y-%m-%d')
+        read['cal_dt'] = pd.to_datetime(read['cal_dt'], format='mixed', errors='coerce').dt.strftime('%Y-%m-%d')
         read.insert(0, column="propertyCode", value=propertyCode)
         read.insert(1, column="pullDateId", value=pullDateId)
         read.insert(2, column="createdAt", value=createdAt)

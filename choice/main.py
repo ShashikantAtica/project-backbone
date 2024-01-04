@@ -16,6 +16,7 @@ from utils.secrets.SecretManager import get_secret_from_api
 from bs4 import BeautifulSoup
 import csv
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
@@ -233,8 +234,8 @@ def Choice_Pms(row):
                     # Start Reservation Report
                     createdAt = "'" + str(arrow.now()) + "'"
                     updatedAt = "'" + str(arrow.now()) + "'"
-                    createdAtEpoch =  int(arrow.utcnow().timestamp())
-                    updatedAtEpoch =  int(arrow.utcnow().timestamp())
+                    createdAtEpoch = int(arrow.utcnow().timestamp())
+                    updatedAtEpoch = int(arrow.utcnow().timestamp())
                     reservation_dataframe = []
                     start_date = row['res_before']
                     end_date = row['res_after']
@@ -326,11 +327,11 @@ def Choice_Pms(row):
                         read.insert(3, column="updatedAt", value=updatedAt)
                         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                        read.insert(6, column="uniqueKey", value=read["Account"].astype(str))       
-                        read['Arrive'] = pd.to_datetime(read['Arrive'], format="%m/%d/%y")
-                        read['Depart'] = pd.to_datetime(read['Depart'], format="%m/%d/%y")
-                        read['Reserve Date'] = pd.to_datetime(read['Reserve Date'], format="%m/%d/%y")
-                        read['Cancellation Date'] = pd.to_datetime(read['Cancellation Date'], format="%m/%d/%y")
+                        read.insert(6, column="uniqueKey", value=read["Account"].astype(str))
+                        read['Arrive'] = pd.to_datetime(read['Arrive'], format="%m/%d/%y", errors='coerce')
+                        read['Depart'] = pd.to_datetime(read['Depart'], format="%m/%d/%y", errors='coerce')
+                        read['Reserve Date'] = pd.to_datetime(read['Reserve Date'], format="%m/%d/%y", errors='coerce')
+                        read['Cancellation Date'] = pd.to_datetime(read['Cancellation Date'], format="%m/%d/%y", errors='coerce')
                         read['CRS Conf. No'] = read['CRS Conf. No'].fillna(0).astype(int)
                         read['Room'] = read['Room'].fillna(0).astype(int)
 
@@ -431,10 +432,10 @@ def Choice_Pms(row):
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                         try:
                             read['﻿IDS_DATE'] = pd.to_datetime(read['﻿IDS_DATE'], format="%m/%d/%y")
-                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['﻿IDS_DATE'].astype(str))            
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['﻿IDS_DATE'].astype(str))
                         except Exception:
                             read['IDS_DATE'] = pd.to_datetime(read['IDS_DATE'], format="%m/%d/%y")
-                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['IDS_DATE'].astype(str)) 
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['IDS_DATE'].astype(str))
                         headers = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'IDS_DATE', 'Day', 'Rooms', 'OOO', 'StayOver', 'Arrivals',
                                    'DueOut', 'Available', 'GroupBlock', 'GroupPickedUp', 'TransNGTD', 'TransGTD', 'Occupied',
                                    'OccPercent', 'RoomRev', 'RevPAR', 'ADR', 'Ppl']
@@ -516,7 +517,7 @@ def Choice_Pms(row):
                         read.insert(3, column="updatedAt", value=updatedAt)
                         read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                        read['Cxl Date'] = pd.to_datetime(read['Cxl Date'])
+                        read['Cxl Date'] = pd.to_datetime(read['Cxl Date'], format='mixed', errors='coerce')
                         read['# Resv'] = read['# Resv'].fillna(0).astype(int)
                         read['Room nights'] = read['Room nights'].fillna(0).astype(int)
                         headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "CancellationReason", "CxlDate", "Resv", "RoomNights",
@@ -685,10 +686,10 @@ def Choice_Pms(row):
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                         try:
                             read['﻿IDS_DATE_DAY'] = pd.to_datetime(read['﻿IDS_DATE_DAY'], format="%m/%d/%y - %a")
-                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['﻿IDS_DATE_DAY'].astype(str) + "_" + read['Rate Code'].astype(str))            
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['﻿IDS_DATE_DAY'].astype(str) + "_" + read['Rate Code'].astype(str))
                         except Exception:
                             read['IDS_DATE_DAY'] = pd.to_datetime(read['IDS_DATE_DAY'], format="%m/%d/%y - %a")
-                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['IDS_DATE_DAY'].astype(str) + "_" + read['Rate Code'].astype(str))            
+                            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['IDS_DATE_DAY'].astype(str) + "_" + read['Rate Code'].astype(str))
                         read['%Room Nights'] = read['%Room Nights'].fillna(0).astype(int)
                         headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "IDS_DATE_DAY", "RateCode", "RoomNights", "RoomNightsPer", "RoomRevenue", "RoomRevenuePer", "DailyAVG"]
                         read.to_csv(filename, index=False, header=headers_list)
@@ -761,30 +762,23 @@ def Choice_Pms(row):
 
                     filename = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
                     group_pickup_detail_report.to_csv(filename, index=False)
-                    group_pickup_detail_binary_stream = open(filename, 'rb')
-                    group_pickup_detail_binary_data = group_pickup_detail_binary_stream.read()
+                    print(f"[{atica_property_code}]{report_type} Uploading Group Pickup Detail report")
+                    read = pd.read_csv(filename)
+                    read.dropna(subset=['Block Date'], inplace=True)
+                    read.insert(0, column="propertyCode", value=propertyCode)
+                    read.insert(1, column="pullDateId", value=pullDateId)
+                    read.insert(2, column="createdAt", value=createdAt)
+                    read.insert(3, column="updatedAt", value=updatedAt)
+                    read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                    read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                    read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'], format="%m/%d/%y", errors='coerce')
+                    read['Block Date'] = pd.to_datetime(read['Block Date'], format="%m/%d/%y", errors='coerce')
+                    read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read["Group Name"].astype(str) + "_" + read["Fixed Cut Off Date"].astype(str) + "_" + read["Room Type"].astype(str) + "_" + read["Block Date"].astype(str))
 
-                    if not ignore_size_check and len(group_pickup_detail_binary_data) < 1000:
-                        print(f"[{atica_property_code}]{report_type} Report size < 1 kb not sending, having only header")
-                        # os.remove(filename)
-                    else:
-                        print(f"[{atica_property_code}]{report_type} Uploading Group Pickup Detail report")
-                        read = pd.read_csv(filename)
-                        read.insert(0, column="propertyCode", value=propertyCode)
-                        read.insert(1, column="pullDateId", value=pullDateId)
-                        read.insert(2, column="createdAt", value=createdAt)
-                        read.insert(3, column="updatedAt", value=updatedAt)
-                        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-                        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                        read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'], format="%m/%d/%y")
-                        read['Block Date'] = pd.to_datetime(read['Block Date'], format="%m/%d/%y")
-                        # read = read.dropna(subset=['Block Date']) #to drop all rows with null block date
-                        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read["Group Name"].astype(str) + "_" + read["Fixed Cut Off Date"].astype(str) + "_" + read["Room Type"].astype(str) + "_" + read["Block Date"].astype(str))
-                        
-                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
-                                        "RoomType", "BlockDate", "OriginalBlock", "CurrentBlock", "GuaranteedArrivalsPickedUp", "NonGuaranteedArrivalsPickedUp",
-                                        "TotalPickedUp", "RoomsNotPickedUp", "Revenue", "ADR"]
-                        read.to_csv(filename, index=False, header=headers_list)
+                    headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "GroupName", "GroupStatus", "RollingCutOffDays", "FixedCutOffDate", "SalesManager",
+                                    "RoomType", "BlockDate", "OriginalBlock", "CurrentBlock", "GuaranteedArrivalsPickedUp", "NonGuaranteedArrivalsPickedUp",
+                                    "TotalPickedUp", "RoomsNotPickedUp", "Revenue", "ADR"]
+                    read.to_csv(filename, index=False, header=headers_list)
                     # End Group Pickup Detail Report
 
             reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
@@ -802,7 +796,7 @@ def Choice_Pms(row):
             check_group_pickup_detail_file = os.path.isfile(group_pickup_detail_file_path)
 
             error_msg = ""
-            fileCount=0
+            fileCount = 0
 
             if not check_reservation_file:
                 error_msg = error_msg + " Reservation file - N/A"
@@ -824,7 +818,7 @@ def Choice_Pms(row):
 
             if check_reservation_file:
 
-                fileCount=fileCount+1
+                fileCount = fileCount + 1
                 res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservation.csv", encoding="utf-8"))
                 res_result = list(res_result)
                 print(len(res_result))
@@ -836,7 +830,7 @@ def Choice_Pms(row):
 
             if check_occupancy_file:
 
-                fileCount=fileCount+1
+                fileCount = fileCount + 1
                 occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
                 print(len(occ_result))
@@ -848,7 +842,7 @@ def Choice_Pms(row):
 
             if check_cancellation_file:
 
-                fileCount=fileCount+1
+                fileCount = fileCount + 1
                 cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv", encoding="utf-8"))
                 cancel_result = list(cancel_result)
                 print(len(cancel_result))
@@ -860,7 +854,7 @@ def Choice_Pms(row):
 
             if check_revenue_file:
 
-                fileCount=fileCount+1
+                fileCount = fileCount + 1
                 revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv", encoding="utf-8"))
                 revenue_result = list(revenue_result)
                 print(len(revenue_result))
@@ -872,7 +866,7 @@ def Choice_Pms(row):
 
             if check_revenue_detail_file:
 
-                fileCount=fileCount+1
+                fileCount = fileCount + 1
                 revenue_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue_Detail.csv", encoding="utf-8"))
                 revenue_detail_result = list(revenue_detail_result)
                 print(len(revenue_detail_result))
@@ -883,8 +877,8 @@ def Choice_Pms(row):
                     error_msg = error_msg + "REVENUE DETAIL File Was Blank, "
 
             if check_group_pickup_detail_file:
-                
-                fileCount=fileCount+1
+
+                fileCount = fileCount + 1
                 group_pickup_detail_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Group_Pickup_Detail.csv", encoding="utf-8"))
                 group_pickup_detail_result = list(group_pickup_detail_result)
                 print(len(group_pickup_detail_result))
@@ -894,26 +888,26 @@ def Choice_Pms(row):
                 else:
                     error_msg = error_msg + "GROUP PICKUP DETAIL File Was Blank, "
 
-            if (fileCount==6):
-                if(error_msg==""):
+            if (fileCount == 6):
+                if (error_msg == ""):
                     update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
                 else:
-                    error_msg="Partially Successfull:- "+error_msg
+                    error_msg = "Partially Successfull:- " + error_msg
                     update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
             else:
-                if (fileCount==0):
+                if (fileCount == 0):
                     error_msg = "All File Not Found"
                 else:
-                    error_msg="Partially Successfull:- "+error_msg
+                    error_msg = "Partially Successfull:- " + error_msg
                 update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
 
-                
+
         except Exception as e:
             print(e)
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)
 
 
-def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
+def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
     LAST_PULL_DATE_ID = None
     DB_PMS_NAME = "'" + PMS_NAME + "'"
     DB_PROPERTY_CODE = "'" + PROPERTY_CODE + "'"
@@ -1012,7 +1006,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
