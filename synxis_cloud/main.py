@@ -503,9 +503,9 @@ def Synxis_Cloud_Pms(row):
         fileCount=fileCount+1
          # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
-        read['Status_Dt'] = pd.to_datetime(read['Status_Dt'])
-        read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'])
-        read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'])
+        read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
+        read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed')
+        read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed')
         read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed')
         read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed')
         read.insert(0, column="propertyCode", value=propertyCode)
