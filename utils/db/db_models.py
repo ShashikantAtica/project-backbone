@@ -693,14 +693,14 @@ synxis_cloud_reservation_model = Table(
 
 synxis_cloud_forecast_model = Table(
     'synxis_cloud_forecast', meta,
-    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('id', Integer, autoincrement=True),
     Column('propertyCode', String(20)),
     Column('pullDateId', BIGINT),
     Column('createdAt', TIMESTAMP(timezone=True)),
     Column('updatedAt', TIMESTAMP(timezone=True)),
     Column('createdAtEpoch', BIGINT),
     Column('updatedAtEpoch', BIGINT),
-    Column('uniqueKey', String(255)),
+    Column('uniqueKey', String(255), primary_key=True),
     Column('cal_dt', String(255)),
     Column('Total_Rooms', String(255)),
     Column('OOO_OOI', String(255)),
@@ -783,14 +783,14 @@ synxis_cloud_revenue_recap_model = Table(
 
 synxis_cloud_monthly_summary_model = Table(
     'synxis_cloud_monthly_summary', meta,
-    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('id', Integer, autoincrement=True),
     Column('propertyCode', String(55)),
     Column('pullDateId', BIGINT),
     Column('createdAt', TIMESTAMP(timezone=True)),
     Column('updatedAt', TIMESTAMP(timezone=True)),
     Column('createdAtEpoch', BIGINT),
     Column('updatedAtEpoch', BIGINT),
-    Column('uniqueKey', String(255)),
+    Column('uniqueKey', String(255), primary_key=True),
     Column('BUSINESS_DT', String(255)),
     Column('OCCUPIED_ROOM_QTY', String(255)),
     Column('RENTABLE_ROOM_QTY', String(255)),
