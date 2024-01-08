@@ -21,28 +21,37 @@ from selenium.webdriver.support.ui import Select
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
 
 
 def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list, res_before, res_after):
-    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    reservation = '"Cxl_Date"'
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of cancellation list (up to 90 Days)
+    # log(n)*M indexing check.
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from choice_cancellation_list where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    stmt = insert(db_models.choice_cancellation_list_model).values(cancellation_list)
+    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
+    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
+    # end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
+    # print("start_date :: ", start_date)
+    # print("end_date :: ", end_date)
 
-    # Add new data of cancellation list (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_cancellation_list_model.insert(), cancellation_list)
-    conn.commit()
-    conn.close()
+    # reservation = '"Cxl_Date"'
+    # db_propertyCode = "'" + propertyCode + "'"
+
+    # # Delete existing data of cancellation list (up to 90 Days)
+    # conn = db_config.get_db_connection()
+    # conn.execute(text(f'DELETE from choice_cancellation_list where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    # conn.commit()
+    # conn.close()
+
+    # # Add new data of cancellation list (up to 90 Days)
+    # conn = db_config.get_db_connection()
+    # conn.execute(db_models.choice_cancellation_list_model.insert(), cancellation_list)
+    # conn.commit()
+    # conn.close()
 
 
 def choice_cancellation(row):
