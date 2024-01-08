@@ -21,7 +21,29 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
 
+
+def bulk_insert_choice_noshow(propertyCode, Noshow_result):
+# log(n)*M indexing check.
+    conn = db_config.get_db_connection()
+    stmt = insert(db_models.choice_noshow_model).values(Noshow_result)
+    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
+    # Execute the insert statement
+    conn.execute(stmt)
+    conn.commit()
+    conn.close()
+
+def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, res_before, res_after):
+    # log(n)*M indexing check.
+    
+    conn = db_config.get_db_connection()
+    stmt = insert(db_models.choice_cancellation_list_model).values(cancellation_list_result)
+    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
+    # Execute the insert statement
+    conn.execute(stmt)
+    conn.commit()
+    conn.close()
 
 def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
     start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
@@ -781,13 +803,210 @@ def Choice_Pms(row):
                     read.to_csv(filename, index=False, header=headers_list)
                     # End Group Pickup Detail Report
 
+                    # Start cancelltionlist Report
+                    cancelltionlist_dataframe = []
+                    start_date = row['res_before']
+                    end_date = row['res_after']
+                    curr = start_date
+                    while curr <= end_date:
+                        start = curr
+                        end = curr.shift(days=+45)
+                        if end > end_date:
+                            end = end_date
+                        curr = curr.shift(days=+46)
+
+                        cancelltionlist_data_post = {
+                            'JOD': 'apache_cancel_list', #
+                            'locale': 'en_US', #
+                            'ARG0': external_property_code, #
+                            'ARG1': username, #
+                            'ARG2': current_date.format("M/D/YYYY"),
+                            'activityDateType':'cancel',
+                            'ARG3': start.format("M/D/YYYY"),
+                            'ARG4': end.format("M/D/YYYY"),
+                            'ARG5':'*',
+                            'ARG6':'*',
+                            'ARG7':'cancelDate',
+                            'reportId': '26', #
+                            'updateCounter': 'Y', #
+                            'CSV': 'true', #
+                            'CSV_SUPPRESS_HEADERS': 'false', #
+                            'reportServerKey': serverkey,
+                            'reportServerUsername': username,
+                            'fullPageRequestTime': int(time.time())
+                        }
+
+                        if property_type == 'Skytouch':
+                            cancelltionlist_data_post['commaSeparatedAccounts'] = ""
+                            cancelltionlist_data_post['activityDateType'] = ""
+
+                        z = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=cancelltionlist_data_post)
+                        report_type = '[cancelltionlist]'
+                        print(f"[{atica_property_code}]{report_type} Sent request!")
+                        # print(z.content)
+
+                        if z.status_code == 200:
+                            temp = tempfile.TemporaryFile()
+                            temp.write(z.content)
+                            temp.seek(0)
+                            read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
+                            cancelltionlist_dataframe.append(read_xl)
+                            temp.close()
+                            print(
+                                f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+                        else:
+                            print(
+                                f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+
+                    occupancy_report = pd.concat(cancelltionlist_dataframe, ignore_index=True)
+
+                    filename = f'{folder_name}{propertyCode}_Cancelltion_List.csv'
+                    occupancy_report.to_csv(filename, index=False)
+                    occupancy_binary_stream = open(filename, 'rb')
+                    occupancy_binary_data = occupancy_binary_stream.read()
+
+                    if not ignore_size_check and len(occupancy_binary_data) < 1000:
+                        print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
+                        # os.remove(filename)
+                    else:
+                        df = pd.read_csv(filename)
+                        df = df.drop('Company', axis=1)
+                        df = df.drop('Group', axis=1)
+                        new_column_names = ["Account", "Guest_Name", "Arrival_Group", "Nights", "Rate_Plan", "GTD", "Source", "Rm_Type", "Cxl_Code", "Cxl_Date", "Cxl_Clk"]
+                        df.columns = new_column_names
+                        df.dropna(inplace=True, how="all")
+                        createdAt = "'" + str(arrow.now()) + "'"
+                        updatedAt = "'" + str(arrow.now()) + "'"
+                        createdAtEpoch = int(arrow.utcnow().timestamp())
+                        updatedAtEpoch = int(arrow.utcnow().timestamp())
+                        df.insert(0, column="propertyCode", value=propertyCode)
+                        df.insert(1, column="pullDateId", value=pullDateId)
+                        df.insert(2, column="createdAt", value=createdAt)
+                        df.insert(3, column="updatedAt", value=updatedAt)
+                        df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                        df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                        df['Account'] = df['Account'].fillna(0).astype(int)
+                        df['Nights'] = df['Nights'].fillna(0).astype(int)
+                        df.insert(6, column="uniqueKey", value=df["Account"].astype(str))
+
+                        output_df = pd.DataFrame(columns=df.columns)
+
+                        previous_row = None
+
+                        for index, data in df.iterrows():
+                            if previous_row is not None and int(data["Account"]) == 0:
+                                previous_row["Guest_Name"] += f", {data['Guest_Name']}"
+                            else:
+                                if previous_row is not None:
+                                    output_df = pd.concat([output_df, previous_row.to_frame().T], ignore_index=True)
+                                previous_row = data
+
+                        if previous_row is not None:
+                            output_df = pd.concat([output_df, previous_row.to_frame().T], ignore_index=True)
+                        output_df['Arrival_Group'] = pd.to_datetime(output_df['Arrival_Group'], format="%m/%d/%y").dt.date
+                        output_df['Cxl_Date'] = pd.to_datetime(output_df['Cxl_Date'], format="%m/%d/%y").dt.date
+                        output_df.to_csv(f'{folder_name}{propertyCode}_Cancellation_List_Final.csv', index=False)
+                        print(f"{atica_property_code} Choice Cancellation List report pulled successfully")
+
+                        # read.to_csv(filename, header=headers, index=False)
+
+                    # End cancelltionlist Report
+
+                    # Start noshow Report
+                    noshow_dataframe = []
+                    start_date = row['res_before']
+                    end_date = row['res_after']
+                    curr = start_date
+                    while curr <= end_date:
+                        start = curr
+                        end = curr.shift(days=+45)
+                        if end > end_date:
+                            end = end_date
+                        curr = curr.shift(days=+46)
+
+                        noshow_data_post = {
+                            'JOD': 'apache_no_show', 
+                            'locale': 'en_US', 
+                            'property': external_property_code, 
+                            'userId': username, 
+                            'reportId': '48', 
+                            'updateCounter': 'Y', 
+                            'creditCardStatusTypeXML': '', 
+                            'isNoShowBatchEnabled': 'Y',
+                            'CSV': 'true', 
+                            'CSV_SUPPRESS_HEADERS': 'false', 
+                            'startDatePastCurrent': start.format("M/D/YYYY"),
+                            'endDatePastCurrent': end.format("M/D/YYYY"),
+                            'ARG2': current_date.format("M/D/YYYY"),
+                            'guaranteeCode': '*',
+                            'reportServerKey': serverkey,
+                            'reportServerUsername': username,
+                            'fullPageRequestTime': int(time.time())
+                        }
+
+                        if property_type == 'Skytouch':
+                            noshow_data_post['commaSeparatedAccounts'] = ""
+                            noshow_data_post['activityDateType'] = ""
+
+                        z = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=noshow_data_post)
+                        report_type = '[Noshow]'
+                        print(f"[{atica_property_code}]{report_type} Sent request!")
+
+                        if z.status_code == 200:
+                            temp = tempfile.TemporaryFile()
+                            temp.write(z.content)
+                            temp.seek(0)
+                            read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
+                            noshow_dataframe.append(read_xl)
+                            temp.close()
+                            print(
+                                f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+                        else:
+                            print(
+                                f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+
+                    noshow_report = pd.concat(noshow_dataframe, ignore_index=True)
+
+                    filename = f'{folder_name}{propertyCode}_Noshow.csv'
+                    noshow_report.to_csv(filename, index=False)
+                    noshow_binary_stream = open(filename, 'rb')
+                    noshow_binary_data = noshow_binary_stream.read()
+
+                    if not ignore_size_check and len(noshow_binary_data) < 1:
+                        print(f"[{atica_property_code}]{report_type} Report size < 1 kb not sending, having only header")
+                        # os.remove(filename)
+                    else:
+                        print(f"[{atica_property_code}]{report_type} Uploading Noshow")
+                        read = pd.read_csv(filename)
+                        read.dropna(inplace=True, how="all")
+                        read.insert(0, column="propertyCode", value=propertyCode)
+                        read.insert(1, column="pullDateId", value=pullDateId)
+                        read.insert(2, column="createdAt", value=createdAt)
+                        read.insert(3, column="updatedAt", value=updatedAt)
+                        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                        read['Account'] = read['Account'].fillna(0).astype(int)
+                        read.insert(6, column="uniqueKey", value=read["Account"].astype(str))
+                        
+                        headers = ['propertyCode','pullDateId','createdAt','updatedAt','createdAtEpoch',
+                                   'updatedAtEpoch','uniqueKey','account','guestName','arrival','departure',
+                                   'source','GTD','ratePlan','rate','balance','payment','authStatus']
+                        read.to_csv(filename, header=headers, index=False)
+
+                    # End noshow Report
+                        
             reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
             occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.csv'
             cancellation_file_path = f'{folder_name}{propertyCode}_Cancellation.csv'
             revenue_file_path = f'{folder_name}{propertyCode}_Revenue.csv'
             revenue_detail_file_path = f'{folder_name}{propertyCode}_Revenue_Detail.csv'
             group_pickup_detail_file_path = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
-
+            Noshow_file_path = f'{folder_name}{propertyCode}_Noshow.csv'
+            cancellation_list_file_path = f'{folder_name}{propertyCode}_Cancellation_List_Final.csv'
+            
+            
+            check_cancellation_list_file = os.path.isfile(cancellation_list_file_path)
+            check_Noshow_file = os.path.isfile(Noshow_file_path)
             check_reservation_file = os.path.isfile(reservation_file_path)
             check_occupancy_file = os.path.isfile(occupancy_file_path)
             check_cancellation_file = os.path.isfile(cancellation_file_path)
@@ -798,6 +1017,12 @@ def Choice_Pms(row):
             error_msg = ""
             fileCount = 0
 
+            if not check_Noshow_file:
+                error_msg = error_msg + " Noshow file - N/A"
+
+            if not check_cancellation_list_file:
+                error_msg = error_msg + " Cancellation List file - N/A"
+            
             if not check_reservation_file:
                 error_msg = error_msg + " Reservation file - N/A"
 
@@ -888,7 +1113,31 @@ def Choice_Pms(row):
                 else:
                     error_msg = error_msg + "GROUP PICKUP DETAIL File Was Blank, "
 
-            if (fileCount == 6):
+            if check_Noshow_file:
+
+                fileCount = fileCount + 1
+                Noshow_result = csv.DictReader(open(Noshow_file_path, encoding="utf-8"))
+                Noshow_result = list(Noshow_result)
+                print(len(Noshow_result))
+                if len(Noshow_result) > 0:
+                    bulk_insert_choice_noshow(propertyCode, Noshow_result)
+                    print("Noshow DONE")
+                else:
+                    error_msg = error_msg + "Noshow File Was Blank, "
+            
+            if check_cancellation_list_file:
+
+                fileCount = fileCount + 1
+                cancellation_list_result = csv.DictReader(open(cancellation_list_file_path, encoding="utf-8"))
+                cancellation_list_result = list(cancellation_list_result)
+                print(len(cancellation_list_result))
+                if len(cancellation_list_result) > 0:
+                    bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, row['res_before'], row['res_after'])
+                    print("CANCELLATION LIST DONE")
+                else:
+                    error_msg = error_msg + "Cancellation List File Was Blank, "
+            
+            if (fileCount == 8):
                 if (error_msg == ""):
                     update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
                 else:

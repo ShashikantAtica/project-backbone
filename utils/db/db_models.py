@@ -208,9 +208,18 @@ choice_noshow_model = Table(
     Column('updatedAt', TIMESTAMP(timezone=True)),
     Column('createdAtEpoch', BIGINT),
     Column('updatedAtEpoch', BIGINT),
-    Column('uniqueKey', String(255), primary_key=True),    
-    Column('ACCOUNT', String(55)),
-    Column('AUTH_STATUS', String(55)),
+    Column('uniqueKey', String(255), primary_key=True), 
+    Column('account', String(55)),
+    Column('guestName', String(55)),
+    Column('arrival', String(55)),
+    Column('departure', String(55)),
+    Column('source', String(55)),
+    Column('GTD', String(55)),
+    Column('ratePlan', String(55)),
+    Column('rate', String(55)),
+    Column('balance', String(55)),
+    Column('payment', String(55)),
+    Column('authStatus', String(55)),
 )
 
 auto_clerk_res_model = Table(
