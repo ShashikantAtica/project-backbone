@@ -46,53 +46,82 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result,
     conn.close()
 
 def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
-    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
-    reservation = '"ReserveDate"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
+    print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from choice_res where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    stmt = insert(db_models.choice_res_model).values(res_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Account': stmt.excluded.Account,
+            'GuestName': stmt.excluded.GuestName,
+            'Arrive': stmt.excluded.Arrive,
+            'Depart': stmt.excluded.Depart,
+            'Nights': stmt.excluded.Nights,
+            'Status': stmt.excluded.Status,
+            'Rate': stmt.excluded.Rate,
+            'RateCode': stmt.excluded.RateCode,
+            'Type': stmt.excluded.Type,
+            'Room': stmt.excluded.Room,
+            'Source': stmt.excluded.Source,
+            'CRSConfNo': stmt.excluded.CRSConfNo,
+            'GTD': stmt.excluded.GTD,
+            'ReserveDate': stmt.excluded.ReserveDate,
+            'User': stmt.excluded.User,
+            'SharedAccount': stmt.excluded.SharedAccount,
+            'TrackCode': stmt.excluded.TrackCode,
+            'Package': stmt.excluded.Package,
+            'CancellationDate': stmt.excluded.CancellationDate,
+            'CXLUserID': stmt.excluded.CXLUserID,
+            
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
-
-    # Add new data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_res_model.insert(), res_list)
-    conn.commit()
-    conn.close()
+    print("Data imported")
 
 
 def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
-    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-
-    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
-    print("end_date :: ", end_date)
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of occ (up to 90 Days)
+    print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM choice_occ where "IDS_DATE" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    stmt = insert(db_models.choice_occ_model).values(occ_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'IDS_DATE': stmt.excluded.IDS_DATE,
+            'Day': stmt.excluded.Day,
+            'Rooms': stmt.excluded.Rooms,
+            'OOO': stmt.excluded.OOO,
+            'StayOver': stmt.excluded.StayOver,
+            'Arrivals': stmt.excluded.Arrivals,
+            'DueOut': stmt.excluded.DueOut,
+            'Available': stmt.excluded.Available,
+            'GroupBlock': stmt.excluded.GroupBlock,
+            'GroupPickedUp': stmt.excluded.GroupPickedUp,
+            'TransNGTD': stmt.excluded.TransNGTD,
+            'TransGTD': stmt.excluded.TransGTD,
+            'Occupied': stmt.excluded.Occupied,
+            'OccPercent': stmt.excluded.OccPercent,
+            'RoomRev': stmt.excluded.RoomRev,
+            'RevPAR': stmt.excluded.RevPAR,
+            'ADR': stmt.excluded.ADR,
+            'Ppl': stmt.excluded.Ppl,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
-
-    # Add new data of occ (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_occ_model.insert(), occ_list)
-    conn.commit()
-    conn.close()
+    print("Data imported")
 
 
 def bulk_insert_choice_cancel(propertyCode, cancel_list, cancel_before, cancel_after):
@@ -133,45 +162,65 @@ def bulk_insert_choice_revenue(propertyCode, revenue_list):
 
 
 def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue_before, revenue_after):
-    start_date = "'" + revenue_before.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-
-    end_date = "'" + revenue_after.format("YYYY-MM-DD") + "'"
-    print("end_date :: ", end_date)
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of revenue detail (up to 90 Days)
+    print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM choice_revenue_detail where "IDS_DATE_DAY" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    stmt = insert(db_models.choice_revenue_detail_model).values(revenue_detail_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'IDS_DATE_DAY': stmt.excluded.IDS_DATE_DAY,
+            'RateCode': stmt.excluded.RateCode,
+            'RoomNights': stmt.excluded.RoomNights,
+            'RoomNightsPer': stmt.excluded.RoomNightsPer,
+            'RoomRevenue': stmt.excluded.RoomRevenue,
+            'RoomRevenuePer': stmt.excluded.RoomRevenuePer,
+            'DailyAVG': stmt.excluded.DailyAVG,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
-
-    # Add new data of revenue detail (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_revenue_detail_model.insert(), revenue_detail_list)
-    conn.commit()
-    conn.close()
+    print("Data imported")
 
 
 def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_list, group_pickup_before, group_pickup_after):
-    start_date = "'" + group_pickup_before.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-
-    end_date = "'" + group_pickup_after.format("YYYY-MM-DD") + "'"
-    print("end_date :: ", end_date)
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of occ (up to 90 Days)
+    print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM choice_group_pickup_detail where "BlockDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    stmt = insert(db_models.choice_group_pickup_detail_model).values(group_pickup_detail_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'GroupName': stmt.excluded.GroupName,
+            'GroupStatus': stmt.excluded.GroupStatus,
+            'RollingCutOffDays': stmt.excluded.RollingCutOffDays,
+            'FixedCutOffDate': stmt.excluded.FixedCutOffDate,
+            'SalesManager': stmt.excluded.SalesManager,
+            'RoomType': stmt.excluded.RoomType,
+            'BlockDate': stmt.excluded.BlockDate,
+            'OriginalBlock': stmt.excluded.OriginalBlock,
+            'CurrentBlock': stmt.excluded.CurrentBlock,
+            'GuaranteedArrivalsPickedUp': stmt.excluded.GuaranteedArrivalsPickedUp,
+            'NonGuaranteedArrivalsPickedUp': stmt.excluded.NonGuaranteedArrivalsPickedUp,
+            'TotalPickedUp': stmt.excluded.TotalPickedUp,
+            'RoomsNotPickedUp': stmt.excluded.RoomsNotPickedUp,
+            'Revenue': stmt.excluded.Revenue,
+            'ADR': stmt.excluded.ADR,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
-
-    # Add new data of occ (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_group_pickup_detail_model.insert(), group_pickup_detail_list)
-    conn.commit()
-    conn.close()
+    print("Data imported")
 
 
 def Choice_Pms(row):

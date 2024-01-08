@@ -151,14 +151,14 @@ choice_revenue_detail_model = Table(
 
 choice_group_pickup_detail_model = Table(
     'choice_group_pickup_detail', meta,
-    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('id', Integer, autoincrement=True),
     Column('propertyCode', String(55)),
     Column('pullDateId', BIGINT),
     Column('createdAt', TIMESTAMP(timezone=True)),
     Column('updatedAt', TIMESTAMP(timezone=True)),
     Column('createdAtEpoch', BIGINT),
     Column('updatedAtEpoch', BIGINT),
-    Column('uniqueKey', String(255)),
+    Column('uniqueKey', String(255), primary_key=True),
     Column('GroupName', String(255)),
     Column('GroupStatus', String(255)),
     Column('RollingCutOffDays', String(255)),
