@@ -77,11 +77,6 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
-    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
     # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
@@ -192,67 +187,148 @@ def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_forecast(res_list, propertyCode, min_date, max_date):
-    start_date = "'" + min_date + "'"
-    end_date = "'" + max_date + "'"
-
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    reservation = '"cal_dt"'
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from synxis_cloud_forecast where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of reservation
+def bulk_insert_synxis_cloud_forecast(fore_list, propertyCode, min_date, max_date):
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_forecast_model.insert(), res_list)
+    stmt = insert(db_models.synxis_cloud_forecast_model).values(fore_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'cal_dt': stmt.excluded.cal_dt,
+            'Total_Rooms': stmt.excluded.Total_Rooms,
+            'OOO_OOI': stmt.excluded.OOO_OOI,
+            'rentable_rooms': stmt.excluded.rentable_rooms,
+            'Rooms_Sold': stmt.excluded.Rooms_Sold,
+            'total_stayovers': stmt.excluded.total_stayovers,
+            'total_due_out': stmt.excluded.total_due_out,
+            'Total_Reservations': stmt.excluded.Total_Reservations,
+            'day_use_in_house': stmt.excluded.day_use_in_house,
+            'gtd': stmt.excluded.gtd,
+            'non_gtd': stmt.excluded.non_gtd,
+            'Not_Picked_Up': stmt.excluded.Not_Picked_Up,
+            'Left_To_Sell': stmt.excluded.Left_To_Sell,
+            'occ_per': stmt.excluded.occ_per,
+            'Total_Room_Revenue': stmt.excluded.Total_Room_Revenue,
+            'ADR': stmt.excluded.ADR,
+            'Adult_Child': stmt.excluded.Adult_Child,
+            'Sum_Total_Rooms': stmt.excluded.Sum_Total_Rooms,
+            'SumOOO_OOI': stmt.excluded.SumOOO_OOI,
+            'Sum_Rentable_Rooms': stmt.excluded.Sum_Rentable_Rooms,
+            'Sum_Rooms_Sold': stmt.excluded.Sum_Rooms_Sold,
+            'Sum_Stayovers': stmt.excluded.Sum_Stayovers,
+            'Sum_Checkouts': stmt.excluded.Sum_Checkouts,
+            'Sum_Arrivals': stmt.excluded.Sum_Arrivals,
+            'Sum_Day_Use': stmt.excluded.Sum_Day_Use,
+            'SumGtd': stmt.excluded.SumGtd,
+            'SumNonGtd': stmt.excluded.SumNonGtd,
+            'Sum_GroupsRoomsNotPickedUp': stmt.excluded.Sum_GroupsRoomsNotPickedUp,
+            'Sum_Rooms_Left_To_Sell': stmt.excluded.Sum_Rooms_Left_To_Sell,
+            'Sum_RoomsOccupied_Percentage': stmt.excluded.Sum_RoomsOccupied_Percentage,
+            'SumTotalRoomRevenue': stmt.excluded.SumTotalRoomRevenue,
+            'Sum_ADR': stmt.excluded.Sum_ADR,
+            'SUM_ADULT_CHILD': stmt.excluded.SUM_ADULT_CHILD,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_revenue_recap(res_list, propertyCode, report_date):
-    prev_date = arrow.get(report_date, "DD MMM YYYY").format("YYYY-MM-DD")
-    # Delete existing data
-    conn = db_config.get_db_connection()
-    conn.execute(text(f"""DELETE from synxis_cloud_revenue_recap where "Date" = '{prev_date}' and "propertyCode" = '{propertyCode}';"""))
-    conn.commit()
-    conn.close()
 
-    # Add new data of revenue
+def bulk_insert_synxis_cloud_revenue_recap(rev_list, propertyCode, report_date):
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), res_list)
+    stmt = insert(db_models.synxis_cloud_revenue_recap_model).values(rev_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Date': stmt.excluded.Date,
+            'report_type': stmt.excluded.report_type,
+            'report_type_values': stmt.excluded.report_type_values,
+            'Room_Nights': stmt.excluded.Room_Nights,
+            'Room': stmt.excluded.Room,
+            'F_B': stmt.excluded.F_B,
+            'Taxes': stmt.excluded.Taxes,
+            'Other': stmt.excluded.Other,
+            'Month_To_Date_Room_Nights': stmt.excluded.Month_To_Date_Room_Nights,
+            'Month_To_Date_Room': stmt.excluded.Month_To_Date_Room,
+            'Month_To_Date_F_B': stmt.excluded.Month_To_Date_F_B,
+            'Month_To_Date_Taxes': stmt.excluded.Month_To_Date_Taxes,
+            'Month_To_Date_Others': stmt.excluded.Month_To_Date_Others,
+            'Year_To_Date_Room_Nights': stmt.excluded.Year_To_Date_Room_Nights,
+            'Year_To_Date__Room': stmt.excluded.Year_To_Date__Room,
+            'Year_To_Date_F_B': stmt.excluded.Year_To_Date_F_B,
+            'Year_To_Date_Taxes': stmt.excluded.Year_To_Date_Taxes,
+            'Year_To_Date_Other': stmt.excluded.Year_To_Date_Other,
+            'Room_Nights_Total': stmt.excluded.Room_Nights_Total,
+            'Room_Total': stmt.excluded.Room_Total,
+            'F_B_Total': stmt.excluded.F_B_Total,
+            'Taxes_Total': stmt.excluded.Taxes_Total,
+            'Other_Total': stmt.excluded.Other_Total,
+            'Month_To_Date_Room_Nights_Total': stmt.excluded.Month_To_Date_Room_Nights_Total,
+            'Month_To_Date_Room_Total': stmt.excluded.Month_To_Date_Room_Total,
+            'Month_To_Date_F_B_total': stmt.excluded.Month_To_Date_F_B_total,
+            'Month_To_Date_Taxes_Total': stmt.excluded.Month_To_Date_Taxes_Total,
+            'Month_To_Date_Total': stmt.excluded.Month_To_Date_Total,
+            'Year_To_Date_Room_Nights_Total': stmt.excluded.Year_To_Date_Room_Nights_Total,
+            'Year_To_Date_Room_Total': stmt.excluded.Year_To_Date_Room_Total,
+            'Year_To_Date_F_B_Total': stmt.excluded.Year_To_Date_F_B_Total,
+            'Year_To_Date_Taxes_Total': stmt.excluded.Year_To_Date_Taxes_Total,
+            'Year_To_Date_Total': stmt.excluded.Year_To_Date_Total,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
 
 
-def bulk_insert_synxis_cloud_monthly_summary(res_list, propertyCode, min_date, max_date):
-    start_date = min_date
-    end_date = max_date
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    reservation = '"BUSINESS_DT"'
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f"""DELETE from synxis_cloud_monthly_summary where {reservation} between '{start_date}' and '{end_date}' and "propertyCode" = {db_propertyCode};"""))
-    conn.commit()
-    conn.close()
-
-    # Add new data of reservation
+def bulk_insert_synxis_cloud_monthly_summary(mon_list, propertyCode, min_date, max_date):
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.synxis_cloud_monthly_summary_model.insert(), res_list)
+    stmt = insert(db_models.synxis_cloud_monthly_summary_model).values(mon_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'BUSINESS_DT': stmt.excluded.BUSINESS_DT,
+            'OCCUPIED_ROOM_QTY': stmt.excluded.OCCUPIED_ROOM_QTY,
+            'RENTABLE_ROOM_QTY': stmt.excluded.RENTABLE_ROOM_QTY,
+            'OCCUPANCY_PERCENT': stmt.excluded.OCCUPANCY_PERCENT,
+            'ADR_WITH_COMPS': stmt.excluded.ADR_WITH_COMPS,
+            'TOTAL_FOOD_AND_BEV_REV': stmt.excluded.TOTAL_FOOD_AND_BEV_REV,
+            'TOTAL_ROOM_REV1': stmt.excluded.TOTAL_ROOM_REV1,
+            'TOTAL_TAX_REV': stmt.excluded.TOTAL_TAX_REV,
+            'TOTAL_OTH_REV': stmt.excluded.TOTAL_OTH_REV,
+            'TOTAL_REV': stmt.excluded.TOTAL_REV,
+            'Date': stmt.excluded.Date,
+            'OCCUPIED_ROOM_QTY_Total': stmt.excluded.OCCUPIED_ROOM_QTY_Total,
+            'RENTABLE_ROOM_QTY_Total': stmt.excluded.RENTABLE_ROOM_QTY_Total,
+            'Occupancy_Percent_Total': stmt.excluded.Occupancy_Percent_Total,
+            'ADR_Total': stmt.excluded.ADR_Total,
+            'FoodandBeverage': stmt.excluded.FoodandBeverage,
+            'RoomCharges': stmt.excluded.RoomCharges,
+            'Taxes': stmt.excluded.Taxes,
+            'Others': stmt.excluded.Others,
+            'Total': stmt.excluded.Total,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
