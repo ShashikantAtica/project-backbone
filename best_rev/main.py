@@ -24,28 +24,43 @@ from selenium.webdriver.chrome.service import Service
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
 
 
 def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list, fore_start_date, fore_end_date):
-    start_date = "'" + fore_start_date.format("YYYY-MM-DD") + "'"
-    end_date = "'" + fore_end_date.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    reservation = '"StayDate"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f"""DELETE from bestrev_total_forecast where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};"""))
-    conn.commit()
-    conn.close()
-
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.bestrev_total_forecast_model.insert(), total_forecast_list)
+    stmt = insert(db_models.bestrev_total_forecast_model).values(total_forecast_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Alert': stmt.excluded.Alert,
+            'Priority': stmt.excluded.Priority,
+            'StayDate': stmt.excluded.StayDate,
+            'DayofWeek': stmt.excluded.DayofWeek,
+            'Favorite': stmt.excluded.Favorite,
+            'Event': stmt.excluded.Event,
+            'BestWesternRate': stmt.excluded.BestWesternRate,
+            'RecommendedRate': stmt.excluded.RecommendedRate,
+            'RatetoUpload': stmt.excluded.RatetoUpload,
+            'RecommendationStatus': stmt.excluded.RecommendationStatus,
+            'MarketRate': stmt.excluded.MarketRate,
+            'AvailableRooms': stmt.excluded.AvailableRooms,
+            'TransientCapacity': stmt.excluded.TransientCapacity,
+            'TotalForecast_IncludesGroup': stmt.excluded.TotalForecast_IncludesGroup,
+            'OntheBooks_IncludesGroup': stmt.excluded.OntheBooks_IncludesGroup,
+            'AverageDailyRate': stmt.excluded.AverageDailyRate,
+            'RevPAR': stmt.excluded.RevPAR,
+            'Occupancy_IncludesGroup': stmt.excluded.Occupancy_IncludesGroup,
+            'ForecastOccupancy_IncludesGroup': stmt.excluded.ForecastOccupancy_IncludesGroup,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")

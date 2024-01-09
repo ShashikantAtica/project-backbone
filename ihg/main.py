@@ -23,6 +23,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
+
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
@@ -75,43 +77,89 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_ihg_res(res_list, propertyCode, res_before, res_after):
-    start_date = res_before.format("YYYY-MM-DD")
-    end_date = res_after.format("YYYY-MM-DD")
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    conn = db_config.get_db_connection()
-    conn.execute(text(f"""DELETE from ihg_res where to_char("TransactionTime(GMT)"::date,'YYYY-MM-DD') between '{start_date}' and '{end_date}' and "propertyCode" = '{propertyCode}';"""))
-    conn.commit()
-    conn.close()
-
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.ihg_res_model.insert(), res_list)
+    stmt = insert(db_models.ihg_res_model).values(res_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'ConfirmationNumber': stmt.excluded.ConfirmationNumber,
+            'PriorityClubMember': stmt.excluded.PriorityClubMember,
+            'GuestName': stmt.excluded.GuestName,
+            'ArrivalDate': stmt.excluded.ArrivalDate,
+            'RateCode': stmt.excluded.RateCode,
+            'RateCategory': stmt.excluded.RateCategory,
+            'Guaranteed': stmt.excluded.Guaranteed,
+            'RoomType': stmt.excluded.RoomType,
+            'ArrivalRoomRate': stmt.excluded.ArrivalRoomRate,
+            'NumberofGuests': stmt.excluded.NumberofGuests,
+            'NumberofNights': stmt.excluded.NumberofNights,
+            'NumberofRooms': stmt.excluded.NumberofRooms,
+            'PropertyName': stmt.excluded.PropertyName,
+            'HotelCode': stmt.excluded.HotelCode,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
 
 
-def bulk_insert_occ_res(res_list, propertyCode, occ_before, occ_after):
-    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    occupancy = '"Date"'
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from ihg_occ where {occupancy} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of reservation
+def bulk_insert_occ_res(occ_list, propertyCode, occ_before, occ_after):
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.ihg_occ_model.insert(), res_list)
+    stmt = insert(db_models.ihg_occ_model).values(occ_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'BlackoutDates': stmt.excluded.BlackoutDates,
+            'blank': stmt.excluded.blank,
+            'ClosedtoArrival': stmt.excluded.ClosedtoArrival,
+            'Date': stmt.excluded.Date,
+            'DayofWeek': stmt.excluded.DayofWeek,
+            'MaximumLOS': stmt.excluded.MaximumLOS,
+            'MinimumLOS': stmt.excluded.MinimumLOS,
+            'ReservationGuaranteeRequired': stmt.excluded.ReservationGuaranteeRequired,
+            'AverageLeadTime': stmt.excluded.AverageLeadTime,
+            'AverageLOS': stmt.excluded.AverageLOS,
+            'CancelDue': stmt.excluded.CancelDue,
+            'CancelorNoShow': stmt.excluded.CancelorNoShow,
+            'DepositDue': stmt.excluded.DepositDue,
+            'Deposit': stmt.excluded.Deposit,
+            'Groupremaining': stmt.excluded.Groupremaining,
+            'RoomslefttoSell': stmt.excluded.RoomslefttoSell,
+            'SpecialEventSpecialRequirement': stmt.excluded.SpecialEventSpecialRequirement,
+            'Paceasofdate': stmt.excluded.Paceasofdate,
+            'AC': stmt.excluded.AC,
+            'ActualroomssoldLY': stmt.excluded.ActualroomssoldLY,
+            'ADR': stmt.excluded.ADR,
+            'BFR': stmt.excluded.BFR,
+            'Groupcommitted': stmt.excluded.Groupcommitted,
+            'Groupcontracted': stmt.excluded.Groupcontracted,
+            'GroupPickupasofdate': stmt.excluded.GroupPickupasofdate,
+            'Grouppickup': stmt.excluded.Grouppickup,
+            'Occ': stmt.excluded.Occ,
+            'OVB': stmt.excluded.OVB,
+            'Paceasofdate1': stmt.excluded.Paceasofdate1,
+            'Paceasofdate2': stmt.excluded.Paceasofdate2,
+            'Pickupasofdate': stmt.excluded.Pickupasofdate,
+            'Pickupasofdate1': stmt.excluded.Pickupasofdate1,
+            'Roomssold': stmt.excluded.Roomssold,
+            'TotalRoomsCommitted': stmt.excluded.TotalRoomsCommitted,
+            
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")

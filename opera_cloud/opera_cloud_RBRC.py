@@ -25,6 +25,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
+
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
@@ -78,24 +80,39 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_opera_cloud_rbrc(rbrc_list, lowest_input_date_str, propertyCode):
 
-    BUSINESS_DATE = '"BUSINESS_DATE"'
-
-    print("lowest_input_date in report :: ", lowest_input_date_str)
-
-    formatted_lowest_input_date_str = "'" + lowest_input_date_str.format('YYYY-MM-DD') + "'"
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of RBRC
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from opera_rbrc where {BUSINESS_DATE} >= {formatted_lowest_input_date_str} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-    print("DELETED OLD DATA >= !!!", formatted_lowest_input_date_str)
-
-    # Add new data of RBRC
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.opera_rbrc_model.insert(), rbrc_list)
+    stmt = insert(db_models.opera_rbrc_model).values(rbrc_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'RESORT': stmt.excluded.RESORT,
+            'BUSINESS_DATE': stmt.excluded.BUSINESS_DATE,
+            'CHAR_BUSINESS_DATE': stmt.excluded.CHAR_BUSINESS_DATE,
+            'MASTER_VALUE': stmt.excluded.MASTER_VALUE,
+            'CF_MASTER_SEQ': stmt.excluded.CF_MASTER_SEQ,
+            'GROUP_NAME': stmt.excluded.GROUP_NAME,
+            'ARR_TODAY': stmt.excluded.ARR_TODAY,
+            'NO_DEFINITE_ROOMS': stmt.excluded.NO_DEFINITE_ROOMS,
+            'IN_GUEST': stmt.excluded.IN_GUEST,
+            'OCC_SINGLE': stmt.excluded.OCC_SINGLE,
+            'DOUBLE_OCC': stmt.excluded.DOUBLE_OCC,
+            'REVENUE': stmt.excluded.REVENUE,
+            'FB_REV': stmt.excluded.FB_REV,
+            'OTHER_REV': stmt.excluded.OTHER_REV,
+            'TOTAL_REVENUE': stmt.excluded.TOTAL_REVENUE,
+            'RESORT_ROOM': stmt.excluded.RESORT_ROOM,
+            'PER_OCC': stmt.excluded.PER_OCC,
+            'GET_ARR': stmt.excluded.GET_ARR,
+            'MULTI_OCC_PER': stmt.excluded.MULTI_OCC_PER,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
