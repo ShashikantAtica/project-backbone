@@ -22,6 +22,8 @@ import pandas as pd
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
+
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
@@ -75,28 +77,54 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
-    # input_date_str is minimum date in report and all data with date equal more than this will get deleted and data of report will get added
-    Day_of_Arrival = '"Day_of_Arrival"'
-
-    print("lowest_date_in_report :: ", low_input_date_str)
-
-    formatted_yesterday_date_of_report = "'" + low_input_date_str + "'"
-    db_propertyCode = "'" + propertyCode + "'"
-
-    # Delete existing data of RBRC
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from ideasg3_occ where {Day_of_Arrival} >= {formatted_yesterday_date_of_report} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-    print("DELETE OLD DATA >= !!!", formatted_yesterday_date_of_report)
-
-    # Add new data of RBRC
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.ideasg3_occ_model.insert(), occ_list)
+    stmt = insert(db_models.ideasg3_occ_model).values(occ_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Day_of_Week': stmt.excluded.Day_of_Week,
+            'Day_of_Arrival': stmt.excluded.Day_of_Arrival,
+            'Special_Event': stmt.excluded.Special_Event,
+            'Out_of_Order': stmt.excluded.Out_of_Order,
+            'Occupancy_On_Books_Current': stmt.excluded.Occupancy_On_Books_Current,
+            'Occupancy_On_Books_Change': stmt.excluded.Occupancy_On_Books_Change,
+            'Occupancy_Forecast_Current': stmt.excluded.Occupancy_Forecast_Current,
+            'Occupancy_Forecast_Change': stmt.excluded.Occupancy_Forecast_Change,
+            'Occupancy_Forecast_Percent_Current': stmt.excluded.Occupancy_Forecast_Percent_Current,
+            'Occupancy_Forecast_Percent_Change': stmt.excluded.Occupancy_Forecast_Percent_Change,
+            'Revenue_On_Books_USD_Current': stmt.excluded.Revenue_On_Books_USD_Current,
+            'Revenue_On_Books_USD_Change': stmt.excluded.Revenue_On_Books_USD_Change,
+            'Revenue_Forecast_USD_Current': stmt.excluded.Revenue_Forecast_USD_Current,
+            'Revenue_Forecast_USD_Change': stmt.excluded.Revenue_Forecast_USD_Change,
+            'ADR_On_Books_USD_Current': stmt.excluded.ADR_On_Books_USD_Current,
+            'ADR_On_Books_USD_Change': stmt.excluded.ADR_On_Books_USD_Change,
+            'ADR_Forecast_USD_Current': stmt.excluded.ADR_Forecast_USD_Current,
+            'ADR_Forecast_USD_Change': stmt.excluded.ADR_Forecast_USD_Change,
+            'RevPAR_On_Books_USD_Current': stmt.excluded.RevPAR_On_Books_USD_Current,
+            'RevPAR_On_Books_USD_Change': stmt.excluded.RevPAR_On_Books_USD_Change,
+            'RevPAR_Forecast_USD_Current': stmt.excluded.RevPAR_Forecast_USD_Current,
+            'RevPAR_Forecast_USD_Change': stmt.excluded.RevPAR_Forecast_USD_Change,
+            'Last_Room_Value_For_RC_DLX_USD_Current': stmt.excluded.Last_Room_Value_For_RC_DLX_USD_Current,
+            'Last_Room_Value_For_RC_DLX_USD_Change': stmt.excluded.Last_Room_Value_For_RC_DLX_USD_Change,
+            'Overbooking_Current': stmt.excluded.Overbooking_Current,
+            'Overbooking_Change': stmt.excluded.Overbooking_Change,
+            'BAR_by_Day_for_Room_Class_DLX_USD_Current': stmt.excluded.BAR_by_Day_for_Room_Class_DLX_USD_Current,
+            'BAR_by_Day_for_Room_Class_DLX_USD_Change': stmt.excluded.BAR_by_Day_for_Room_Class_DLX_USD_Change,
+            'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': stmt.excluded.BAR_Restricted_by_LRV_for_Room_Class_DLX_Current,
+            'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': stmt.excluded.BAR_Restricted_by_LRV_for_Room_Class_DLX_Change,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
+   
 
 
 def prep_service():
@@ -327,7 +355,17 @@ def IDeaSG3_Rms(row):
             df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
             df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['Day_of_Arrival'].astype(str)) 
             df = df.reset_index(drop=True)
-            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+            headers_list = [ "propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch",
+                            "uniqueKey","Day_of_Week","Day_of_Arrival","Special_Event","Out_of_Order","Occupancy_On_Books_Current",
+                            "Occupancy_On_Books_Change","Occupancy_Forecast_Current","Occupancy_Forecast_Change",
+                            "Occupancy_Forecast_Percent_Current","Occupancy_Forecast_Percent_Change","Revenue_On_Books_USD_Current",
+                            "Revenue_On_Books_USD_Change","Revenue_Forecast_USD_Current","Revenue_Forecast_USD_Change","ADR_On_Books_USD_Current",
+                            "ADR_On_Books_USD_Change","ADR_Forecast_USD_Current","ADR_Forecast_USD_Change","RevPAR_On_Books_USD_Current",
+                            "RevPAR_On_Books_USD_Change","RevPAR_Forecast_USD_Current","RevPAR_Forecast_USD_Change","Last_Room_Value_For_RC_DLX_USD_Current",
+                            "Last_Room_Value_For_RC_DLX_USD_Change","Overbooking_Current","Overbooking_Change","BAR_by_Day_for_Room_Class_DLX_USD_Current",
+                            "BAR_by_Day_for_Room_Class_DLX_USD_Change","BAR_Restricted_by_LRV_for_Room_Class_DLX_Current","BAR_Restricted_by_LRV_for_Room_Class_DLX_Change"]
+            
+            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
             occ_result = list(occ_result)
         except Exception:
