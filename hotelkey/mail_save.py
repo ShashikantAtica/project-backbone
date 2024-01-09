@@ -19,6 +19,7 @@ import pandas as pd
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
@@ -71,38 +72,105 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_hotelkey_res(res_list, propertyCode, res_before, res_after):
-    start_date = res_before.format("YYYY-MM-DD")
-    end_date = res_after.format("YYYY-MM-DD")
-    print("res_start_date :: ", start_date)
-    print("res_end_date :: ", end_date)
-
-    conn = db_config.get_db_connection()
-    conn.execute(text(f"""DELETE from hotelkey_res where "CreationDate" between '{start_date}' and '{end_date}' and "propertyCode" = '{propertyCode}';"""))
-    conn.commit()
-    conn.close()
-
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.hotelkey_res_model.insert(), res_list)
+    stmt = insert(db_models.hotelkey_res_model).values(res_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Property': stmt.excluded.Property,
+            'Status': stmt.excluded.Status,
+            'Channel': stmt.excluded.Channel,
+            'Res': stmt.excluded.Res,
+            'GuestName': stmt.excluded.GuestName,
+            'ArrivalDate': stmt.excluded.ArrivalDate,
+            'DepartDate': stmt.excluded.DepartDate,
+            'Nts': stmt.excluded.Nts,
+            'Adl': stmt.excluded.Adl,
+            'MarketSegment': stmt.excluded.MarketSegment,
+            'Group': stmt.excluded.Group,
+            'RateCode': stmt.excluded.RateCode,
+            'Product': stmt.excluded.Product,
+            'AssignedProduct': stmt.excluded.AssignedProduct,
+            'Rate': stmt.excluded.Rate,
+            'TaxInc': stmt.excluded.TaxInc,
+            'ProjectedRevenue': stmt.excluded.ProjectedRevenue,
+            'TotalWithoutTax': stmt.excluded.TotalWithoutTax,
+            'PayMth': stmt.excluded.PayMth,
+            'PaymentsTaken': stmt.excluded.PaymentsTaken,
+            'DepositsScheduled': stmt.excluded.DepositsScheduled,
+            'BalanceDue': stmt.excluded.BalanceDue,
+            'CreationDate': stmt.excluded.CreationDate,
+            'CreationUser': stmt.excluded.CreationUser,
+            'CP': stmt.excluded.CP,
+            'CPName': stmt.excluded.CPName,
+            'Blank': stmt.excluded.Blank,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
 
 
 def bulk_insert_hotelkey_occ(occ_list, propertyCode, occ_before, occ_after):
-    start_date = occ_before.format("YYYY-MM-DD")
-    end_date = occ_after.format("YYYY-MM-DD")
-    print("occ_start_date :: ", start_date)
-    print("occ_end_date :: ", end_date)
-
-    conn = db_config.get_db_connection()
-    conn.execute(text(f"""DELETE from hotelkey_occ where "Date" between '{start_date}' and '{end_date}' and "propertyCode" = '{propertyCode}';"""))
-    conn.commit()
-    conn.close()
-
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.hotelkey_occ_model.insert(), occ_list)
+    stmt = insert(db_models.hotelkey_occ_model).values(occ_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'Date': stmt.excluded.Date,
+            'Property': stmt.excluded.Property,
+            'PFRZ': stmt.excluded.PFRZ,
+            'FRZ': stmt.excluded.FRZ,
+            'TOD': stmt.excluded.TOD,
+            'DOW': stmt.excluded.DOW,
+            'GTD': stmt.excluded.GTD,
+            'LOS': stmt.excluded.LOS,
+            'CXL': stmt.excluded.CXL,
+            'OO': stmt.excluded.OO,
+            'Hold': stmt.excluded.Hold,
+            'Yieldable': stmt.excluded.Yieldable,
+            'Sold': stmt.excluded.Sold,
+            'BLK': stmt.excluded.BLK,
+            'SD': stmt.excluded.SD,
+            'OccOTB': stmt.excluded.OccOTB,
+            'OccPYClose': stmt.excluded.OccPYClose,
+            'OccPYVar': stmt.excluded.OccPYVar,
+            'ADROTB': stmt.excluded.ADROTB,
+            'ADRPYClose': stmt.excluded.ADRPYClose,
+            'ADRPYVar': stmt.excluded.ADRPYVar,
+            'DiscPer': stmt.excluded.DiscPer,
+            'Price1': stmt.excluded.Price1,
+            'LT1': stmt.excluded.LT1,
+            'Per1': stmt.excluded.Per1,
+            'RM1': stmt.excluded.RM1,
+            'Price2': stmt.excluded.Price2,
+            'LT2': stmt.excluded.LT2,
+            'Per2': stmt.excluded.Per2,
+            'RM2': stmt.excluded.RM2,
+            'Price3': stmt.excluded.Price3,
+            'LT3': stmt.excluded.LT3,
+            'Per3': stmt.excluded.Per3,
+            'RM3': stmt.excluded.RM3,
+            'Price4': stmt.excluded.Price4,
+            'LT4': stmt.excluded.LT4,
+            'Per4': stmt.excluded.Per4,
+            'RM4': stmt.excluded.RM4,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")

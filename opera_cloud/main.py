@@ -24,6 +24,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
+
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
           'https://www.googleapis.com/auth/gmail.send']
@@ -77,95 +79,209 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_opera_cloud_res(res_list, propertyCode, res_before, res_after):
-    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
-    reservation = '"INSERT_DATE"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from opera_res where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.opera_res_model.insert(), res_list)
+    stmt = insert(db_models.opera_res_model).values(res_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'RESV_NAME_ID': stmt.excluded.RESV_NAME_ID,
+            'GUARANTEE_CODE': stmt.excluded.GUARANTEE_CODE,
+            'RESV_STATUS': stmt.excluded.RESV_STATUS,
+            'ROOM': stmt.excluded.ROOM,
+            'FULL_NAME': stmt.excluded.FULL_NAME,
+            'DEPARTURE': stmt.excluded.DEPARTURE,
+            'PERSONS': stmt.excluded.PERSONS,
+            'GROUP_NAME': stmt.excluded.GROUP_NAME,
+            'NO_OF_ROOMS': stmt.excluded.NO_OF_ROOMS,
+            'ROOM_CATEGORY_LABEL': stmt.excluded.ROOM_CATEGORY_LABEL,
+            'RATE_CODE': stmt.excluded.RATE_CODE,
+            'INSERT_USER': stmt.excluded.INSERT_USER,
+            'INSERT_DATE': stmt.excluded.INSERT_DATE,
+            'GUARANTEE_CODE_DESC': stmt.excluded.GUARANTEE_CODE_DESC,
+            'COMPANY_NAME': stmt.excluded.COMPANY_NAME,
+            'TRAVEL_AGENT_NAME': stmt.excluded.TRAVEL_AGENT_NAME,
+            'ARRIVAL': stmt.excluded.ARRIVAL,
+            'NIGHTS': stmt.excluded.NIGHTS,
+            'COMP_HOUSE_YN': stmt.excluded.COMP_HOUSE_YN,
+            'SHARE_AMOUNT': stmt.excluded.SHARE_AMOUNT,
+            'C_T_S_NAME': stmt.excluded.C_T_S_NAME,
+            'SHORT_RESV_STATUS': stmt.excluded.SHORT_RESV_STATUS,
+            'SHARE_AMOUNT_PER_STAY': stmt.excluded.SHARE_AMOUNT_PER_STAY,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
+    
 
 
 def bulk_insert_opera_cloud_occ(occ_list, propertyCode, occ_before, occ_after):
-    start_date = "'" + occ_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + occ_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
-    reservation = '"CONSIDERED_DATE"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from opera_occ where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.opera_occ_model.insert(), occ_list)
+    stmt = insert(db_models.opera_occ_model).values(occ_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'REVENUE': stmt.excluded.REVENUE,
+            'NO_ROOMS': stmt.excluded.NO_ROOMS,
+            'IND_DEDUCT_ROOMS': stmt.excluded.IND_DEDUCT_ROOMS,
+            'IND_NON_DEDUCT_ROOMS': stmt.excluded.IND_NON_DEDUCT_ROOMS,
+            'GRP_DEDUCT_ROOMS': stmt.excluded.GRP_DEDUCT_ROOMS,
+            'GRP_NON_DEDUCT_ROOMS': stmt.excluded.GRP_NON_DEDUCT_ROOMS,
+            'NO_PERSONS': stmt.excluded.NO_PERSONS,
+            'ARRIVAL_ROOMS': stmt.excluded.ARRIVAL_ROOMS,
+            'DEPARTURE_ROOMS': stmt.excluded.DEPARTURE_ROOMS,
+            'COMPLIMENTARY_ROOMS': stmt.excluded.COMPLIMENTARY_ROOMS,
+            'HOUSE_USE_ROOMS': stmt.excluded.HOUSE_USE_ROOMS,
+            'DAY_USE_ROOMS': stmt.excluded.DAY_USE_ROOMS,
+            'NO_SHOW_ROOMS': stmt.excluded.NO_SHOW_ROOMS,
+            'INVENTORY_ROOMS': stmt.excluded.INVENTORY_ROOMS,
+            'CONSIDERED_DATE': stmt.excluded.CONSIDERED_DATE,
+            'CHAR_CONSIDERED_DATE': stmt.excluded.CHAR_CONSIDERED_DATE,
+            'IND_DEDUCT_REVENUE': stmt.excluded.IND_DEDUCT_REVENUE,
+            'IND_NON_DEDUCT_REVENUE': stmt.excluded.IND_NON_DEDUCT_REVENUE,
+            'GRP_NON_DEDUCT_REVENUE': stmt.excluded.GRP_NON_DEDUCT_REVENUE,
+            'GRP_DEDUCT_REVENUE': stmt.excluded.GRP_DEDUCT_REVENUE,
+            'OWNER_ROOMS': stmt.excluded.OWNER_ROOMS,
+            'FF_ROOMS': stmt.excluded.FF_ROOMS,
+            'CF_OOO_ROOMS': stmt.excluded.CF_OOO_ROOMS,
+            'CF_CALC_OCC_ROOMS': stmt.excluded.CF_CALC_OCC_ROOMS,
+            'CF_CALC_INV_ROOMS': stmt.excluded.CF_CALC_INV_ROOMS,
+            'CF_AVERAGE_ROOM_RATE': stmt.excluded.CF_AVERAGE_ROOM_RATE,
+            'CF_OCCUPANCY': stmt.excluded.CF_OCCUPANCY,
+            'CF_IND_DED_REV': stmt.excluded.CF_IND_DED_REV,
+            'CF_IND_NON_DED_REV': stmt.excluded.CF_IND_NON_DED_REV,
+            'CF_BLK_DED_REV': stmt.excluded.CF_BLK_DED_REV,
+            'CF_BLK_NON_DED_REV': stmt.excluded.CF_BLK_NON_DED_REV,
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
+    
 
 def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode, res_before, res_after):
-    start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-    end_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
-    print("end_date :: ", end_date)
-
-    # delete all data
-    # current_date = arrow.now()
-    # print("current_date :: ", current_date)
-    # start_date = current_date.shift(days=-90)
-    # print("start_date :: ", start_date)
-    reservation = '"ARRIVAL"'
-    db_propertyCode = "'" + propertyCode + "'"
-    # current_date = "'" + res_after.format("YYYY-MM-DD") + "'"
-    # start_date = "'" + res_before.format("YYYY-MM-DD") + "'"
-
-    # Delete existing data of reservation (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE from opera_arrival where {reservation} between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of reservation
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.opera_arrival_model.insert(), arrival_list)
+    stmt = insert(db_models.opera_arrival_model).values(arrival_list)
+    conn.commit()
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['uniqueKey'],
+        set_={
+            'pullDateId': stmt.excluded.pullDateId,
+            'updatedAt': stmt.excluded.updatedAt,
+            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+            'REDEEM_FLAG_YN': stmt.excluded.REDEEM_FLAG_YN,
+            'MOBILE_REGSITERED_YN': stmt.excluded.MOBILE_REGSITERED_YN,
+            'TOTAL_STAYS_ACROSS_CHAIN': stmt.excluded.TOTAL_STAYS_ACROSS_CHAIN,
+            'TOTAL_NIGHTS_ACROSS_CHAIN': stmt.excluded.TOTAL_NIGHTS_ACROSS_CHAIN,
+            'EXTERNAL_REFERENCE': stmt.excluded.EXTERNAL_REFERENCE,
+            'UPDATE_DATE': stmt.excluded.UPDATE_DATE,
+            'UPDATE_USER': stmt.excluded.UPDATE_USER,
+            'DISP_ROOM_NO': stmt.excluded.DISP_ROOM_NO,
+            'RESV_COLOR': stmt.excluded.RESV_COLOR,
+            'ROWNUM': stmt.excluded.ROWNUM,
+            'IS_SHARED_YN': stmt.excluded.IS_SHARED_YN,
+            'TRUNC_BEGIN': stmt.excluded.TRUNC_BEGIN,
+            'TRUNC_END': stmt.excluded.TRUNC_END,
+            'CONFIRMATION_NO': stmt.excluded.CONFIRMATION_NO,
+            'ARRIVAL': stmt.excluded.ARRIVAL,
+            'PRODUCTS': stmt.excluded.PRODUCTS,
+            'SHORT_RESV_STATUS': stmt.excluded.SHORT_RESV_STATUS,
+            'RESORT': stmt.excluded.RESORT,
+            'FULL_NAME_NO_SHR_IND': stmt.excluded.FULL_NAME_NO_SHR_IND,
+            'ARRIVAL_TIME1': stmt.excluded.ARRIVAL_TIME1,
+            'ARRIVAL_TRANSPORT_TYPE': stmt.excluded.ARRIVAL_TRANSPORT_TYPE,
+            'FULL_NAME': stmt.excluded.FULL_NAME,
+            'NO_OF_ROOMS': stmt.excluded.NO_OF_ROOMS,
+            'ROOM_CATEGORY_LABEL': stmt.excluded.ROOM_CATEGORY_LABEL,
+            'ARRIVAL_TIME': stmt.excluded.ARRIVAL_TIME,
+            'DEPARTURE_TIME': stmt.excluded.DEPARTURE_TIME,
+            'MARKET_CODE': stmt.excluded.MARKET_CODE,
+            'RATE_CODE': stmt.excluded.RATE_CODE,
+            'DEPARTURE': stmt.excluded.DEPARTURE,
+            'VIP': stmt.excluded.VIP,
+            'GUARANTEE_CODE': stmt.excluded.GUARANTEE_CODE,
+            'BILL_TO_ADDRESS': stmt.excluded.BILL_TO_ADDRESS,
+            'PREFERRED_ROOM_TYPE': stmt.excluded.PREFERRED_ROOM_TYPE,
+            'BEGIN_DATE': stmt.excluded.BEGIN_DATE,
+            'GROUP_ID': stmt.excluded.GROUP_ID,
+            'BLOCK_CODE': stmt.excluded.BLOCK_CODE,
+            'ORIGIN_OF_BOOKING': stmt.excluded.ORIGIN_OF_BOOKING,
+            'EFFECTIVE_RATE_AMOUNT': stmt.excluded.EFFECTIVE_RATE_AMOUNT,
+            'SPECIAL_REQUESTS': stmt.excluded.SPECIAL_REQUESTS,
+            'EXP_DATE': stmt.excluded.EXP_DATE,
+            'PAYMENT_METHOD': stmt.excluded.PAYMENT_METHOD,
+            'ADULTS': stmt.excluded.ADULTS,
+            'CHILDREN': stmt.excluded.CHILDREN,
+            'PERSONS': stmt.excluded.PERSONS,
+            'DEPOSIT_PAID': stmt.excluded.DEPOSIT_PAID,
+            'ARRIVAL_CARRIER_CODE': stmt.excluded.ARRIVAL_CARRIER_CODE,
+            'COMPANY_NAME': stmt.excluded.COMPANY_NAME,
+            'CURRENCY_CODE': stmt.excluded.CURRENCY_CODE,
+            'ROOM_NO': stmt.excluded.ROOM_NO,
+            'SHARE_AMOUNT': stmt.excluded.SHARE_AMOUNT,
+            'CREDIT_CARD_NUMBER': stmt.excluded.CREDIT_CARD_NUMBER,
+            'PHYSICAL_QUANTITY': stmt.excluded.PHYSICAL_QUANTITY,
+            'RESV_NAME_ID': stmt.excluded.RESV_NAME_ID,
+            'GUEST_NAME_ID': stmt.excluded.GUEST_NAME_ID,
+            'PREFERENCES': stmt.excluded.PREFERENCES,
+            'LAST_ROOM': stmt.excluded.LAST_ROOM,
+            'SHARE_NAMES': stmt.excluded.SHARE_NAMES,
+            'ACCOMPANYING_YN': stmt.excluded.ACCOMPANYING_YN,
+            'COMP_HOUSE': stmt.excluded.COMP_HOUSE,
+            'ACCOMPANYING_NAMES': stmt.excluded.ACCOMPANYING_NAMES,
+            'EXTN_NUMBER': stmt.excluded.EXTN_NUMBER,
+            'ADVANCE_CHECKED_IN_YN': stmt.excluded.ADVANCE_CHECKED_IN_YN,
+            'SHOW_AWARDS_LAMP_YN': stmt.excluded.SHOW_AWARDS_LAMP_YN,
+            'LIST_G_MEM_TYPE_LEVEL': stmt.excluded.LIST_G_MEM_TYPE_LEVEL,
+            'LIST_G_INV_ITEMS': stmt.excluded.LIST_G_INV_ITEMS,
+            'LIST_G_BILL_RESV': stmt.excluded.LIST_G_BILL_RESV,
+            'LIST_G_COMMENT_NAME_ID': stmt.excluded.LIST_G_COMMENT_NAME_ID,
+            'LIST_G_RESERV_PROMO': stmt.excluded.LIST_G_RESERV_PROMO,
+            'LIST_G_DEPT_ID': stmt.excluded.LIST_G_DEPT_ID,
+            'LIST_G_DEP_DATE_CHANGE': stmt.excluded.LIST_G_DEP_DATE_CHANGE,
+            'LIST_G_COMMENT_RESV_NAME_ID': stmt.excluded.LIST_G_COMMENT_RESV_NAME_ID,
+            'LIST_G_FIXED_CHARGES': stmt.excluded.LIST_G_FIXED_CHARGES,
+            'LIST_G_AWARDS': stmt.excluded.LIST_G_AWARDS,
+            'NO_OF_STAYS': stmt.excluded.NO_OF_STAYS,
+            'NO_OF_NIGHTS': stmt.excluded.NO_OF_NIGHTS,
+            'COUNT_ROUTING': stmt.excluded.COUNT_ROUTING,
+            'COUNT_COMMENTS': stmt.excluded.COUNT_COMMENTS,
+            'COUNT_RES_COMMENTS': stmt.excluded.COUNT_RES_COMMENTS,
+            'COUNT_PROMOTIONS': stmt.excluded.COUNT_PROMOTIONS,
+            'COUNT_TRACES': stmt.excluded.COUNT_TRACES,
+            'COUNT_FIXED_CHARGES': stmt.excluded.COUNT_FIXED_CHARGES,
+            'COUNT_MEMBER_TYPE': stmt.excluded.COUNT_MEMBER_TYPE,
+            'COUNT_INVENTORY_ITEMS': stmt.excluded.COUNT_INVENTORY_ITEMS,
+            'COUNT_DEP_DATE_CHANGE': stmt.excluded.COUNT_DEP_DATE_CHANGE,
+            'CF_COLOR_DESC': stmt.excluded.CF_COLOR_DESC,
+            'CF_DISPLAY_RECORD_01': stmt.excluded.CF_DISPLAY_RECORD_01,
+            'CF_ADULTS': stmt.excluded.CF_ADULTS,
+            'CF_CHILDREN': stmt.excluded.CF_CHILDREN,
+            'CF_NO_OF_ROOMS': stmt.excluded.CF_NO_OF_ROOMS,
+            
+        }
+    )
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Data imported")
+    
 
 
 def prep_service():
