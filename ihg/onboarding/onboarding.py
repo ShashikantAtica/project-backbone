@@ -11,6 +11,8 @@ import pandas as pd
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
+
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
@@ -81,7 +83,7 @@ def bulk_insert_occ_res(occ_list):
     print("Data imported")
 
 
-def IHG_Pms(row):
+def IHG_Pms(row, reporttype, localfilepath):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
@@ -89,6 +91,12 @@ def IHG_Pms(row):
     # Modification of res report
     reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.xlsx'
     occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy_Onboarding.xlsx'
+
+    if(reporttype == 'Reservation'):
+        reservation_file_path = localfilepath
+    elif(reporttype == 'Occupancy'):
+        occupancy_file_path = localfilepath
+
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_occupancy_file = os.path.isfile(occupancy_file_path)
@@ -99,11 +107,9 @@ def IHG_Pms(row):
     updatedAtEpoch = int(arrow.utcnow().timestamp())
 
     errorMessage = ""
-    fileCount=0
 
     if check_reservation_file:
 
-        fileCount=fileCount+1
         # Reservation Data Clean and Insert
         read = pd.read_excel(reservation_file_path)
         read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
@@ -124,12 +130,9 @@ def IHG_Pms(row):
             print("RES DONE")
         else:
             errorMessage = errorMessage + "Reservation File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Reservation File Not Found, "
 
     if check_occupancy_file:
         
-        fileCount=fileCount+1
         # Occupancy Data Clean and Insert
         read = pd.read_excel(occupancy_file_path)
         read['Date'] = pd.to_datetime(read['Date'])
@@ -159,21 +162,12 @@ def IHG_Pms(row):
             print("OCC DONE")
         else:
             errorMessage = errorMessage + "Occupancy File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Occupancy File Not Found, "
 
                 
-    if (fileCount==2):
-        if(errorMessage==""):
-            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-        else:
-            errorMessage="Partially Successfull:- "+errorMessage
-            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    if(errorMessage==""):
+        update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
     else:
-        if (fileCount==0):
-            errorMessage = "All File Not Found"
-        else:
-            errorMessage="Partially Successfull:- "+errorMessage
+        errorMessage="Partially Successfull:- "+errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 
@@ -184,12 +178,25 @@ if __name__ == '__main__':
     print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
     propertycode = None
+    reporttype = None
+    filename = None
+    localfilepath = None
+
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        parser.add_argument("--reporttype", type=str, required=False, help="Type in the reporttype")
+        parser.add_argument("--filename", type=str, required=False, help="Type in the filename")
+        parser.add_argument("--localfilepath", type=str, required=False, help="Type in the localfilepath")
         args = parser.parse_args()
         propertycode = args.propertycode
+        reporttype = args.reporttype
+        filename = args.filename
+        localfilepath = args.localfilepath
         print(f"propertycode :: {propertycode}")
+        print(f"reporttype :: {reporttype}")
+        print(f"filename :: {filename}")
+        print(f"localfilepath :: {localfilepath}")
     except:
         pass
 
@@ -230,7 +237,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_manual_one_day")
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
@@ -247,7 +254,7 @@ if __name__ == '__main__':
                     "pullDateId": LAST_PULL_DATE_ID
                 }
                 print("row :: ", row)
-                IHG_Pms(row)
+                IHG_Pms(row, reporttype, localfilepath)
             else:
                 print("LAST_PULL_DATE_ID is NULL")
     else:

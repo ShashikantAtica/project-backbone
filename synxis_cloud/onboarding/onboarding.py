@@ -8,9 +8,10 @@ sys.path.append("../../")
 import arrow
 import csv
 import pandas as pd
-from sqlalchemy.dialects.postgresql import insert
+
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
@@ -57,6 +58,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         conn.close()
         error_message = str(e)
         print(error_message)
+
 
 
 def bulk_insert_synxis_cloud_res(res_list):
@@ -115,7 +117,8 @@ def bulk_insert_synxis_cloud_monthly_summary(mon_list):
         print(error_message)
 
 
-def SynxisCloud_Pms(row):
+
+def SynxisCloud_Pms(row, reporttype, localfilepath):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
@@ -123,6 +126,18 @@ def SynxisCloud_Pms(row):
     forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
     revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
     monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly_Onboarding.csv'
+
+    report_file_path = ""
+
+    if(reporttype == 'Reservation'):
+        reservation_file_path = localfilepath
+    elif(reporttype == 'Forecast'):
+        forecast_file_path = localfilepath
+    elif(reporttype == 'Revenue'):
+        revenue_file_path = localfilepath
+    elif(reporttype == 'Monthly'):
+        monthly_file_path = localfilepath
+
 
     check_reservation_file = os.path.isfile(reservation_file_path)
     check_forecast_file = os.path.isfile(forecast_file_path)
@@ -135,11 +150,9 @@ def SynxisCloud_Pms(row):
     updatedAtEpoch = int(arrow.utcnow().timestamp())
 
     errorMessage = ""
-    fileCount=0
 
     if check_reservation_file:
 
-        fileCount=fileCount+1
          # Reservation Data Clean and Insert
         read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
         read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
@@ -185,12 +198,9 @@ def SynxisCloud_Pms(row):
             print("RES DONE")
         else:
             errorMessage = errorMessage + "Reservation File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Reservation File Not Found, "
 
     if check_forecast_file:
 
-        fileCount=fileCount+1
         # Forecast Data Clean and Insert
         read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
         read['cal_dt'] = pd.to_datetime(read['cal_dt'])
@@ -210,12 +220,9 @@ def SynxisCloud_Pms(row):
             print("FORE DONE")
         else:
             errorMessage = errorMessage + "Forecast File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Forecast File Not Found, "
 
     if check_revenue_file:
 
-        fileCount=fileCount+1
         # Revenue Recap Data Clean and Insert
         date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
         date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
@@ -245,12 +252,9 @@ def SynxisCloud_Pms(row):
             print("REV DONE")
         else:
             errorMessage = errorMessage + "Revenue File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Revenue File Not Found, "
 
     if check_monthly_file:
 
-        fileCount=fileCount+1
         # Monthly Summary Data Clean and Insert
         read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
         read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
@@ -273,20 +277,12 @@ def SynxisCloud_Pms(row):
             print("MONTHLY DONE")
         else:
             errorMessage = errorMessage + "Monthly File Was Blank, "
-    else:
-        errorMessage = errorMessage + "Monthly File Not Found, "
 
-    if (fileCount==4):
-        if(errorMessage==""):
-            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-        else:
-            errorMessage="Partially Successfull:- "+errorMessage
-            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    
+    if(errorMessage==""):
+        update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
     else:
-        if (fileCount==0):
-            errorMessage = "All File Not Found"
-        else:
-            errorMessage="Partially Successfull:- "+errorMessage
+        errorMessage="Partially Successfull:- "+errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 
@@ -297,12 +293,25 @@ if __name__ == '__main__':
     print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
     propertycode = None
+    reporttype = None
+    filename = None
+    localfilepath = None
+
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        parser.add_argument("--reporttype", type=str, required=False, help="Type in the reporttype")
+        parser.add_argument("--filename", type=str, required=False, help="Type in the filename")
+        parser.add_argument("--localfilepath", type=str, required=False, help="Type in the localfilepath")
         args = parser.parse_args()
         propertycode = args.propertycode
+        reporttype = args.reporttype
+        filename = args.filename
+        localfilepath = args.localfilepath
         print(f"propertycode :: {propertycode}")
+        print(f"reporttype :: {reporttype}")
+        print(f"filename :: {filename}")
+        print(f"localfilepath :: {localfilepath}")
     except:
         pass
 
@@ -343,7 +352,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_manual_one_day")
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
@@ -360,7 +369,7 @@ if __name__ == '__main__':
                     "pullDateId": LAST_PULL_DATE_ID
                 }
                 print("row :: ", row)
-                SynxisCloud_Pms(row)
+                SynxisCloud_Pms(row, reporttype, localfilepath)
             else:
                 print("LAST_PULL_DATE_ID is NULL")
     else:

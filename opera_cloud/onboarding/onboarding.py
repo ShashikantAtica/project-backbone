@@ -13,6 +13,8 @@ import pandas as pd
 
 from utils.db import db_config
 from utils.db import db_models
+from sqlalchemy.dialects.postgresql import insert
+
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
@@ -103,7 +105,8 @@ def bulk_insert_opera_cloud_rbrc(rbrc_list):
     print("Data imported")
 
 
-def OperaCloud_Pms(row):
+
+def OperaCloud_Pms(row, reporttype, localfilepath):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
@@ -112,6 +115,16 @@ def OperaCloud_Pms(row):
     occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy_Onboarding.xml'
     arrival_file_path = f'{attachment_format}/{propertyCode}_Arrival_Onboarding.xml'
     rbrc_file_path = f'{attachment_format}/{propertyCode}_RBRC_Onboarding.xml'
+
+
+    if(reporttype == 'Reservation'):
+        reservation_file_path = localfilepath
+    elif(reporttype == 'Occupancy'):
+        occupancy_file_path = localfilepath
+    elif(reporttype == 'Arrival'):
+        arrival_file_path = localfilepath
+    elif(reporttype == 'RBRC'):
+        rbrc_file_path = localfilepath
 
 
     check_reservation_file = os.path.isfile(reservation_file_path)
@@ -126,23 +139,9 @@ def OperaCloud_Pms(row):
     updatedAtEpoch =  int(arrow.utcnow().timestamp())
 
     errorMessage = ""
-    fileCount=0
-
-    if not check_reservation_file:
-        errorMessage = errorMessage + " Reservation file - N/A"
-
-    if not check_occupancy_file:
-        errorMessage = errorMessage + " Occupancy file - N/A"
-
-    if not check_arrival_file:
-        errorMessage = errorMessage + " Arrival file - N/A"
-
-    if not check_rbrc_file:
-        errorMessage = errorMessage + " RBRC file - N/A"
 
     if check_reservation_file:
 
-        fileCount=fileCount+1
         # Start Reservation Report
         cols = ["RESV_NAME_ID", "GUARANTEE_CODE", "RESV_STATUS", "ROOM", "FULL_NAME", "DEPARTURE", "PERSONS",
                 "GROUP_NAME",
@@ -235,7 +234,6 @@ def OperaCloud_Pms(row):
         
     if check_occupancy_file:
 
-        fileCount=fileCount+1
         # Start Occupancy Report
         cols = ['REVENUE', 'NO_ROOMS', 'IND_DEDUCT_ROOMS', 'IND_NON_DEDUCT_ROOMS', 'GRP_DEDUCT_ROOMS',
                 'GRP_NON_DEDUCT_ROOMS',
@@ -427,7 +425,6 @@ def OperaCloud_Pms(row):
 
     if check_arrival_file:
 
-        fileCount=fileCount+1
         # Start Arrival Report
         arrival_dataframe = []
 
@@ -481,8 +478,6 @@ def OperaCloud_Pms(row):
             errorMessage = errorMessage + " Arrival File Was Blank,"
 
     if check_rbrc_file:
-
-        fileCount=fileCount+1
         # Start RBRC Report
         cols = ["RESORT","BUSINESS_DATE","CHAR_BUSINESS_DATE","MASTER_VALUE","CF_MASTER_SEQ","GROUP_NAME","ARR_TODAY","NO_DEFINITE_ROOMS",
         "IN_GUEST","OCC_SINGLE","DOUBLE_OCC","REVENUE",
@@ -568,19 +563,13 @@ def OperaCloud_Pms(row):
             errorMessage = errorMessage + " RBRC File Was Blank,"
         # End Arrival Report
 
-    if (fileCount==4):
-        if(errorMessage==""):
-            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-
-        else:
-            errorMessage="Partially Successfull:- "+errorMessage
-            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    
+    if(errorMessage==""):
+        update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
     else:
-        if (fileCount==0):
-            errorMessage = "All File Not Found"
-        else:
-            errorMessage="Partially Successfull:- "+errorMessage
+        errorMessage="Partially Successfull:- "+errorMessage
         update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    
 
 
 if __name__ == '__main__':
@@ -589,12 +578,25 @@ if __name__ == '__main__':
     print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
     propertycode = None
+    reporttype = None
+    filename = None
+    localfilepath = None
+
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        parser.add_argument("--reporttype", type=str, required=False, help="Type in the reporttype")
+        parser.add_argument("--filename", type=str, required=False, help="Type in the filename")
+        parser.add_argument("--localfilepath", type=str, required=False, help="Type in the localfilepath")
         args = parser.parse_args()
         propertycode = args.propertycode
+        reporttype = args.reporttype
+        filename = args.filename
+        localfilepath = args.localfilepath
         print(f"propertycode :: {propertycode}")
+        print(f"reporttype :: {reporttype}")
+        print(f"filename :: {filename}")
+        print(f"localfilepath :: {localfilepath}")
     except:
         pass
 
@@ -635,7 +637,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_manual_one_day")
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
@@ -652,7 +654,7 @@ if __name__ == '__main__':
                     "pullDateId": LAST_PULL_DATE_ID
                 }
                 print("row :: ", row)
-                OperaCloud_Pms(row)
+                OperaCloud_Pms(row, reporttype, localfilepath)
             else:
                 print("LAST_PULL_DATE_ID is NULL")
     else:
