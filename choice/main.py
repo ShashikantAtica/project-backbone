@@ -26,102 +26,117 @@ from sqlalchemy.dialects.postgresql import insert
 
 def bulk_insert_choice_noshow(propertyCode, Noshow_result):
 # log(n)*M indexing check.
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.choice_noshow_model).values(Noshow_result)
-    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.choice_noshow_model).values(Noshow_result)
+        stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, res_before, res_after):
     # log(n)*M indexing check.
-    
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.choice_cancellation_list_model).values(cancellation_list_result)
-    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.choice_cancellation_list_model).values(cancellation_list_result)
+        stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.choice_res_model).values(res_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'Account': stmt.excluded.Account,
-            'GuestName': stmt.excluded.GuestName,
-            'Arrive': stmt.excluded.Arrive,
-            'Depart': stmt.excluded.Depart,
-            'Nights': stmt.excluded.Nights,
-            'Status': stmt.excluded.Status,
-            'Rate': stmt.excluded.Rate,
-            'RateCode': stmt.excluded.RateCode,
-            'Type': stmt.excluded.Type,
-            'Room': stmt.excluded.Room,
-            'Source': stmt.excluded.Source,
-            'CRSConfNo': stmt.excluded.CRSConfNo,
-            'GTD': stmt.excluded.GTD,
-            'ReserveDate': stmt.excluded.ReserveDate,
-            'User': stmt.excluded.User,
-            'SharedAccount': stmt.excluded.SharedAccount,
-            'TrackCode': stmt.excluded.TrackCode,
-            'Package': stmt.excluded.Package,
-            'CancellationDate': stmt.excluded.CancellationDate,
-            'CXLUserID': stmt.excluded.CXLUserID,
-            
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.choice_res_model).values(res_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'Account': stmt.excluded.Account,
+                'GuestName': stmt.excluded.GuestName,
+                'Arrive': stmt.excluded.Arrive,
+                'Depart': stmt.excluded.Depart,
+                'Nights': stmt.excluded.Nights,
+                'Status': stmt.excluded.Status,
+                'Rate': stmt.excluded.Rate,
+                'RateCode': stmt.excluded.RateCode,
+                'Type': stmt.excluded.Type,
+                'Room': stmt.excluded.Room,
+                'Source': stmt.excluded.Source,
+                'CRSConfNo': stmt.excluded.CRSConfNo,
+                'GTD': stmt.excluded.GTD,
+                'ReserveDate': stmt.excluded.ReserveDate,
+                'User': stmt.excluded.User,
+                'SharedAccount': stmt.excluded.SharedAccount,
+                'TrackCode': stmt.excluded.TrackCode,
+                'Package': stmt.excluded.Package,
+                'CancellationDate': stmt.excluded.CancellationDate,
+                'CXLUserID': stmt.excluded.CXLUserID,
+                
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.choice_occ_model).values(occ_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'IDS_DATE': stmt.excluded.IDS_DATE,
-            'Day': stmt.excluded.Day,
-            'Rooms': stmt.excluded.Rooms,
-            'OOO': stmt.excluded.OOO,
-            'StayOver': stmt.excluded.StayOver,
-            'Arrivals': stmt.excluded.Arrivals,
-            'DueOut': stmt.excluded.DueOut,
-            'Available': stmt.excluded.Available,
-            'GroupBlock': stmt.excluded.GroupBlock,
-            'GroupPickedUp': stmt.excluded.GroupPickedUp,
-            'TransNGTD': stmt.excluded.TransNGTD,
-            'TransGTD': stmt.excluded.TransGTD,
-            'Occupied': stmt.excluded.Occupied,
-            'OccPercent': stmt.excluded.OccPercent,
-            'RoomRev': stmt.excluded.RoomRev,
-            'RevPAR': stmt.excluded.RevPAR,
-            'ADR': stmt.excluded.ADR,
-            'Ppl': stmt.excluded.Ppl,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.choice_occ_model).values(occ_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'IDS_DATE': stmt.excluded.IDS_DATE,
+                'Day': stmt.excluded.Day,
+                'Rooms': stmt.excluded.Rooms,
+                'OOO': stmt.excluded.OOO,
+                'StayOver': stmt.excluded.StayOver,
+                'Arrivals': stmt.excluded.Arrivals,
+                'DueOut': stmt.excluded.DueOut,
+                'Available': stmt.excluded.Available,
+                'GroupBlock': stmt.excluded.GroupBlock,
+                'GroupPickedUp': stmt.excluded.GroupPickedUp,
+                'TransNGTD': stmt.excluded.TransNGTD,
+                'TransGTD': stmt.excluded.TransGTD,
+                'Occupied': stmt.excluded.Occupied,
+                'OccPercent': stmt.excluded.OccPercent,
+                'RoomRev': stmt.excluded.RoomRev,
+                'RevPAR': stmt.excluded.RevPAR,
+                'ADR': stmt.excluded.ADR,
+                'Ppl': stmt.excluded.Ppl,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def bulk_insert_choice_cancel(propertyCode, cancel_list, cancel_before, cancel_after):
@@ -163,64 +178,72 @@ def bulk_insert_choice_revenue(propertyCode, revenue_list):
 
 def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue_before, revenue_after):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.choice_revenue_detail_model).values(revenue_detail_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'IDS_DATE_DAY': stmt.excluded.IDS_DATE_DAY,
-            'RateCode': stmt.excluded.RateCode,
-            'RoomNights': stmt.excluded.RoomNights,
-            'RoomNightsPer': stmt.excluded.RoomNightsPer,
-            'RoomRevenue': stmt.excluded.RoomRevenue,
-            'RoomRevenuePer': stmt.excluded.RoomRevenuePer,
-            'DailyAVG': stmt.excluded.DailyAVG,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.choice_revenue_detail_model).values(revenue_detail_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'IDS_DATE_DAY': stmt.excluded.IDS_DATE_DAY,
+                'RateCode': stmt.excluded.RateCode,
+                'RoomNights': stmt.excluded.RoomNights,
+                'RoomNightsPer': stmt.excluded.RoomNightsPer,
+                'RoomRevenue': stmt.excluded.RoomRevenue,
+                'RoomRevenuePer': stmt.excluded.RoomRevenuePer,
+                'DailyAVG': stmt.excluded.DailyAVG,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_list, group_pickup_before, group_pickup_after):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.choice_group_pickup_detail_model).values(group_pickup_detail_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'GroupName': stmt.excluded.GroupName,
-            'GroupStatus': stmt.excluded.GroupStatus,
-            'RollingCutOffDays': stmt.excluded.RollingCutOffDays,
-            'FixedCutOffDate': stmt.excluded.FixedCutOffDate,
-            'SalesManager': stmt.excluded.SalesManager,
-            'RoomType': stmt.excluded.RoomType,
-            'BlockDate': stmt.excluded.BlockDate,
-            'OriginalBlock': stmt.excluded.OriginalBlock,
-            'CurrentBlock': stmt.excluded.CurrentBlock,
-            'GuaranteedArrivalsPickedUp': stmt.excluded.GuaranteedArrivalsPickedUp,
-            'NonGuaranteedArrivalsPickedUp': stmt.excluded.NonGuaranteedArrivalsPickedUp,
-            'TotalPickedUp': stmt.excluded.TotalPickedUp,
-            'RoomsNotPickedUp': stmt.excluded.RoomsNotPickedUp,
-            'Revenue': stmt.excluded.Revenue,
-            'ADR': stmt.excluded.ADR,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.choice_group_pickup_detail_model).values(group_pickup_detail_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'GroupName': stmt.excluded.GroupName,
+                'GroupStatus': stmt.excluded.GroupStatus,
+                'RollingCutOffDays': stmt.excluded.RollingCutOffDays,
+                'FixedCutOffDate': stmt.excluded.FixedCutOffDate,
+                'SalesManager': stmt.excluded.SalesManager,
+                'RoomType': stmt.excluded.RoomType,
+                'BlockDate': stmt.excluded.BlockDate,
+                'OriginalBlock': stmt.excluded.OriginalBlock,
+                'CurrentBlock': stmt.excluded.CurrentBlock,
+                'GuaranteedArrivalsPickedUp': stmt.excluded.GuaranteedArrivalsPickedUp,
+                'NonGuaranteedArrivalsPickedUp': stmt.excluded.NonGuaranteedArrivalsPickedUp,
+                'TotalPickedUp': stmt.excluded.TotalPickedUp,
+                'RoomsNotPickedUp': stmt.excluded.RoomsNotPickedUp,
+                'Revenue': stmt.excluded.Revenue,
+                'ADR': stmt.excluded.ADR,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def Choice_Pms(row):

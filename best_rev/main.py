@@ -29,41 +29,45 @@ from sqlalchemy.dialects.postgresql import insert
 
 def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list, fore_start_date, fore_end_date):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.bestrev_total_forecast_model).values(total_forecast_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'Alert': stmt.excluded.Alert,
-            'Priority': stmt.excluded.Priority,
-            'StayDate': stmt.excluded.StayDate,
-            'DayofWeek': stmt.excluded.DayofWeek,
-            'Favorite': stmt.excluded.Favorite,
-            'Event': stmt.excluded.Event,
-            'BestWesternRate': stmt.excluded.BestWesternRate,
-            'RecommendedRate': stmt.excluded.RecommendedRate,
-            'RatetoUpload': stmt.excluded.RatetoUpload,
-            'RecommendationStatus': stmt.excluded.RecommendationStatus,
-            'MarketRate': stmt.excluded.MarketRate,
-            'AvailableRooms': stmt.excluded.AvailableRooms,
-            'TransientCapacity': stmt.excluded.TransientCapacity,
-            'TotalForecast_IncludesGroup': stmt.excluded.TotalForecast_IncludesGroup,
-            'OntheBooks_IncludesGroup': stmt.excluded.OntheBooks_IncludesGroup,
-            'AverageDailyRate': stmt.excluded.AverageDailyRate,
-            'RevPAR': stmt.excluded.RevPAR,
-            'Occupancy_IncludesGroup': stmt.excluded.Occupancy_IncludesGroup,
-            'ForecastOccupancy_IncludesGroup': stmt.excluded.ForecastOccupancy_IncludesGroup,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.bestrev_total_forecast_model).values(total_forecast_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'Alert': stmt.excluded.Alert,
+                'Priority': stmt.excluded.Priority,
+                'StayDate': stmt.excluded.StayDate,
+                'DayofWeek': stmt.excluded.DayofWeek,
+                'Favorite': stmt.excluded.Favorite,
+                'Event': stmt.excluded.Event,
+                'BestWesternRate': stmt.excluded.BestWesternRate,
+                'RecommendedRate': stmt.excluded.RecommendedRate,
+                'RatetoUpload': stmt.excluded.RatetoUpload,
+                'RecommendationStatus': stmt.excluded.RecommendationStatus,
+                'MarketRate': stmt.excluded.MarketRate,
+                'AvailableRooms': stmt.excluded.AvailableRooms,
+                'TransientCapacity': stmt.excluded.TransientCapacity,
+                'TotalForecast_IncludesGroup': stmt.excluded.TotalForecast_IncludesGroup,
+                'OntheBooks_IncludesGroup': stmt.excluded.OntheBooks_IncludesGroup,
+                'AverageDailyRate': stmt.excluded.AverageDailyRate,
+                'RevPAR': stmt.excluded.RevPAR,
+                'Occupancy_IncludesGroup': stmt.excluded.Occupancy_IncludesGroup,
+                'ForecastOccupancy_IncludesGroup': stmt.excluded.ForecastOccupancy_IncludesGroup,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def BestRev_Pms(row):

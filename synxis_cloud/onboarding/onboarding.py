@@ -122,168 +122,175 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
-    reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.csv' 
-    forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
-    revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
-    monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly_Onboarding.csv'
 
-    report_file_path = ""
+    try:
+        reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.csv' 
+        forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
+        revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
+        monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly_Onboarding.csv'
 
-    if(reporttype == 'Reservation'):
-        reservation_file_path = localfilepath
-    elif(reporttype == 'Forecast'):
-        forecast_file_path = localfilepath
-    elif(reporttype == 'Revenue'):
-        revenue_file_path = localfilepath
-    elif(reporttype == 'Monthly'):
-        monthly_file_path = localfilepath
+        report_file_path = ""
+
+        if(reporttype == 'Reservation'):
+            reservation_file_path = localfilepath
+        elif(reporttype == 'Forecast'):
+            forecast_file_path = localfilepath
+        elif(reporttype == 'Revenue'):
+            revenue_file_path = localfilepath
+        elif(reporttype == 'Monthly'):
+            monthly_file_path = localfilepath
 
 
-    check_reservation_file = os.path.isfile(reservation_file_path)
-    check_forecast_file = os.path.isfile(forecast_file_path)
-    check_revenue_file = os.path.isfile(revenue_file_path)
-    check_monthly_file = os.path.isfile(monthly_file_path)
+        check_reservation_file = os.path.isfile(reservation_file_path)
+        check_forecast_file = os.path.isfile(forecast_file_path)
+        check_revenue_file = os.path.isfile(revenue_file_path)
+        check_monthly_file = os.path.isfile(monthly_file_path)
 
-    createdAt = "'" + str(arrow.now()) + "'"
-    updatedAt = "'" + str(arrow.now()) + "'"
-    createdAtEpoch = int(arrow.utcnow().timestamp())
-    updatedAtEpoch = int(arrow.utcnow().timestamp())
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch = int(arrow.utcnow().timestamp())
+        updatedAtEpoch = int(arrow.utcnow().timestamp())
 
-    errorMessage = ""
+        errorMessage = ""
 
-    if check_reservation_file:
+        if check_reservation_file:
 
-         # Reservation Data Clean and Insert
-        read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
-        read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
-        read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed')
-        read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed')
-        read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed')
-        read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed')
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read['Pay_At_Property'] = read['Pay_At_Property'].fillna(0).astype(int)
-        read['Total_Price_For_Adult'] = read['Total_Price_For_Adult'].fillna(0).astype(int)
-        read['Total_Price_For_Child_Age_Group1'] = read['Total_Price_For_Child_Age_Group1'].fillna(0).astype(int)
-        read['Total_Price_For_Child_Age_Group2'] = read['Total_Price_For_Child_Age_Group2'].fillna(0).astype(int)
-        read['Total_Price_For_Child_Age_Group3'] = read['Total_Price_For_Child_Age_Group3'].fillna(0).astype(int)
-        read['Total_Price_For_Child_Age_Group4'] = read['Total_Price_For_Child_Age_Group4'].fillna(0).astype(int)
-        read['Total_Price_For_Child_Age_Group5'] = read['Total_Price_For_Child_Age_Group5'].fillna(0).astype(int)
-        read['Total_Price_For_Child_Unknown_Age_Group'] = read['Total_Price_For_Child_Unknown_Age_Group'].fillna(0).astype(int)
-        read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
-        read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
-        read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
-        read['Nights_Qty'] = read['Nights_Qty'].fillna(0).astype(int)
-        read['Room_Qty'] = read['Room_Qty'].fillna(0).astype(int)
-        read['Total_Adult_Occupancy'] = read['Total_Adult_Occupancy'].fillna(0).astype(int)
-        read['Total_Child_Occupancy_For_Age_Group1'] = read['Total_Child_Occupancy_For_Age_Group1'].fillna(0).astype(int)
-        read['Total_Child_Occupancy_For_Age_Group2'] = read['Total_Child_Occupancy_For_Age_Group2'].fillna(0).astype(int)
-        read['Total_Child_Occupancy_For_Age_Group3'] = read['Total_Child_Occupancy_For_Age_Group3'].fillna(0).astype(int)
-        read['Total_Child_Occupancy_For_Age_Group4'] = read['Total_Child_Occupancy_For_Age_Group4'].fillna(0).astype(int)
-        read['Total_Child_Occupancy_For_Age_Group5'] = read['Total_Child_Occupancy_For_Age_Group5'].fillna(0).astype(int)
-        read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
-        #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
-        read = read[read['Confirm_No'].str.len() >= 1]
-        read.insert(6, column="uniqueKey", value=read['Confirm_No'].astype(str))
-        read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
-    
-        res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
-        res_result = list(res_result)
-        if len(res_result) > 0:
-            bulk_insert_synxis_cloud_res(res_result)
-            print("RES DONE")
-        else:
-            errorMessage = errorMessage + "Reservation File Was Blank, "
-
-    if check_forecast_file:
-
-        # Forecast Data Clean and Insert
-        read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
-        read['cal_dt'] = pd.to_datetime(read['cal_dt'])
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['cal_dt'].astype(str))
-        read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
-
-        fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
-        fore_result = list(fore_result)
-        if len(fore_result) > 0:
-            bulk_insert_synxis_cloud_forecast(fore_result)
-            print("FORE DONE")
-        else:
-            errorMessage = errorMessage + "Forecast File Was Blank, "
-
-    if check_revenue_file:
-
-        # Revenue Recap Data Clean and Insert
-        date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
-        date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
-        read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read.insert(6, column="Date", value=date)
-        read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
-        read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
-        read['F_B'] = read['F_B'].fillna(0).astype(int)
-        read['Other'] = read['Other'].fillna(0).astype(int)
-        read['Month_To_Date_F_B'] = read['Month_To_Date_F_B'].fillna(0).astype(int)
-        read['Year_To_Date_F_B'] = read['Year_To_Date_F_B'].apply(str).str.replace(',', '').astype(float)
-        read['F_B_Total'] = read['F_B_Total'].fillna(0).astype(int)
-        read['Other_Total'] = read['Other_Total'].fillna(0).astype(int)
-        read['Month_To_Date_F_B_total'] = read['Month_To_Date_F_B_total'].fillna(0).astype(float)
-        read['Year_To_Date_F_B_Total'] = read['Year_To_Date_F_B_Total'].apply(str).str.replace(',', '').astype(float)
-        read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
-        rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
-        rev_result = list(rev_result)
-        if len(rev_result) > 0:
-            bulk_insert_synxis_cloud_revenue_recap(rev_result)
-            print("REV DONE")
-        else:
-            errorMessage = errorMessage + "Revenue File Was Blank, "
-
-    if check_monthly_file:
-
-        # Monthly Summary Data Clean and Insert
-        read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
-        read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['BUSINESS_DT'].astype(str))
-        read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
-        read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
-        read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
-
-        monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
-        monthly_result = list(monthly_result)
+            # Reservation Data Clean and Insert
+            read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+            read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
+            read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed')
+            read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed')
+            read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed')
+            read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed')
+            read.insert(0, column="propertyCode", value=propertyCode)
+            read.insert(1, column="pullDateId", value=pullDateId)
+            read.insert(2, column="createdAt", value=createdAt)
+            read.insert(3, column="updatedAt", value=updatedAt)
+            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read['Pay_At_Property'] = read['Pay_At_Property'].fillna(0).astype(int)
+            read['Total_Price_For_Adult'] = read['Total_Price_For_Adult'].fillna(0).astype(int)
+            read['Total_Price_For_Child_Age_Group1'] = read['Total_Price_For_Child_Age_Group1'].fillna(0).astype(int)
+            read['Total_Price_For_Child_Age_Group2'] = read['Total_Price_For_Child_Age_Group2'].fillna(0).astype(int)
+            read['Total_Price_For_Child_Age_Group3'] = read['Total_Price_For_Child_Age_Group3'].fillna(0).astype(int)
+            read['Total_Price_For_Child_Age_Group4'] = read['Total_Price_For_Child_Age_Group4'].fillna(0).astype(int)
+            read['Total_Price_For_Child_Age_Group5'] = read['Total_Price_For_Child_Age_Group5'].fillna(0).astype(int)
+            read['Total_Price_For_Child_Unknown_Age_Group'] = read['Total_Price_For_Child_Unknown_Age_Group'].fillna(0).astype(int)
+            read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
+            read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
+            read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
+            read['Nights_Qty'] = read['Nights_Qty'].fillna(0).astype(int)
+            read['Room_Qty'] = read['Room_Qty'].fillna(0).astype(int)
+            read['Total_Adult_Occupancy'] = read['Total_Adult_Occupancy'].fillna(0).astype(int)
+            read['Total_Child_Occupancy_For_Age_Group1'] = read['Total_Child_Occupancy_For_Age_Group1'].fillna(0).astype(int)
+            read['Total_Child_Occupancy_For_Age_Group2'] = read['Total_Child_Occupancy_For_Age_Group2'].fillna(0).astype(int)
+            read['Total_Child_Occupancy_For_Age_Group3'] = read['Total_Child_Occupancy_For_Age_Group3'].fillna(0).astype(int)
+            read['Total_Child_Occupancy_For_Age_Group4'] = read['Total_Child_Occupancy_For_Age_Group4'].fillna(0).astype(int)
+            read['Total_Child_Occupancy_For_Age_Group5'] = read['Total_Child_Occupancy_For_Age_Group5'].fillna(0).astype(int)
+            read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
+            #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
+            read = read[read['Confirm_No'].str.len() >= 1]
+            read.insert(6, column="uniqueKey", value=read['Confirm_No'].astype(str))
+            read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
         
-        if len(monthly_result) > 0:
-            bulk_insert_synxis_cloud_monthly_summary(monthly_result)
-            print("MONTHLY DONE")
-        else:
-            errorMessage = errorMessage + "Monthly File Was Blank, "
+            res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
+            res_result = list(res_result)
+            if len(res_result) > 0:
+                bulk_insert_synxis_cloud_res(res_result)
+                print("RES DONE")
+            else:
+                errorMessage = errorMessage + "Reservation File Was Blank, "
 
-    
-    if(errorMessage==""):
-        update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-    else:
-        errorMessage="Partially Successfull:- "+errorMessage
-        update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+        if check_forecast_file:
+
+            # Forecast Data Clean and Insert
+            read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
+            read['cal_dt'] = pd.to_datetime(read['cal_dt'])
+            read.insert(0, column="propertyCode", value=propertyCode)
+            read.insert(1, column="pullDateId", value=pullDateId)
+            read.insert(2, column="createdAt", value=createdAt)
+            read.insert(3, column="updatedAt", value=updatedAt)
+            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['cal_dt'].astype(str))
+            read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
+
+            fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
+            fore_result = list(fore_result)
+            if len(fore_result) > 0:
+                bulk_insert_synxis_cloud_forecast(fore_result)
+                print("FORE DONE")
+            else:
+                errorMessage = errorMessage + "Forecast File Was Blank, "
+
+        if check_revenue_file:
+
+            # Revenue Recap Data Clean and Insert
+            date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
+            date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
+            read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
+            read.insert(0, column="propertyCode", value=propertyCode)
+            read.insert(1, column="pullDateId", value=pullDateId)
+            read.insert(2, column="createdAt", value=createdAt)
+            read.insert(3, column="updatedAt", value=updatedAt)
+            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read.insert(6, column="Date", value=date)
+            read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
+            read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
+            read['F_B'] = read['F_B'].fillna(0).astype(int)
+            read['Other'] = read['Other'].fillna(0).astype(int)
+            read['Month_To_Date_F_B'] = read['Month_To_Date_F_B'].fillna(0).astype(int)
+            read['Year_To_Date_F_B'] = read['Year_To_Date_F_B'].apply(str).str.replace(',', '').astype(float)
+            read['F_B_Total'] = read['F_B_Total'].fillna(0).astype(int)
+            read['Other_Total'] = read['Other_Total'].fillna(0).astype(int)
+            read['Month_To_Date_F_B_total'] = read['Month_To_Date_F_B_total'].fillna(0).astype(float)
+            read['Year_To_Date_F_B_Total'] = read['Year_To_Date_F_B_Total'].apply(str).str.replace(',', '').astype(float)
+            read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
+            rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
+            rev_result = list(rev_result)
+            if len(rev_result) > 0:
+                bulk_insert_synxis_cloud_revenue_recap(rev_result)
+                print("REV DONE")
+            else:
+                errorMessage = errorMessage + "Revenue File Was Blank, "
+
+        if check_monthly_file:
+
+            # Monthly Summary Data Clean and Insert
+            read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
+            read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)")
+            read.insert(0, column="propertyCode", value=propertyCode)
+            read.insert(1, column="pullDateId", value=pullDateId)
+            read.insert(2, column="createdAt", value=createdAt)
+            read.insert(3, column="updatedAt", value=updatedAt)
+            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['BUSINESS_DT'].astype(str))
+            read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
+            read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
+            read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
+
+            monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
+            monthly_result = list(monthly_result)
+            
+            if len(monthly_result) > 0:
+                bulk_insert_synxis_cloud_monthly_summary(monthly_result)
+                print("MONTHLY DONE")
+            else:
+                errorMessage = errorMessage + "Monthly File Was Blank, "
+
+        
+        if(errorMessage==""):
+            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+        else:
+            errorMessage="Partially Successfull:- "+errorMessage
+            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    except Exception as e:
+        msg = f"[{propertyCode}] failed due to {e}"
+        print(msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        return 0
 
 
 if __name__ == '__main__':

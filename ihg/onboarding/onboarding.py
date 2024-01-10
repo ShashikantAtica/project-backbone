@@ -65,110 +65,124 @@ def bulk_insert_ihg_res(res_list):
 
     # Add new data of reservation
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.ihg_res_model.insert(), res_list)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        conn.execute(db_models.ihg_res_model.insert(), res_list)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def bulk_insert_occ_res(occ_list):
 
     # Add new data of reservation
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.ihg_occ_model.insert(), occ_list)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    try:
+        conn = db_config.get_db_connection()
+        conn.execute(db_models.ihg_occ_model.insert(), occ_list)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
 
 
 def IHG_Pms(row, reporttype, localfilepath):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     attachment_format = "../reports"
-
+    
+    try:
     # Modification of res report
-    reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.xlsx'
-    occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy_Onboarding.xlsx'
+        reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.xlsx'
+        occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy_Onboarding.xlsx'
 
-    if(reporttype == 'Reservation'):
-        reservation_file_path = localfilepath
-    elif(reporttype == 'Occupancy'):
-        occupancy_file_path = localfilepath
+        if(reporttype == 'Reservation'):
+            reservation_file_path = localfilepath
+        elif(reporttype == 'Occupancy'):
+            occupancy_file_path = localfilepath
 
 
-    check_reservation_file = os.path.isfile(reservation_file_path)
-    check_occupancy_file = os.path.isfile(occupancy_file_path)
+        check_reservation_file = os.path.isfile(reservation_file_path)
+        check_occupancy_file = os.path.isfile(occupancy_file_path)
 
-    createdAt = "'" + str(arrow.now()) + "'"
-    updatedAt = "'" + str(arrow.now()) + "'"
-    createdAtEpoch = int(arrow.utcnow().timestamp())
-    updatedAtEpoch = int(arrow.utcnow().timestamp())
+        createdAt = "'" + str(arrow.now()) + "'"
+        updatedAt = "'" + str(arrow.now()) + "'"
+        createdAtEpoch = int(arrow.utcnow().timestamp())
+        updatedAtEpoch = int(arrow.utcnow().timestamp())
 
-    errorMessage = ""
+        errorMessage = ""
 
-    if check_reservation_file:
+        if check_reservation_file:
 
-        # Reservation Data Clean and Insert
-        read = pd.read_excel(reservation_file_path)
-        read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
-        read.columns = read.columns.str.replace(' ', '', regex=True)
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read.insert(6, column="uniqueKey", value=read["ConfirmationNumber"].astype(str))
-        read.to_csv(f"{attachment_format}{propertyCode}_Reservations.csv", index=False)
+            # Reservation Data Clean and Insert
+            read = pd.read_excel(reservation_file_path)
+            read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
+            read.columns = read.columns.str.replace(' ', '', regex=True)
+            read.insert(0, column="propertyCode", value=propertyCode)
+            read.insert(1, column="pullDateId", value=pullDateId)
+            read.insert(2, column="createdAt", value=createdAt)
+            read.insert(3, column="updatedAt", value=updatedAt)
+            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read.insert(6, column="uniqueKey", value=read["ConfirmationNumber"].astype(str))
+            read.to_csv(f"{attachment_format}{propertyCode}_Reservations.csv", index=False)
 
-        res_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Reservations.csv", encoding="utf-8"))
-        res_result = list(res_result)
-        if len(res_result) > 0:
-            bulk_insert_ihg_res(res_result)
-            print("RES DONE")
+            res_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Reservations.csv", encoding="utf-8"))
+            res_result = list(res_result)
+            if len(res_result) > 0:
+                bulk_insert_ihg_res(res_result)
+                print("RES DONE")
+            else:
+                errorMessage = errorMessage + "Reservation File Was Blank, "
+
+        if check_occupancy_file:
+            
+            # Occupancy Data Clean and Insert
+            read = pd.read_excel(occupancy_file_path)
+            read['Date'] = pd.to_datetime(read['Date'])
+
+            read.insert(0, column="propertyCode", value=propertyCode)
+            read.insert(1, column="pullDateId", value=pullDateId)
+            read.insert(2, column="createdAt", value=createdAt)
+            read.insert(3, column="updatedAt", value=updatedAt)
+            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str)) 
+
+
+            headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
+                            "MaximumLOS", "MinimumLOS", "ReservationGuaranteeRequired", "24Hourhold", "AverageLeadTime",
+                            "AverageLOS", "CancelDue", "CancelorNoShow", "DepositDue", "Deposit", "Groupremaining",
+                            "RoomslefttoSell", "SpecialEventSpecialRequirement", "Paceasofdate", "AC", "ActualroomssoldLY",
+                            "ADR", "BFR", "Groupcommitted", "Groupcontracted", "GroupPickupasofdate", "Grouppickup", "Occ",
+                            "OVB", "Paceasofdate1", "Paceasofdate2", "Pickupasofdate", "Pickupasofdate1", "Roomssold",
+                            "TotalRoomsCommitted"]
+            read.to_csv(f"{attachment_format}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
+
+            occ_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+            occ_result = list(occ_result)
+            if len(occ_result) > 0:
+                bulk_insert_occ_res(occ_result)
+                print("OCC DONE")
+            else:
+                errorMessage = errorMessage + "Occupancy File Was Blank, "
+
+                    
+        if(errorMessage==""):
+            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
-            errorMessage = errorMessage + "Reservation File Was Blank, "
-
-    if check_occupancy_file:
-        
-        # Occupancy Data Clean and Insert
-        read = pd.read_excel(occupancy_file_path)
-        read['Date'] = pd.to_datetime(read['Date'])
-
-        read.insert(0, column="propertyCode", value=propertyCode)
-        read.insert(1, column="pullDateId", value=pullDateId)
-        read.insert(2, column="createdAt", value=createdAt)
-        read.insert(3, column="updatedAt", value=updatedAt)
-        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-        read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str)) 
-
-
-        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "uniqueKey", "BlackoutDates", "blank", "ClosedtoArrival", "Date", "DayofWeek",
-                        "MaximumLOS", "MinimumLOS", "ReservationGuaranteeRequired", "24Hourhold", "AverageLeadTime",
-                        "AverageLOS", "CancelDue", "CancelorNoShow", "DepositDue", "Deposit", "Groupremaining",
-                        "RoomslefttoSell", "SpecialEventSpecialRequirement", "Paceasofdate", "AC", "ActualroomssoldLY",
-                        "ADR", "BFR", "Groupcommitted", "Groupcontracted", "GroupPickupasofdate", "Grouppickup", "Occ",
-                        "OVB", "Paceasofdate1", "Paceasofdate2", "Pickupasofdate", "Pickupasofdate1", "Roomssold",
-                        "TotalRoomsCommitted"]
-        read.to_csv(f"{attachment_format}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
-
-        occ_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Occupancy.csv", encoding="utf-8"))
-        occ_result = list(occ_result)
-        if len(occ_result) > 0:
-            bulk_insert_occ_res(occ_result)
-            print("OCC DONE")
-        else:
-            errorMessage = errorMessage + "Occupancy File Was Blank, "
-
-                
-    if(errorMessage==""):
-        update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-    else:
-        errorMessage="Partially Successfull:- "+errorMessage
-        update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+            errorMessage="Partially Successfull:- "+errorMessage
+            update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+    except Exception as e:
+        msg = f"[{propertyCode}] failed due to {e}"
+        print(msg)
+        update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        return 0
 
 
 if __name__ == '__main__':
