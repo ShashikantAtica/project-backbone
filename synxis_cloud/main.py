@@ -79,6 +79,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
     # Add new data of reservation
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_reservation_model).values(res_list)
@@ -195,6 +196,7 @@ def bulk_insert_synxis_cloud_res(res_list, propertyCode, res_before, res_after):
 
 def bulk_insert_synxis_cloud_forecast(fore_list, propertyCode, min_date, max_date):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_forecast_model).values(fore_list)
@@ -255,6 +257,7 @@ def bulk_insert_synxis_cloud_forecast(fore_list, propertyCode, min_date, max_dat
 
 def bulk_insert_synxis_cloud_revenue_recap(rev_list, propertyCode, report_date):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_revenue_recap_model).values(rev_list)
@@ -314,6 +317,7 @@ def bulk_insert_synxis_cloud_revenue_recap(rev_list, propertyCode, report_date):
 
 def bulk_insert_synxis_cloud_monthly_summary(mon_list, propertyCode, min_date, max_date):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_monthly_summary_model).values(mon_list)
@@ -616,6 +620,9 @@ def Synxis_Cloud_Pms(row):
             read.insert(3, column="updatedAt", value=updatedAt)
             read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+            read['Total_Cash_Pymnt'] = read['Total_Cash_Pymnt'].apply(str).str.replace(',', '').astype(float)
+            read['Pay_At_Property'] = read['Pay_At_Property'].apply(str).str.replace(',', '').astype(float)
+            read['Cash_Refund'] = read['Cash_Refund'].apply(str).str.replace(',', '').astype(float)
             read['Pay_At_Property'] = read['Pay_At_Property'].fillna(0).astype(int)
             read['Total_Price_For_Adult'] = read['Total_Price_For_Adult'].fillna(0).astype(int)
             read['Total_Price_For_Child_Age_Group1'] = read['Total_Price_For_Child_Age_Group1'].fillna(0).astype(int)
