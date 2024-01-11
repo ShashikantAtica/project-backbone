@@ -65,6 +65,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_opera_cloud_res(res_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_res_model).values(res_list)
@@ -108,11 +109,14 @@ def bulk_insert_opera_cloud_res(res_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
     
 
 
 def bulk_insert_opera_cloud_occ(occ_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_occ_model).values(occ_list)
@@ -164,9 +168,12 @@ def bulk_insert_opera_cloud_occ(occ_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 def bulk_insert_opera_cloud_arrival(arrival_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_arrival_model).values(arrival_list)
@@ -277,11 +284,14 @@ def bulk_insert_opera_cloud_arrival(arrival_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
     
 
 def bulk_insert_opera_cloud_rbrc(rbrc_list):
 
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_rbrc_model).values(rbrc_list)
@@ -321,6 +331,8 @@ def bulk_insert_opera_cloud_rbrc(rbrc_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def OperaCloud_Pms(row, reporttype, localfilepath):
@@ -445,8 +457,12 @@ def OperaCloud_Pms(row, reporttype, localfilepath):
             print("RES RESULT")
             # print(res_result) #This can be uncommented to test/see the result of parsed data
             if len(res_result) > 0:
-                bulk_insert_opera_cloud_res(res_result)
-                print("RES DONE")
+                error_temp = bulk_insert_opera_cloud_res(res_result)
+                if(error_temp == ""):
+                    print("RES DONE")   
+                else:
+                    print("RES FAILED")
+                    errorMessage = errorMessage + " RES Failed: " + error_temp
             else:
                 errorMessage = errorMessage + " Reservation File Was Blank,"
             # End Reservation Report
@@ -636,8 +652,12 @@ def OperaCloud_Pms(row, reporttype, localfilepath):
             print("OCC RESULT")
             # print(occ_result)  #This can be uncommented to test/see the result of parsed data
             if len(occ_result) > 0:
-                bulk_insert_opera_cloud_occ(occ_result)
-                print("OCC DONE")
+                error_temp = bulk_insert_opera_cloud_occ(occ_result)
+                if(error_temp == ""):
+                    print("OCC DONE")   
+                else:
+                    print("OCC FAILED")
+                    errorMessage = errorMessage + " OCC Failed: " + error_temp
             else:
                 errorMessage = errorMessage + " Occupancy File Was Blank,"
             # End Occupancy Report
@@ -691,8 +711,12 @@ def OperaCloud_Pms(row, reporttype, localfilepath):
             print("ARRIVAL RESULT")
             # print(arrival_result)  #This can be uncommented to test/see the result of parsed data
             if len(arrival_result) > 0:
-                bulk_insert_opera_cloud_arrival(arrival_result)
-                print("ARRIVAL DONE")
+                error_temp = bulk_insert_opera_cloud_arrival(arrival_result)
+                if(error_temp == ""):
+                    print("ARRIVAL DONE")   
+                else:
+                    print("ARRIVAL FAILED")
+                    errorMessage = errorMessage + " ARRIVAL Failed: " + error_temp
             else:
                 errorMessage = errorMessage + " Arrival File Was Blank,"
 
@@ -776,8 +800,12 @@ def OperaCloud_Pms(row, reporttype, localfilepath):
             print("RBRC RESULT")
             # print(rbrc_result) #This can be uncommented to test/see the result of parsed data
             if len(rbrc_result) > 0:
-                bulk_insert_opera_cloud_rbrc(rbrc_result)
-                print("RBRC DONE")
+                error_temp = bulk_insert_opera_cloud_rbrc(rbrc_result)
+                if(error_temp == ""):
+                    print("RBRC DONE")   
+                else:
+                    print("RBRC FAILED")
+                    errorMessage = errorMessage + " RBRC Failed: " + error_temp
             else:
                 errorMessage = errorMessage + " RBRC File Was Blank,"
             # End Arrival Report

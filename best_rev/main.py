@@ -29,6 +29,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list, fore_start_date, fore_end_date):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.bestrev_total_forecast_model).values(total_forecast_list)
@@ -68,6 +69,8 @@ def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list, fore_s
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def BestRev_Pms(row):
@@ -221,10 +224,15 @@ def BestRev_Pms(row):
             print(len(total_forecast_result))
             fore_start_date = arrow.now().format("YYYY-MM-DD")
             fore_end_date = arrow.now().shift(days=+365).format("YYYY-MM-DD")
-            bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_result, fore_start_date, fore_end_date)
-            print("TOTAL FORECAST DONE")
+            
+            error_temp = bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_result, fore_start_date, fore_end_date)
+            if(error_temp == ""):
+                print("TOTAL FORECAST DONE")
+                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            else:
+                print("TOTAL FORECAST FAILED")
+                errorMessage = errorMessage + " FORECAST Failed: " + error_temp
 
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
             update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
     except Exception as e:

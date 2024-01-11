@@ -78,6 +78,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.ideasg3_occ_model).values(occ_list)
@@ -128,6 +129,8 @@ def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
    
 
 
@@ -384,10 +387,15 @@ def IDeaSG3_Rms(row):
             # print(occ_result) #This can be uncommented to test/see the result of parsed data
 
             if len(occ_result) > 0:
-                bulk_insert_IDeaSG3_occ(occ_result, low_input_date_str, propertyCode=propertyCode)
-                print("Occupancy DONE")
+                error_temp = bulk_insert_IDeaSG3_occ(occ_result, low_input_date_str, propertyCode=propertyCode)
+                if(error_temp == ""):
+                    print("Occupancy DONE")
+                    update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                else:
+                    print("OCC FAILED")
+                    errorMessage = " OCC Failed: " + error_temp
+                    update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=False)
 
-                update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
                 print("File was blank!!!")
                 update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)

@@ -63,6 +63,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_ihg_res(res_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.ihg_res_model).values(res_list)
@@ -97,10 +98,13 @@ def bulk_insert_ihg_res(res_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_occ_res(occ_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.ihg_occ_model).values(occ_list)
@@ -156,6 +160,8 @@ def bulk_insert_occ_res(occ_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 
@@ -203,8 +209,12 @@ def IHG_Pms(row, reporttype, localfilepath):
             res_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Reservations.csv", encoding="utf-8"))
             res_result = list(res_result)
             if len(res_result) > 0:
-                bulk_insert_ihg_res(res_result)
-                print("RES DONE")
+                error_temp = bulk_insert_ihg_res(res_result)
+                if(error_temp == ""):
+                    print("RES DONE")   
+                else:
+                    print("RES FAILED")
+                    errorMessage = errorMessage + " RES Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Reservation File Was Blank, "
 
@@ -235,8 +245,12 @@ def IHG_Pms(row, reporttype, localfilepath):
             occ_result = csv.DictReader(open(f"{attachment_format}{propertyCode}_Occupancy.csv", encoding="utf-8"))
             occ_result = list(occ_result)
             if len(occ_result) > 0:
-                bulk_insert_occ_res(occ_result)
-                print("OCC DONE")
+                error_temp = bulk_insert_occ_res(occ_result)
+                if(error_temp == ""):
+                    print("OCC DONE")   
+                else:
+                    print("OCC FAILED")
+                    errorMessage = errorMessage + " OCC Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Occupancy File Was Blank, "
 

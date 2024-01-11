@@ -79,6 +79,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 
 def bulk_insert_opera_cloud_res(res_list, propertyCode, res_before, res_after):
+    error_temp=""
     print("Data importing...")
     try:
         conn = db_config.get_db_connection()
@@ -123,10 +124,13 @@ def bulk_insert_opera_cloud_res(res_list, propertyCode, res_before, res_after):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
     
 
 
 def bulk_insert_opera_cloud_occ(occ_list, propertyCode, occ_before, occ_after):
+    error_temp=""
     print("Data importing...")
     try:
         conn = db_config.get_db_connection()
@@ -179,9 +183,12 @@ def bulk_insert_opera_cloud_occ(occ_list, propertyCode, occ_before, occ_after):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
     
 
 def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode, res_before, res_after):
+    error_temp=""
     print("Data importing...")
     try:
         conn = db_config.get_db_connection()
@@ -293,6 +300,53 @@ def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode, res_before, res_
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
+
+def bulk_insert_opera_cloud_rbrc(rbrc_list, lowest_input_date_str, propertyCode):
+    print("Data importing...")
+    error_temp=""
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.opera_rbrc_model).values(rbrc_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'RESORT': stmt.excluded.RESORT,
+                'BUSINESS_DATE': stmt.excluded.BUSINESS_DATE,
+                'CHAR_BUSINESS_DATE': stmt.excluded.CHAR_BUSINESS_DATE,
+                'MASTER_VALUE': stmt.excluded.MASTER_VALUE,
+                'CF_MASTER_SEQ': stmt.excluded.CF_MASTER_SEQ,
+                'GROUP_NAME': stmt.excluded.GROUP_NAME,
+                'ARR_TODAY': stmt.excluded.ARR_TODAY,
+                'NO_DEFINITE_ROOMS': stmt.excluded.NO_DEFINITE_ROOMS,
+                'IN_GUEST': stmt.excluded.IN_GUEST,
+                'OCC_SINGLE': stmt.excluded.OCC_SINGLE,
+                'DOUBLE_OCC': stmt.excluded.DOUBLE_OCC,
+                'REVENUE': stmt.excluded.REVENUE,
+                'FB_REV': stmt.excluded.FB_REV,
+                'OTHER_REV': stmt.excluded.OTHER_REV,
+                'TOTAL_REVENUE': stmt.excluded.TOTAL_REVENUE,
+                'RESORT_ROOM': stmt.excluded.RESORT_ROOM,
+                'PER_OCC': stmt.excluded.PER_OCC,
+                'GET_ARR': stmt.excluded.GET_ARR,
+                'MULTI_OCC_PER': stmt.excluded.MULTI_OCC_PER,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
     
 
 
@@ -374,7 +428,7 @@ def OperaCloud_Pms(row):
 
     try:
 
-        label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy", f"{propertyCode} Arrival"]
+        label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy", f"{propertyCode} Arrival", f"{propertyCode} RBRC"]
         folder_name = "./reports/"
         messages_array = []
         saved_messages_ids = []
@@ -384,9 +438,11 @@ def OperaCloud_Pms(row):
             f'{folder_name}{propertyCode}_Reservation.xml',
             f'{folder_name}{propertyCode}_Occupancy.xml',
             f'{folder_name}{propertyCode}_Arrival.xml',
+            f'{folder_name}{propertyCode}_RBRC.xml',
             f'{folder_name}{propertyCode}_Reservations.csv',
             f'{folder_name}{propertyCode}_Occupancy.csv',
-            f'{folder_name}{propertyCode}_Arrival.csv'
+            f'{folder_name}{propertyCode}_Arrival.csv',
+            f'{folder_name}{propertyCode}_RBRC.csv',
         ]
 
         for file_path in file_paths:
@@ -459,10 +515,12 @@ def OperaCloud_Pms(row):
         reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xml'
         occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.xml'
         arrival_file_path = f'{folder_name}{propertyCode}_Arrival.xml'
+        rbrc_file_path = f'{folder_name}{propertyCode}_RBRC.xml'
 
         check_reservation_file = os.path.isfile(reservation_file_path)
         check_occupancy_file = os.path.isfile(occupancy_file_path)
         check_arrival_file = os.path.isfile(arrival_file_path)
+        check_rbrc_file = os.path.isfile(rbrc_file_path)
 
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
@@ -492,6 +550,13 @@ def OperaCloud_Pms(row):
                 errorMessage = errorMessage + f"No new messages for {arr_labelname} label, "
             else:
                 errorMessage = errorMessage + " Arrival file - N/A"
+
+        if not check_rbrc_file:
+            rbrc_labelname=f"{propertyCode} RBRC"
+            if rbrc_labelname in track_label_nomsg_set:
+                errorMessage = errorMessage + f"No new messages for {rbrc_labelname} label, "
+            else:
+                errorMessage = errorMessage + " RBRC file - N/A"
 
         if check_reservation_file:
             
@@ -580,8 +645,13 @@ def OperaCloud_Pms(row):
             print("RES RESULT")
             # print(res_result) #This can be uncommented to test/see the result of parsed data
             if len(res_result) > 0:
-                bulk_insert_opera_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
-                print("RES DONE")
+                error_temp = bulk_insert_opera_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
+                if(error_temp == ""):
+                    print("RES DONE")
+                else:
+                    print("RES FAILED")
+                    errorMessage = errorMessage + " RES Failed: " + error_temp
+                
             else:
                 errorMessage = errorMessage + "Reservation File Was Blank, "
             # End Reservation Report
@@ -772,8 +842,13 @@ def OperaCloud_Pms(row):
             print("OCC RESULT")
             # print(occ_result) #This can be uncommented to test/see the result of parsed data
             if len(occ_result) > 0:
-                bulk_insert_opera_cloud_occ(occ_result, propertyCode, row['occ_before'], row['occ_after'])
-                print("OCC DONE")
+                error_temp = bulk_insert_opera_cloud_occ(occ_result, propertyCode, row['occ_before'], row['occ_after'])
+                if(error_temp == ""):
+                    print("OCC DONE")
+                else:
+                    print("OCC FAILED")
+                    errorMessage = errorMessage + " Occupancy Failed: " + error_temp
+                
             else:
                 errorMessage = errorMessage + "Occupancy File Was Blank, "
             # End Occupancy Report
@@ -821,13 +896,112 @@ def OperaCloud_Pms(row):
             print("ARRIVAL RESULT")
             # print(arrival_result) #This can be uncommented to test/see the result of parsed data
             if len(arrival_result) > 0:
-                bulk_insert_opera_cloud_arrival(arrival_result, propertyCode, row['res_before'], row['res_after'])
-                print("ARRIVAL DONE")
+                error_temp = bulk_insert_opera_cloud_arrival(arrival_result, propertyCode, row['res_before'], row['res_after'])
+                if(error_temp == ""):
+                    print("ARRIVAL DONE")
+                else:
+                    print("ARRIVAL FAILED")
+                    errorMessage = errorMessage + " Arrival Failed: " + error_temp
+                
             else:
                 errorMessage = errorMessage + "Arrival File Was Blank, "
             # End Arrival Report
                 
-        if len(track_label_nomsg_set) != 3:
+        if check_rbrc_file:
+
+            fileCount=fileCount+1
+            # Start RBRC Report
+            cols = ["RESORT","BUSINESS_DATE","CHAR_BUSINESS_DATE","MASTER_VALUE","CF_MASTER_SEQ","GROUP_NAME","ARR_TODAY","NO_DEFINITE_ROOMS",
+            "IN_GUEST","OCC_SINGLE","DOUBLE_OCC","REVENUE",
+            "FB_REV","OTHER_REV","TOTAL_REVENUE","RESORT_ROOM",
+            "PER_OCC","GET_ARR","MULTI_OCC_PER"]
+            rows = []
+
+            # Parsing the XML file
+            xmlparse = Xet.parse(rbrc_file_path)
+            root = xmlparse.getroot()
+
+            date_set = set()
+            try:
+                for i in root[0][0][0]:
+                    RESORT = i.find("RESORT").text if(i.find("RESORT")) is not None else ""
+                    BUSINESS_DATE = i.find("BUSINESS_DATE").text if(i.find("BUSINESS_DATE")) is not None else ""
+                    CHAR_BUSINESS_DATE = i.find("CHAR_BUSINESS_DATE").text if(i.find("CHAR_BUSINESS_DATE")) is not None else ""
+                    for k in i.find("LIST_MARKET"):
+                        MASTER_VALUE = k.find("MASTER_VALUE").text if(k.find("MASTER_VALUE") is not None and k.find("MASTER_VALUE").text != "{NULL}")   else ""
+                        CF_MASTER_SEQ = k.find("CF_MASTER_SEQ").text if(k.find("CF_MASTER_SEQ")) is not None else ""
+                        GROUP_NAME  = k.find("GROUP_NAME").text if(k.find("GROUP_NAME") is not None and k.find("GROUP_NAME").text != "Unknown") else ""
+                        for j in k.find("LIST_DETAIL"):
+                            ARR_TODAY = j.find("ARR_TODAY").text if(j.find("ARR_TODAY")) is not None else ""
+                            NO_DEFINITE_ROOMS = j.find("NO_DEFINITE_ROOMS").text if(j.find("NO_DEFINITE_ROOMS")) is not None else ""
+                            IN_GUEST  = j.find("IN_GUEST").text if(j.find("IN_GUEST")) is not None else ""
+                            OCC_SINGLE = j.find("OCC_SINGLE").text if(j.find("OCC_SINGLE")) is not None else ""
+                            DOUBLE_OCC = j.find("DOUBLE_OCC").text if(j.find("DOUBLE_OCC")) is not None else ""
+                            REVENUE = j.find("REVENUE").text if(j.find("REVENUE")) is not None else ""
+                            FB_REV = j.find("FB_REV").text if(j.find("FB_REV")) is not None else ""
+                            OTHER_REV = j.find("OTHER_REV").text if(j.find("OTHER_REV")) is not None else ""
+                            TOTAL_REVENUE  = j.find("TOTAL_REVENUE").text if(j.find("TOTAL_REVENUE")) is not None else ""
+                            RESORT_ROOM = j.find("RESORT_ROOM").text if(j.find("RESORT_ROOM")) is not None else ""
+                            PER_OCC = j.find("PER_OCC").text if(j.find("PER_OCC")) is not None else ""
+                            GET_ARR  = j.find("GET_ARR").text if(j.find("GET_ARR")) is not None else ""
+                            MULTI_OCC_PER  = j.find("MULTI_OCC_PER").text if(j.find("MULTI_OCC_PER")) is not None else ""
+                            rows.append({
+                                    "RESORT": RESORT,
+                                    "BUSINESS_DATE": BUSINESS_DATE,
+                                    "CHAR_BUSINESS_DATE": CHAR_BUSINESS_DATE,
+                                    "MASTER_VALUE": MASTER_VALUE,
+                                    "CF_MASTER_SEQ": CF_MASTER_SEQ,
+                                    "GROUP_NAME": GROUP_NAME,
+                                    "ARR_TODAY": ARR_TODAY,
+                                    "NO_DEFINITE_ROOMS": NO_DEFINITE_ROOMS,
+                                    "IN_GUEST": IN_GUEST,
+                                    "OCC_SINGLE": OCC_SINGLE,
+                                    "DOUBLE_OCC": DOUBLE_OCC,
+                                    "REVENUE": REVENUE,
+                                    "FB_REV": FB_REV,
+                                    "OTHER_REV": OTHER_REV,
+                                    "TOTAL_REVENUE": TOTAL_REVENUE,
+                                    "RESORT_ROOM": RESORT_ROOM,
+                                    "PER_OCC": PER_OCC,
+                                    "GET_ARR": GET_ARR,
+                                    "MULTI_OCC_PER": MULTI_OCC_PER})
+                        
+                df = pd.DataFrame(rows, columns=cols)
+                df.insert(0, column="propertyCode", value=propertyCode)
+                df.insert(1, column="pullDateId", value=pullDateId)
+                df.insert(2, column="createdAt", value=createdAt)
+                df.insert(3, column="updatedAt", value=updatedAt)
+                df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE']).dt.strftime('%Y-%m-%d')
+                df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
+                df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))
+                date_set = set(df['BUSINESS_DATE'])
+                date_set.discard(pd.NaT) #to avoid any null value in set that can be minimum of set
+                df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
+                rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
+                rbrc_result = list(rbrc_result)
+            except Exception:
+                rbrc_result = []
+                print("Reservation Data not available")
+            
+            
+            # End RBRC Report
+
+            print("RBRC RESULT")
+            # print(rbrc_result) #This can be uncommented to test/see the result of parsed data
+            if len(rbrc_result) > 0:
+                error_temp = bulk_insert_opera_cloud_rbrc(rbrc_result, min(date_set), propertyCode=propertyCode)
+                if(error_temp == ""):
+                    print("RBRC DONE")
+                else:
+                    print("RBRC FAILED")
+                    errorMessage = errorMessage + " RBRC Failed: " + error_temp
+            else:
+                errorMessage = errorMessage + "RBRC File Was Blank, "
+
+        
+        if len(track_label_nomsg_set) != 4:
         # Apply archive label to saved messages
             label_apply_body = {
                 "addLabelIds": archive_label["id"],
@@ -844,7 +1018,7 @@ def OperaCloud_Pms(row):
             else:
                 print("No messages to save")
 
-        if fileCount == 3:
+        if fileCount == 4:
             if errorMessage == "":
                 update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
             else:
@@ -852,7 +1026,7 @@ def OperaCloud_Pms(row):
                 update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
         else:
             if fileCount == 0:
-                if len(track_label_nomsg_set) == 3:
+                if len(track_label_nomsg_set) == 4:
                     errorMessage = "No new messages for all label"
                 else:
                     errorMessage = "All File Not Found"

@@ -78,7 +78,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_ihg_res(res_list, propertyCode, res_before, res_after):
     print("Data importing...")
-
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.ihg_res_model).values(res_list)
@@ -113,10 +113,13 @@ def bulk_insert_ihg_res(res_list, propertyCode, res_before, res_after):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_occ_res(occ_list, propertyCode, occ_before, occ_after):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.ihg_occ_model).values(occ_list)
@@ -172,6 +175,8 @@ def bulk_insert_occ_res(occ_list, propertyCode, occ_before, occ_after):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def prep_service():
@@ -376,8 +381,12 @@ def IHG_Pms(row):
             res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
             res_result = list(res_result)
             if len(res_result) > 0:
-                bulk_insert_ihg_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
-                print("RES DONE")
+                error_temp = bulk_insert_ihg_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
+                if(error_temp == ""):
+                    print("RES DONE")   
+                else:
+                    print("RES FAILED")
+                    errorMessage = errorMessage + " RES Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Reservation File Was Blank, "
 
@@ -409,8 +418,12 @@ def IHG_Pms(row):
             occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
             occ_result = list(occ_result)
             if len(occ_result) > 0:
-                bulk_insert_occ_res(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
-                print("OCC DONE")
+                error_temp = bulk_insert_occ_res(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
+                if(error_temp == ""):
+                    print("OCC DONE")   
+                else:
+                    print("OCC FAILED")
+                    errorMessage = errorMessage + " OCC Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Occupancy File Was Blank, "
 

@@ -25,6 +25,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 
 def bulk_insert_choice_noshow(propertyCode, Noshow_result):
+    error_temp = ""
 # log(n)*M indexing check.
     try:
         conn = db_config.get_db_connection()
@@ -37,9 +38,12 @@ def bulk_insert_choice_noshow(propertyCode, Noshow_result):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, res_before, res_after):
     # log(n)*M indexing check.
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.choice_cancellation_list_model).values(cancellation_list_result)
@@ -51,9 +55,12 @@ def bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result,
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.choice_res_model).values(res_list)
@@ -95,10 +102,13 @@ def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.choice_occ_model).values(occ_list)
@@ -137,6 +147,8 @@ def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_choice_cancel(propertyCode, cancel_list, cancel_before, cancel_after):
@@ -178,6 +190,7 @@ def bulk_insert_choice_revenue(propertyCode, revenue_list):
 
 def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue_before, revenue_after):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.choice_revenue_detail_model).values(revenue_detail_list)
@@ -205,10 +218,13 @@ def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_list, group_pickup_before, group_pickup_after):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.choice_group_pickup_detail_model).values(group_pickup_detail_list)
@@ -244,6 +260,8 @@ def bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_lis
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def Choice_Pms(row):
@@ -1086,32 +1104,32 @@ def Choice_Pms(row):
             check_revenue_detail_file = os.path.isfile(revenue_detail_file_path)
             check_group_pickup_detail_file = os.path.isfile(group_pickup_detail_file_path)
 
-            error_msg = ""
+            errorMessage = ""
             fileCount = 0
 
             if not check_Noshow_file:
-                error_msg = error_msg + " Noshow file - N/A"
+                errorMessage = errorMessage + " Noshow file - N/A"
 
             if not check_cancellation_list_file:
-                error_msg = error_msg + " Cancellation List file - N/A"
+                errorMessage = errorMessage + " Cancellation List file - N/A"
             
             if not check_reservation_file:
-                error_msg = error_msg + " Reservation file - N/A"
+                errorMessage = errorMessage + " Reservation file - N/A"
 
             if not check_occupancy_file:
-                error_msg = error_msg + " Occupancy file - N/A"
+                errorMessage = errorMessage + " Occupancy file - N/A"
 
             if not check_cancellation_file:
-                error_msg = error_msg + " Cancellation file - N/A"
+                errorMessage = errorMessage + " Cancellation file - N/A"
 
             if not check_revenue_file:
-                error_msg = error_msg + " Revenue file - N/A"
+                errorMessage = errorMessage + " Revenue file - N/A"
 
             if not check_revenue_detail_file:
-                error_msg = error_msg + " Revenue Detail file - N/A"
+                errorMessage = errorMessage + " Revenue Detail file - N/A"
 
             if not check_group_pickup_detail_file:
-                error_msg = error_msg + " Group Pickup Detail file - N/A"
+                errorMessage = errorMessage + " Group Pickup Detail file - N/A"
 
             if check_reservation_file:
 
@@ -1120,10 +1138,14 @@ def Choice_Pms(row):
                 res_result = list(res_result)
                 print(len(res_result))
                 if len(res_result) > 0:
-                    bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
-                    print("RES DONE")
+                    error_temp = bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
+                    if(error_temp == ""):
+                        print("RES DONE")   
+                    else:
+                        print("RES FAILED")
+                        errorMessage = errorMessage + " RES Failed: " + error_temp
                 else:
-                    error_msg = error_msg + "RES File Was Blank, "
+                    errorMessage = errorMessage + "RES File Was Blank, "
 
             if check_occupancy_file:
 
@@ -1132,10 +1154,14 @@ def Choice_Pms(row):
                 occ_result = list(occ_result)
                 print(len(occ_result))
                 if len(occ_result) > 0:
-                    bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
-                    print("OCC DONE")
+                    error_temp = bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
+                    if(error_temp == ""):
+                        print("OCC DONE")   
+                    else:
+                        print("OCC FAILED")
+                        errorMessage = errorMessage + " OCC Failed: " + error_temp
                 else:
-                    error_msg = error_msg + "OCC File Was Blank, "
+                    errorMessage = errorMessage + "OCC File Was Blank, "
 
             if check_cancellation_file:
 
@@ -1147,7 +1173,7 @@ def Choice_Pms(row):
                     bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
                     print("CANCELLATION DONE")
                 else:
-                    error_msg = error_msg + "CANCELLATION File Was Blank, "
+                    errorMessage = errorMessage + "CANCELLATION File Was Blank, "
 
             if check_revenue_file:
 
@@ -1159,7 +1185,7 @@ def Choice_Pms(row):
                     bulk_insert_choice_revenue(propertyCode, revenue_result)
                     print("REVENUE DONE")
                 else:
-                    error_msg = error_msg + "REVENUE File Was Blank, "
+                    errorMessage = errorMessage + "REVENUE File Was Blank, "
 
             if check_revenue_detail_file:
 
@@ -1168,10 +1194,14 @@ def Choice_Pms(row):
                 revenue_detail_result = list(revenue_detail_result)
                 print(len(revenue_detail_result))
                 if len(revenue_detail_result) > 0:
-                    bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_result, row['res_before'], row['res_after'])
-                    print("REVENUE DETAIL DONE")
+                    error_temp = bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_result, row['res_before'], row['res_after'])
+                    if(error_temp == ""):
+                        print("REVENUE DETAIL DONE")
+                    else:
+                        print("REVENUE DETAIL FAILED")
+                        errorMessage = errorMessage + " REVENUE DETAIL Failed: " + error_temp
                 else:
-                    error_msg = error_msg + "REVENUE DETAIL File Was Blank, "
+                    errorMessage = errorMessage + "REVENUE DETAIL File Was Blank, "
 
             if check_group_pickup_detail_file:
 
@@ -1180,10 +1210,14 @@ def Choice_Pms(row):
                 group_pickup_detail_result = list(group_pickup_detail_result)
                 print(len(group_pickup_detail_result))
                 if len(group_pickup_detail_result) > 0:
-                    bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['res_before'], row['res_after'])
-                    print("GROUP PICKUP DETAIL DONE")
+                    error_temp = bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['res_before'], row['res_after'])
+                    if(error_temp == ""):  
+                        print("GROUP PICKUP DETAIL DONE")
+                    else:
+                        print("GROUP PICKUP DETAIL FAILED")
+                        errorMessage = errorMessage + " GROUP PICKUP DETAIL Failed: " + error_temp
                 else:
-                    error_msg = error_msg + "GROUP PICKUP DETAIL File Was Blank, "
+                    errorMessage = errorMessage + "GROUP PICKUP DETAIL File Was Blank, "
 
             if check_Noshow_file:
 
@@ -1192,10 +1226,14 @@ def Choice_Pms(row):
                 Noshow_result = list(Noshow_result)
                 print(len(Noshow_result))
                 if len(Noshow_result) > 0:
-                    bulk_insert_choice_noshow(propertyCode, Noshow_result)
-                    print("Noshow DONE")
+                    error_temp = bulk_insert_choice_noshow(propertyCode, Noshow_result)
+                    if(error_temp == ""):
+                        print("Noshow DONE")
+                    else:
+                        print("NOSHOW FAILED")
+                        errorMessage = errorMessage + " Noshow Failed: " + error_temp
                 else:
-                    error_msg = error_msg + "Noshow File Was Blank, "
+                    errorMessage = errorMessage + "Noshow File Was Blank, "
             
             if check_cancellation_list_file:
 
@@ -1204,23 +1242,27 @@ def Choice_Pms(row):
                 cancellation_list_result = list(cancellation_list_result)
                 print(len(cancellation_list_result))
                 if len(cancellation_list_result) > 0:
-                    bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, row['res_before'], row['res_after'])
-                    print("CANCELLATION LIST DONE")
+                    error_temp = bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, row['res_before'], row['res_after'])
+                    if(error_temp == ""):
+                        print("CANCELLATION LIST DONE")   
+                    else:
+                        print("CANCELLATION LIST FAILED")
+                        errorMessage = errorMessage + " CANCELLATION LIST Failed: " + error_temp
                 else:
-                    error_msg = error_msg + "Cancellation List File Was Blank, "
+                    errorMessage = errorMessage + "Cancellation List File Was Blank, "
             
             if (fileCount == 8):
-                if (error_msg == ""):
+                if (errorMessage == ""):
                     update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
                 else:
-                    error_msg = "Partially Successfull:- " + error_msg
-                    update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
+                    errorMessage = "Partially Successfull:- " + errorMessage
+                    update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
             else:
                 if (fileCount == 0):
-                    error_msg = "All File Not Found"
+                    errorMessage = "All File Not Found"
                 else:
-                    error_msg = "Partially Successfull:- " + error_msg
-                update_into_pulldate(pullDateId, ERROR_NOTE=error_msg, IS_ERROR=True)
+                    errorMessage = "Partially Successfull:- " + errorMessage
+                update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
 
 
         except Exception as e:

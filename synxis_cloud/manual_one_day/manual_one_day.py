@@ -64,6 +64,7 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 def bulk_insert_synxis_cloud_res(res_list):
     # Add new data of reservation
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_reservation_model).values(res_list)
@@ -174,10 +175,13 @@ def bulk_insert_synxis_cloud_res(res_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_synxis_cloud_forecast(fore_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_forecast_model).values(fore_list)
@@ -231,11 +235,14 @@ def bulk_insert_synxis_cloud_forecast(fore_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 
 def bulk_insert_synxis_cloud_revenue_recap(rev_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_revenue_recap_model).values(rev_list)
@@ -289,10 +296,13 @@ def bulk_insert_synxis_cloud_revenue_recap(rev_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def bulk_insert_synxis_cloud_monthly_summary(mon_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.synxis_cloud_monthly_summary_model).values(mon_list)
@@ -333,6 +343,8 @@ def bulk_insert_synxis_cloud_monthly_summary(mon_list):
     except Exception as e:
         error_message = str(e)
         print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 
@@ -414,8 +426,12 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
             res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
             res_result = list(res_result)
             if len(res_result) > 0:
-                bulk_insert_synxis_cloud_res(res_result)
-                print("RES DONE")
+                error_temp = bulk_insert_synxis_cloud_res(res_result)
+                if(error_temp == ""):
+                    print("RES DONE")   
+                else:
+                    print("RES FAILED")
+                    errorMessage = errorMessage + " RES Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Reservation File Was Blank, "
 
@@ -436,8 +452,12 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
             fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
             fore_result = list(fore_result)
             if len(fore_result) > 0:
-                bulk_insert_synxis_cloud_forecast(fore_result)
-                print("FORE DONE")
+                error_temp = bulk_insert_synxis_cloud_forecast(fore_result)
+                if(error_temp == ""):
+                    print("FORE DONE")   
+                else:
+                    print("FORE FAILED")
+                    errorMessage = errorMessage + " FORE Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Forecast File Was Blank, "
 
@@ -468,8 +488,12 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
             rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
             rev_result = list(rev_result)
             if len(rev_result) > 0:
-                bulk_insert_synxis_cloud_revenue_recap(rev_result)
-                print("REV DONE")
+                error_temp = bulk_insert_synxis_cloud_revenue_recap(rev_result)
+                if(error_temp == ""):
+                    print("REV DONE")   
+                else:
+                    print("REV FAILED")
+                    errorMessage = errorMessage + " REV Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Revenue File Was Blank, "
 
@@ -493,8 +517,12 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
             monthly_result = list(monthly_result)
             
             if len(monthly_result) > 0:
-                bulk_insert_synxis_cloud_monthly_summary(monthly_result)
-                print("MONTHLY DONE")
+                error_temp = bulk_insert_synxis_cloud_monthly_summary(monthly_result)
+                if(error_temp == ""):
+                    print("MONTHLY DONE")   
+                else:
+                    print("MONTHLY FAILED")
+                    errorMessage = errorMessage + " MONTHLY Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Monthly File Was Blank, "
 
