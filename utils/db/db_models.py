@@ -1262,4 +1262,22 @@ ideasg3_occ_model = Table(
 
 )
 
+tbl_properties_model = Table(
+    'tbl_properties', meta,
+    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    Column('propertyName', String(255)),
+    Column('propertyCode', String(25)),
+    Column('externalPropertyCode', String(35)),
+    Column('propertySecret', Text()),
+    Column('pmsName', String(255)),
+    Column('timezone', String(255)),
+    Column('resAfter', Integer),
+    Column('resBefore', Integer),
+    Column('occAfter', Integer),
+    Column('occBefore', Integer),
+    Column('createdAt', TIMESTAMP(timezone=True)),
+    Column('updatedAt', TIMESTAMP(timezone=True)),
+    Column('marriott_json', Text())
+)
+
 # meta.create_all(engine)
