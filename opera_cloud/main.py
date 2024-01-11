@@ -928,7 +928,10 @@ def OperaCloud_Pms(row):
                     BUSINESS_DATE = i.find("BUSINESS_DATE").text if(i.find("BUSINESS_DATE")) is not None else ""
                     CHAR_BUSINESS_DATE = i.find("CHAR_BUSINESS_DATE").text if(i.find("CHAR_BUSINESS_DATE")) is not None else ""
                     for k in i.find("LIST_MARKET"):
-                        MASTER_VALUE = k.find("MASTER_VALUE").text if(k.find("MASTER_VALUE") is not None and k.find("MASTER_VALUE").text != "{NULL}")   else ""
+                        if(k.find("MASTER_VALUE") is not None):
+                            MASTER_VALUE = k.find("MASTER_VALUE").text if(k.find("MASTER_VALUE") is not None and k.find("MASTER_VALUE").text != "{NULL}")   else ""
+                        if(k.find("MARKET_CODE") is not None):
+                            MASTER_VALUE = k.find("MARKET_CODE").text if(k.find("MARKET_CODE") is not None and k.find("MARKET_CODE").text != "{NULL}")   else ""
                         CF_MASTER_SEQ = k.find("CF_MASTER_SEQ").text if(k.find("CF_MASTER_SEQ")) is not None else ""
                         GROUP_NAME  = k.find("GROUP_NAME").text if(k.find("GROUP_NAME") is not None and k.find("GROUP_NAME").text != "Unknown") else ""
                         for j in k.find("LIST_DETAIL"):
