@@ -5,30 +5,16 @@ import sys
 from bs4 import BeautifulSoup
 from sqlalchemy import text
 
-sys.path.append("..")
+sys.path.append("../../")
 import arrow
-
-import pickle
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 import csv
-import base64
-import sys
-import pathlib
 import xml.etree.ElementTree as Xet
 import pandas as pd
-
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from utils.db import db_config
 from utils.db import db_models
 from sqlalchemy.dialects.postgresql import insert
 
-
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify',
-          'https://www.googleapis.com/auth/gmail.send']
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME):
@@ -61,7 +47,6 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         DB_STATUS = "'FAILED'"
     else:
         DB_STATUS = "'FINISHED'"
-
     DB_ERROR_NOTE = "'" + str(ERROR_NOTE) + "'"
     DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
     DB_LAST_PULL_DATE_ID = "'" + str(LAST_PULL_DATE_ID) + "'"
@@ -78,9 +63,9 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 
-def bulk_insert_opera_cloud_res(res_list, propertyCode, res_before, res_after):
-    error_temp=""
+def bulk_insert_opera_cloud_res(res_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_res_model).values(res_list)
@@ -129,9 +114,9 @@ def bulk_insert_opera_cloud_res(res_list, propertyCode, res_before, res_after):
     
 
 
-def bulk_insert_opera_cloud_occ(occ_list, propertyCode, occ_before, occ_after):
-    error_temp=""
+def bulk_insert_opera_cloud_occ(occ_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_occ_model).values(occ_list)
@@ -185,11 +170,10 @@ def bulk_insert_opera_cloud_occ(occ_list, propertyCode, occ_before, occ_after):
         print(error_message)
         error_temp=error_message[:250]
     return error_temp
-    
 
-def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode, res_before, res_after):
-    error_temp=""
+def bulk_insert_opera_cloud_arrival(arrival_list):
     print("Data importing...")
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_arrival_model).values(arrival_list)
@@ -302,10 +286,12 @@ def bulk_insert_opera_cloud_arrival(arrival_list, propertyCode, res_before, res_
         print(error_message)
         error_temp=error_message[:250]
     return error_temp
+    
 
-def bulk_insert_opera_cloud_rbrc(rbrc_list, lowest_input_date_str, propertyCode):
+def bulk_insert_opera_cloud_rbrc(rbrc_list):
+
     print("Data importing...")
-    error_temp=""
+    error_temp = ""
     try:
         conn = db_config.get_db_connection()
         stmt = insert(db_models.opera_rbrc_model).values(rbrc_list)
@@ -347,180 +333,36 @@ def bulk_insert_opera_cloud_rbrc(rbrc_list, lowest_input_date_str, propertyCode)
         print(error_message)
         error_temp=error_message[:250]
     return error_temp
-    
 
 
-def prep_service():
-    creds = None
-    AticaCred = '../utils/email/AticaCred.json'
-    TokenPickle = '../utils/email/token.pickle'
-    if os.path.exists(TokenPickle):
-        with open(TokenPickle, 'rb') as token:
-            creds = pickle.load(token)
-
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                AticaCred, SCOPES)
-            creds = flow.run_local_server()
-
-        with open(TokenPickle, 'wb') as token:
-            pickle.dump(creds, token)
-
-    service = build('gmail', 'v1', credentials=creds)
-    return service
-
-
-def get_archive_label(archiveLabelName):
-    service = prep_service()
-    response = service.users().labels().list(userId="me").execute()
-    labels = response["labels"]
-    for pulled_label in labels:
-        if pulled_label["name"] == archiveLabelName:
-            return pulled_label
-
-    # Creates new archive label if not found.
-    body = {
-        "type": "user",
-        "name": archiveLabelName,
-        "messageListVisibility": "show",
-        "labelListVisibility": "labelShow"
-    }
-
-    response = service.users().labels().create(userId="me",
-                                               body=body).execute()
-    return response
-
-
-def create_filter(label, archiveLabel):
-    filter = "-label:" + archiveLabel
-    filter += " label:" + label
-    return "has:attachment " + filter
-
-def label_messege_saver(label_name, messages_array, track_label_nomsg_set):
-    print("label_name :: ", label_name)
-    response = service.users().messages().list(userId="me",
-                                                q=create_filter(label_name, "Saved")
-                                                ).execute()
-    if 'messages' in response:
-        messages = response['messages']
-        item = {
-            "label_name": label_name,
-            "messages": messages
-        }
-        messages_array.append(item)
-
-    else:
-        msg = f"No new messages for {label_name} label"
-        print(msg)
-        track_label_nomsg_set.add(label_name)
-        return 0
-
-
-def OperaCloud_Pms(row):
-    global archive_label
-    atica_property_code = row['atica_property_code']
-    secret_name = row['gcp_secret']
+def OperaCloud_Pms(row, reporttype, localfilepath):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
+    attachment_format = "../reports"
 
     try:
-
-        label_array = [f"{propertyCode} Reservation", f"{propertyCode} Occupancy", f"{propertyCode} Arrival", f"{propertyCode} RBRC"]
-        folder_name = "./reports/"
-        messages_array = []
-        saved_messages_ids = []
-        track_label_nomsg_set = set()
-        
-        file_paths = [
-            f'{folder_name}{propertyCode}_Reservation.xml',
-            f'{folder_name}{propertyCode}_Occupancy.xml',
-            f'{folder_name}{propertyCode}_Arrival.xml',
-            f'{folder_name}{propertyCode}_RBRC.xml',
-            f'{folder_name}{propertyCode}_Reservations.csv',
-            f'{folder_name}{propertyCode}_Occupancy.csv',
-            f'{folder_name}{propertyCode}_Arrival.csv',
-            f'{folder_name}{propertyCode}_RBRC.csv',
-        ]
-
-        for file_path in file_paths:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-
-        for label_name in label_array:
-            label_messege_saver(label_name, messages_array, track_label_nomsg_set)
-
-        for item in messages_array:
-            messages = item["messages"]
-            label_name = item["label_name"]
-            # get first message only
-            message = messages[0]
-            a_message = service.users().messages().get(userId="me",
-                                                        id=message["id"]
-                                                        ).execute()
-
-            for part in a_message['payload']['parts']:
-                save_flag = True
-                if part['filename']:
-
-                    print("save flag : ", save_flag)
-                    if save_flag:
-                        if 'data' in part['body']:
-                            file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
-                        else:
-                            attachment_id = part['body']['attachmentId']
-                            attachment = service.users().messages().attachments().get(userId="me",
-                                                                                        messageId=message["id"],
-                                                                                        id=attachment_id).execute()
-                            data = attachment['data']
-                            file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
-
-                        print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
-                        # file_data
-
-                        # Open file in binary write mode
-                        file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xml", "wb")
-                        binary_file.write(file_data)
-                        binary_file.close()
-
-                    else:
-                        print("Attachment format match fail for message ")
-
-            saved_messages_ids = []
-            for message in messages:
-                saved_messages_ids.append(message["id"])
-            archive_label = get_archive_label("Saved")
-            print(f"{archive_label['name']} : {archive_label['id']}")
-
-            # # Apply archive label to saved messages
-            # label_apply_body = {
-            #     "addLabelIds": archive_label["id"],
-            #     "ids": saved_messages_ids
-            # }
-            #
-            # if saved_messages_ids:
-            #     response = service.users().messages().batchModify(userId="me",
-            #                                                       body=label_apply_body
-            #                                                       ).execute()
-            #     saved_messages_count = len(saved_messages_ids)
-            #     print(f"Saved label applied to {saved_messages_count} messages.")
-            #
-            # else:
-            #     print("No messages to save")
-
         # Modification of res report
-        reservation_file_path = f'{folder_name}{propertyCode}_Reservation.xml'
-        occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.xml'
-        arrival_file_path = f'{folder_name}{propertyCode}_Arrival.xml'
-        rbrc_file_path = f'{folder_name}{propertyCode}_RBRC.xml'
+        reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.xml'
+        occupancy_file_path = f'{attachment_format}/{propertyCode}_Occupancy_Onboarding.xml'
+        arrival_file_path = f'{attachment_format}/{propertyCode}_Arrival_Onboarding.xml'
+        rbrc_file_path = f'{attachment_format}/{propertyCode}_RBRC_Onboarding.xml'
+
+
+        if(reporttype == 'Reservation'):
+            reservation_file_path = localfilepath
+        elif(reporttype == 'Occupancy'):
+            occupancy_file_path = localfilepath
+        elif(reporttype == 'Arrival'):
+            arrival_file_path = localfilepath
+        elif(reporttype == 'RBRC'):
+            rbrc_file_path = localfilepath
+
 
         check_reservation_file = os.path.isfile(reservation_file_path)
         check_occupancy_file = os.path.isfile(occupancy_file_path)
         check_arrival_file = os.path.isfile(arrival_file_path)
         check_rbrc_file = os.path.isfile(rbrc_file_path)
+
 
         createdAt = "'" + str(arrow.now()) + "'"
         updatedAt = "'" + str(arrow.now()) + "'"
@@ -528,39 +370,9 @@ def OperaCloud_Pms(row):
         updatedAtEpoch =  int(arrow.utcnow().timestamp())
 
         errorMessage = ""
-        fileCount=0
-
-        if not check_reservation_file:
-            res_labelname=f"{propertyCode} Reservation"
-            if res_labelname in track_label_nomsg_set:
-                errorMessage = errorMessage + f"No new messages for {res_labelname} label, "
-            else:
-                errorMessage = errorMessage + " Reservation file - N/A"
-
-        if not check_occupancy_file:
-            occ_labelname=f"{propertyCode} Occupancy"
-            if occ_labelname in track_label_nomsg_set:
-                errorMessage = errorMessage + f"No new messages for {occ_labelname} label, "
-            else:
-                errorMessage = errorMessage + " Occupancy file - N/A"
-
-        if not check_arrival_file:
-            arr_labelname=f"{propertyCode} Arrival"
-            if arr_labelname in track_label_nomsg_set:
-                errorMessage = errorMessage + f"No new messages for {arr_labelname} label, "
-            else:
-                errorMessage = errorMessage + " Arrival file - N/A"
-
-        if not check_rbrc_file:
-            rbrc_labelname=f"{propertyCode} RBRC"
-            if rbrc_labelname in track_label_nomsg_set:
-                errorMessage = errorMessage + f"No new messages for {rbrc_labelname} label, "
-            else:
-                errorMessage = errorMessage + " RBRC file - N/A"
 
         if check_reservation_file:
-            
-            fileCount=fileCount+1
+
             # Start Reservation Report
             cols = ["RESV_NAME_ID", "GUARANTEE_CODE", "RESV_STATUS", "ROOM", "FULL_NAME", "DEPARTURE", "PERSONS",
                     "GROUP_NAME",
@@ -633,9 +445,9 @@ def OperaCloud_Pms(row):
                 df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
                 df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
                 df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
-                df.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
+                df.to_csv(f"{attachment_format}/{propertyCode}_Reservations.csv", index=False)
 
-                res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
+                res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservations.csv", encoding="utf-8"))
                 res_result = list(res_result)
                 
             except Exception:
@@ -645,20 +457,18 @@ def OperaCloud_Pms(row):
             print("RES RESULT")
             # print(res_result) #This can be uncommented to test/see the result of parsed data
             if len(res_result) > 0:
-                error_temp = bulk_insert_opera_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
+                error_temp = bulk_insert_opera_cloud_res(res_result)
                 if(error_temp == ""):
-                    print("RES DONE")
+                    print("RES DONE")   
                 else:
                     print("RES FAILED")
                     errorMessage = errorMessage + " RES Failed: " + error_temp
-                
             else:
-                errorMessage = errorMessage + "Reservation File Was Blank, "
+                errorMessage = errorMessage + " Reservation File Was Blank,"
             # End Reservation Report
-
+            
         if check_occupancy_file:
 
-            fileCount=fileCount+1
             # Start Occupancy Report
             cols = ['REVENUE', 'NO_ROOMS', 'IND_DEDUCT_ROOMS', 'IND_NON_DEDUCT_ROOMS', 'GRP_DEDUCT_ROOMS',
                     'GRP_NON_DEDUCT_ROOMS',
@@ -750,9 +560,9 @@ def OperaCloud_Pms(row):
                 df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
                 df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
                 df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['CHAR_CONSIDERED_DATE'].astype(str)) 
-                df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+                df.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
-                occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+                occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
             elif root[0][0][1][1][1].text == 'Forecast':
                 for i in root[0][0][1][1][2]:
@@ -831,31 +641,29 @@ def OperaCloud_Pms(row):
                 df['CONSIDERED_DATE'] = pd.to_datetime(df['CONSIDERED_DATE'])
                 df['CHAR_CONSIDERED_DATE'] = pd.to_datetime(df['CHAR_CONSIDERED_DATE'])
                 df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['CHAR_CONSIDERED_DATE'].astype(str)) 
-                df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False)
+                df.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
-                occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+                occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
                 occ_result = list(occ_result)
             else:
                 occ_result = []
                 print("Occupancy Data not available")
             
             print("OCC RESULT")
-            # print(occ_result) #This can be uncommented to test/see the result of parsed data
+            # print(occ_result)  #This can be uncommented to test/see the result of parsed data
             if len(occ_result) > 0:
-                error_temp = bulk_insert_opera_cloud_occ(occ_result, propertyCode, row['occ_before'], row['occ_after'])
+                error_temp = bulk_insert_opera_cloud_occ(occ_result)
                 if(error_temp == ""):
-                    print("OCC DONE")
+                    print("OCC DONE")   
                 else:
                     print("OCC FAILED")
-                    errorMessage = errorMessage + " Occupancy Failed: " + error_temp
-                
+                    errorMessage = errorMessage + " OCC Failed: " + error_temp
             else:
-                errorMessage = errorMessage + "Occupancy File Was Blank, "
+                errorMessage = errorMessage + " Occupancy File Was Blank,"
             # End Occupancy Report
 
         if check_arrival_file:
 
-            fileCount=fileCount+1
             # Start Arrival Report
             arrival_dataframe = []
 
@@ -874,6 +682,13 @@ def OperaCloud_Pms(row):
 
             arrival_data_concat = pd.DataFrame(arrival_dataframe)
             headers = arrival_data_concat.columns[1:]
+            max_length = 255
+
+            for column in ['LIST_G_MEM_TYPE_LEVEL', 'LIST_G_INV_ITEMS', 'LIST_G_BILL_RESV', 'LIST_G_COMMENT_NAME_ID',
+                        'LIST_G_RESERV_PROMO', 'LIST_G_DEPT_ID', 'LIST_G_DEP_DATE_CHANGE', 'LIST_G_COMMENT_RESV_NAME_ID',
+                        'LIST_G_FIXED_CHARGES', 'LIST_G_AWARDS']:
+                arrival_data_concat[column] = arrival_data_concat[column].astype(str).str[:max_length]
+            
             final_df = arrival_data_concat[headers]
             final_df.insert(0, column="propertyCode", value=propertyCode)
             final_df.insert(1, column="pullDateId", value=pullDateId)
@@ -888,28 +703,24 @@ def OperaCloud_Pms(row):
             final_df['ARRIVAL'] = pd.to_datetime(final_df['ARRIVAL'])
             final_df['DEPARTURE'] = pd.to_datetime(final_df['DEPARTURE'])
             final_df['BEGIN_DATE'] = pd.to_datetime(final_df['BEGIN_DATE'])
-            final_df.to_csv(f"{folder_name}{propertyCode}_Arrival.csv", index=False)
+            final_df.to_csv(f"{attachment_format}/{propertyCode}_Arrival.csv", index=False)
 
-            arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Arrival.csv", encoding="utf-8"))
+            arrival_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Arrival.csv", encoding="utf-8"))
             arrival_result = list(arrival_result)
 
             print("ARRIVAL RESULT")
-            # print(arrival_result) #This can be uncommented to test/see the result of parsed data
+            # print(arrival_result)  #This can be uncommented to test/see the result of parsed data
             if len(arrival_result) > 0:
-                error_temp = bulk_insert_opera_cloud_arrival(arrival_result, propertyCode, row['res_before'], row['res_after'])
+                error_temp = bulk_insert_opera_cloud_arrival(arrival_result)
                 if(error_temp == ""):
-                    print("ARRIVAL DONE")
+                    print("ARRIVAL DONE")   
                 else:
                     print("ARRIVAL FAILED")
-                    errorMessage = errorMessage + " Arrival Failed: " + error_temp
-                
+                    errorMessage = errorMessage + " ARRIVAL Failed: " + error_temp
             else:
-                errorMessage = errorMessage + "Arrival File Was Blank, "
-            # End Arrival Report
-                
-        if check_rbrc_file:
+                errorMessage = errorMessage + " Arrival File Was Blank,"
 
-            fileCount=fileCount+1
+        if check_rbrc_file:
             # Start RBRC Report
             cols = ["RESORT","BUSINESS_DATE","CHAR_BUSINESS_DATE","MASTER_VALUE","CF_MASTER_SEQ","GROUP_NAME","ARR_TODAY","NO_DEFINITE_ROOMS",
             "IN_GUEST","OCC_SINGLE","DOUBLE_OCC","REVENUE",
@@ -968,6 +779,7 @@ def OperaCloud_Pms(row):
                                     "PER_OCC": PER_OCC,
                                     "GET_ARR": GET_ARR,
                                     "MULTI_OCC_PER": MULTI_OCC_PER})
+                            date_set.add(BUSINESS_DATE)
                         
                 df = pd.DataFrame(rows, columns=cols)
                 df.insert(0, column="propertyCode", value=propertyCode)
@@ -976,86 +788,70 @@ def OperaCloud_Pms(row):
                 df.insert(3, column="updatedAt", value=updatedAt)
                 df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                 df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE']).dt.strftime('%Y-%m-%d')
+                df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'])
                 df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
-                df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))
-                date_set = set(df['BUSINESS_DATE'])
-                date_set.discard(pd.NaT) #to avoid any null value in set that can be minimum of set
-                df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
-                rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
+                df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))            
+                df.to_csv(f"{attachment_format}/{propertyCode}_RBRC.csv", index=False)
+                rbrc_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_RBRC.csv", encoding="utf-8"))
                 rbrc_result = list(rbrc_result)
             except Exception:
                 rbrc_result = []
                 print("Reservation Data not available")
-            
             
             # End RBRC Report
 
             print("RBRC RESULT")
             # print(rbrc_result) #This can be uncommented to test/see the result of parsed data
             if len(rbrc_result) > 0:
-                error_temp = bulk_insert_opera_cloud_rbrc(rbrc_result, min(date_set), propertyCode=propertyCode)
+                error_temp = bulk_insert_opera_cloud_rbrc(rbrc_result)
                 if(error_temp == ""):
-                    print("RBRC DONE")
+                    print("RBRC DONE")   
                 else:
                     print("RBRC FAILED")
                     errorMessage = errorMessage + " RBRC Failed: " + error_temp
             else:
-                errorMessage = errorMessage + "RBRC File Was Blank, "
+                errorMessage = errorMessage + " RBRC File Was Blank,"
+            # End Arrival Report
 
         
-        if len(track_label_nomsg_set) != 4:
-        # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                    body=label_apply_body
-                                                                    ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
-
-            else:
-                print("No messages to save")
-
-        if fileCount == 4:
-            if errorMessage == "":
-                update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
-            else:
-                errorMessage="Partially Successfull:- "+errorMessage
-                update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
+        if(errorMessage==""):
+            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
-            if fileCount == 0:
-                if len(track_label_nomsg_set) == 4:
-                    errorMessage = "No new messages for all label"
-                else:
-                    errorMessage = "All File Not Found"
-            else:
-                errorMessage="Partially Successfull:- "+errorMessage
+            errorMessage="Partially Successfull:- "+errorMessage
             update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
     except Exception as e:
-        msg = f"[{atica_property_code}] failed due to {e}"
+        msg = f"[{propertyCode}] failed due to {e}"
         print(msg)
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
         return 0
+    
 
 
 if __name__ == '__main__':
 
-    service = prep_service()
     PMS_NAME = "OperaCloud"
     print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
 
     propertycode = None
+    reporttype = None
+    filename = None
+    localfilepath = None
+
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        parser.add_argument("--reporttype", type=str, required=False, help="Type in the reporttype")
+        parser.add_argument("--filename", type=str, required=False, help="Type in the filename")
+        parser.add_argument("--localfilepath", type=str, required=False, help="Type in the localfilepath")
         args = parser.parse_args()
         propertycode = args.propertycode
+        reporttype = args.reporttype
+        filename = args.filename
+        localfilepath = args.localfilepath
         print(f"propertycode :: {propertycode}")
+        print(f"reporttype :: {reporttype}")
+        print(f"filename :: {filename}")
+        print(f"localfilepath :: {localfilepath}")
     except:
         pass
 
@@ -1096,7 +892,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE,PMS_NAME)
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_manual_one_day")
 
             if LAST_PULL_DATE_ID is not None:
                 row = {
@@ -1113,7 +909,7 @@ if __name__ == '__main__':
                     "pullDateId": LAST_PULL_DATE_ID
                 }
                 print("row :: ", row)
-                OperaCloud_Pms(row)
+                OperaCloud_Pms(row, reporttype, localfilepath)
             else:
                 print("LAST_PULL_DATE_ID is NULL")
     else:

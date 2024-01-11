@@ -6,12 +6,14 @@ from io import BytesIO
 
 from sqlalchemy import text
 
-sys.path.append("..")
+sys.path.append("../../")
 import re
 import time
 import arrow
 import pandas as pd
 import requests
+from datetime import datetime
+
 from utils.secrets.SecretManager import get_secret_from_api
 from bs4 import BeautifulSoup
 import csv
@@ -23,6 +25,39 @@ from utils.db import db_config
 from utils.db import db_models
 from sqlalchemy.dialects.postgresql import insert
 
+def insert_into_tblproperties(property_object):
+    print("Data importing...")
+    conn = db_config.get_db_connection()
+    conn.execute(db_models.tbl_properties_model.insert(), property_object)
+    conn.commit()
+    conn.close()
+    print("Imported successfully!!!")
+
+def update_into_tblproperties(property_object):
+    print("Data updating...")
+    resBeforeDays = 90
+    occBeforeDays = 1
+    propertyCode = "'" + property_object['propertyCode'] + "'"
+    DB_UPDATED_AT = "'" + str(arrow.now()) + "'"
+
+
+    query_string = f'UPDATE "tbl_properties" SET "resBefore"={resBeforeDays}, "occBefore"={occBeforeDays},  "updatedAt"={DB_UPDATED_AT} WHERE "propertyCode"={propertyCode};'
+    conn = db_config.get_db_connection()
+    try:
+        conn.execute(text(query_string))
+        conn.commit()
+        conn.close()
+        print("Updated successfully!!!")
+    except Exception as e:
+        conn.close()
+        error_message = str(e)
+        print(error_message)
+
+def days_since_start():
+    start_date = datetime(2018, 1, 1)
+    current_date = datetime.now()
+    days_difference = (current_date - start_date).days + 1
+    return days_difference
 
 def bulk_insert_choice_noshow(propertyCode, Noshow_result):
     error_temp = ""
@@ -1326,17 +1361,62 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 if __name__ == '__main__':
 
     PMS_NAME = "Choice"
-    print(f"[{PMS_NAME}] SCRIPT IS STARTING...")
+    print(f"[{PMS_NAME}] ONBOARDING SCRIPT IS STARTING...")
+
+    resAfter = 0 
+    resBefore = days_since_start() 
+    occAfter = 90
+    occBefore = days_since_start() 
+    createdAt = "'" + str(arrow.now()) + "'"
+    updatedAt = "'" + str(arrow.now()) + "'"
+    marriott_json = None
+    propertyName = ""
+    propertyCode = ""
+    externalPropertyCode = ""
+    propertySecret = None
+    pmsName = "Choice"
+    timezone = "America/Chicago"
 
     propertycode = None
+    propertyname = None
+    externalpropertycode = None
+
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
+        parser.add_argument("--propertyname", type=str, required=False, help="Type in the propertyname")
+        parser.add_argument("--externalpropertycode", type=str, required=False, help="Type in the externalpropertycode")
         args = parser.parse_args()
         propertycode = args.propertycode
+        propertyname = args.propertyname
+        externalpropertycode = args.externalpropertycode
         print(f"propertycode :: {propertycode}")
+        print(f"propertyname :: {propertyname}")
+        print(f"externalpropertycode :: {externalpropertycode}")
     except:
         pass
+
+    propertyName = propertyname
+    propertyCode = propertycode
+    externalPropertyCode = externalpropertycode
+
+    property_object = {
+    "propertyName": propertyName,
+    "propertyCode": propertyCode,
+    "externalPropertyCode": externalPropertyCode,
+    "propertySecret": propertySecret,
+    "pmsName": pmsName,
+    "timezone": timezone,
+    "resAfter": resAfter,
+    "resBefore": resBefore,
+    "occAfter": occAfter,
+    "occBefore": occBefore,
+    "createdAt": createdAt,
+    "updatedAt": updatedAt,
+    "marriott_json": marriott_json
+    }
+
+    insert_into_tblproperties(property_object)
 
     result = None
     if propertycode is None:
@@ -1393,8 +1473,10 @@ if __name__ == '__main__':
                 }
                 print("row :: ", row)
                 Choice_Pms(row)
+                update_into_tblproperties(property_object)
             else:
                 print("LAST_PULL_DATE_ID is NULL")
+            
     else:
         print(f"Property not available in database!!!")
     print(f"[{PMS_NAME}] SCRIPT STOP!!!")
