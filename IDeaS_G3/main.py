@@ -78,52 +78,59 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_IDeaSG3_occ(occ_list, low_input_date_str, propertyCode):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.ideasg3_occ_model).values(occ_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'Day_of_Week': stmt.excluded.Day_of_Week,
-            'Day_of_Arrival': stmt.excluded.Day_of_Arrival,
-            'Special_Event': stmt.excluded.Special_Event,
-            'Out_of_Order': stmt.excluded.Out_of_Order,
-            'Occupancy_On_Books_Current': stmt.excluded.Occupancy_On_Books_Current,
-            'Occupancy_On_Books_Change': stmt.excluded.Occupancy_On_Books_Change,
-            'Occupancy_Forecast_Current': stmt.excluded.Occupancy_Forecast_Current,
-            'Occupancy_Forecast_Change': stmt.excluded.Occupancy_Forecast_Change,
-            'Occupancy_Forecast_Percent_Current': stmt.excluded.Occupancy_Forecast_Percent_Current,
-            'Occupancy_Forecast_Percent_Change': stmt.excluded.Occupancy_Forecast_Percent_Change,
-            'Revenue_On_Books_USD_Current': stmt.excluded.Revenue_On_Books_USD_Current,
-            'Revenue_On_Books_USD_Change': stmt.excluded.Revenue_On_Books_USD_Change,
-            'Revenue_Forecast_USD_Current': stmt.excluded.Revenue_Forecast_USD_Current,
-            'Revenue_Forecast_USD_Change': stmt.excluded.Revenue_Forecast_USD_Change,
-            'ADR_On_Books_USD_Current': stmt.excluded.ADR_On_Books_USD_Current,
-            'ADR_On_Books_USD_Change': stmt.excluded.ADR_On_Books_USD_Change,
-            'ADR_Forecast_USD_Current': stmt.excluded.ADR_Forecast_USD_Current,
-            'ADR_Forecast_USD_Change': stmt.excluded.ADR_Forecast_USD_Change,
-            'RevPAR_On_Books_USD_Current': stmt.excluded.RevPAR_On_Books_USD_Current,
-            'RevPAR_On_Books_USD_Change': stmt.excluded.RevPAR_On_Books_USD_Change,
-            'RevPAR_Forecast_USD_Current': stmt.excluded.RevPAR_Forecast_USD_Current,
-            'RevPAR_Forecast_USD_Change': stmt.excluded.RevPAR_Forecast_USD_Change,
-            'Last_Room_Value_For_RC_DLX_USD_Current': stmt.excluded.Last_Room_Value_For_RC_DLX_USD_Current,
-            'Last_Room_Value_For_RC_DLX_USD_Change': stmt.excluded.Last_Room_Value_For_RC_DLX_USD_Change,
-            'Overbooking_Current': stmt.excluded.Overbooking_Current,
-            'Overbooking_Change': stmt.excluded.Overbooking_Change,
-            'BAR_by_Day_for_Room_Class_DLX_USD_Current': stmt.excluded.BAR_by_Day_for_Room_Class_DLX_USD_Current,
-            'BAR_by_Day_for_Room_Class_DLX_USD_Change': stmt.excluded.BAR_by_Day_for_Room_Class_DLX_USD_Change,
-            'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': stmt.excluded.BAR_Restricted_by_LRV_for_Room_Class_DLX_Current,
-            'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': stmt.excluded.BAR_Restricted_by_LRV_for_Room_Class_DLX_Change,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    error_temp = ""
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.ideasg3_occ_model).values(occ_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'Day_of_Week': stmt.excluded.Day_of_Week,
+                'Day_of_Arrival': stmt.excluded.Day_of_Arrival,
+                'Special_Event': stmt.excluded.Special_Event,
+                'Out_of_Order': stmt.excluded.Out_of_Order,
+                'Occupancy_On_Books_Current': stmt.excluded.Occupancy_On_Books_Current,
+                'Occupancy_On_Books_Change': stmt.excluded.Occupancy_On_Books_Change,
+                'Occupancy_Forecast_Current': stmt.excluded.Occupancy_Forecast_Current,
+                'Occupancy_Forecast_Change': stmt.excluded.Occupancy_Forecast_Change,
+                'Occupancy_Forecast_Percent_Current': stmt.excluded.Occupancy_Forecast_Percent_Current,
+                'Occupancy_Forecast_Percent_Change': stmt.excluded.Occupancy_Forecast_Percent_Change,
+                'Revenue_On_Books_USD_Current': stmt.excluded.Revenue_On_Books_USD_Current,
+                'Revenue_On_Books_USD_Change': stmt.excluded.Revenue_On_Books_USD_Change,
+                'Revenue_Forecast_USD_Current': stmt.excluded.Revenue_Forecast_USD_Current,
+                'Revenue_Forecast_USD_Change': stmt.excluded.Revenue_Forecast_USD_Change,
+                'ADR_On_Books_USD_Current': stmt.excluded.ADR_On_Books_USD_Current,
+                'ADR_On_Books_USD_Change': stmt.excluded.ADR_On_Books_USD_Change,
+                'ADR_Forecast_USD_Current': stmt.excluded.ADR_Forecast_USD_Current,
+                'ADR_Forecast_USD_Change': stmt.excluded.ADR_Forecast_USD_Change,
+                'RevPAR_On_Books_USD_Current': stmt.excluded.RevPAR_On_Books_USD_Current,
+                'RevPAR_On_Books_USD_Change': stmt.excluded.RevPAR_On_Books_USD_Change,
+                'RevPAR_Forecast_USD_Current': stmt.excluded.RevPAR_Forecast_USD_Current,
+                'RevPAR_Forecast_USD_Change': stmt.excluded.RevPAR_Forecast_USD_Change,
+                'Last_Room_Value_For_RC_DLX_USD_Current': stmt.excluded.Last_Room_Value_For_RC_DLX_USD_Current,
+                'Last_Room_Value_For_RC_DLX_USD_Change': stmt.excluded.Last_Room_Value_For_RC_DLX_USD_Change,
+                'Overbooking_Current': stmt.excluded.Overbooking_Current,
+                'Overbooking_Change': stmt.excluded.Overbooking_Change,
+                'BAR_by_Day_for_Room_Class_DLX_USD_Current': stmt.excluded.BAR_by_Day_for_Room_Class_DLX_USD_Current,
+                'BAR_by_Day_for_Room_Class_DLX_USD_Change': stmt.excluded.BAR_by_Day_for_Room_Class_DLX_USD_Change,
+                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': stmt.excluded.BAR_Restricted_by_LRV_for_Room_Class_DLX_Current,
+                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': stmt.excluded.BAR_Restricted_by_LRV_for_Room_Class_DLX_Change,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
    
 
 
@@ -182,214 +189,225 @@ def IDeaSG3_Rms(row):
     secret_name = row['gcp_secret']
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
-
-    label_array = [f"{propertyCode} Occupancy"]
-    folder_name = "./reports/"
-    messages_array = []
-    for label_name in label_array:
-        print("label_name :: ", label_name)
-        response = service.users().messages().list(userId="me",
-                                                   q=create_filter(label_name, "Saved")
-                                                   ).execute()
-        if 'messages' in response:
-            messages = response['messages']
-            item = {
-                "label_name": label_name,
-                "messages": messages
-            }
-            messages_array.append(item)
-
-        else:
-            msg = f"No new messages for {label_name} label"
-            print(msg)
-            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
-            return 0
-    if len(label_array) == len(messages_array):
-        for item in messages_array:
-            messages = item["messages"]
-            label_name = item["label_name"]
-            # get first message only
-            message = messages[0]
-            a_message = service.users().messages().get(userId="me",
-                                                       id=message["id"]
-                                                       ).execute()
-
-            for part in a_message['payload']['parts']:
-                save_flag = True
-                if part['filename']:
-
-                    print("save flag : ", save_flag)
-                    if save_flag:
-                        if 'data' in part['body']:
-                            file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
-                        else:
-                            attachment_id = part['body']['attachmentId']
-                            attachment = service.users().messages().attachments().get(userId="me",
-                                                                                      messageId=message["id"],
-                                                                                      id=attachment_id).execute()
-                            data = attachment['data']
-                            file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
-
-                        print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
-                        # file_data
-
-                        # Open file in binary write mode
-                        file_name = label_name.split(" ")[1]
-                        binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xlsx", "wb")
-                        binary_file.write(file_data)
-                        binary_file.close()
-
-                        # save message asap
-                        archive_label = get_archive_label("Saved")
-                        label_apply_body = {
-                            "addLabelIds": archive_label["id"]
-                        }
-                        response = service.users().messages().modify(userId="me",
-                                                                     id=message["id"],
-                                                                     body=label_apply_body).execute()
-
-                    else:
-                        print("Attachment format match fail for message ")
-
-            saved_messages_ids = []
-            for message in messages:
-                saved_messages_ids.append(message["id"])
-            archive_label = get_archive_label("Saved")
-            print(f"{archive_label['name']} : {archive_label['id']}")
-
-            # Apply archive label to saved messages
-            label_apply_body = {
-                "addLabelIds": archive_label["id"],
-                "ids": saved_messages_ids
-            }
-
-            if saved_messages_ids:
-                response = service.users().messages().batchModify(userId="me",
-                                                                  body=label_apply_body
-                                                                  ).execute()
-                saved_messages_count = len(saved_messages_ids)
-                print(f"Saved label applied to {saved_messages_count} messages.")
+    try:
+        label_array = [f"{propertyCode} Occupancy"]
+        folder_name = "./reports/"
+        messages_array = []
+        for label_name in label_array:
+            print("label_name :: ", label_name)
+            response = service.users().messages().list(userId="me",
+                                                    q=create_filter(label_name, "Saved")
+                                                    ).execute()
+            if 'messages' in response:
+                messages = response['messages']
+                item = {
+                    "label_name": label_name,
+                    "messages": messages
+                }
+                messages_array.append(item)
 
             else:
-                print("No messages to save")
+                msg = f"No new messages for {label_name} label"
+                print(msg)
+                update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+                return 0
+        if len(label_array) == len(messages_array):
+            for item in messages_array:
+                messages = item["messages"]
+                label_name = item["label_name"]
+                # get first message only
+                message = messages[0]
+                a_message = service.users().messages().get(userId="me",
+                                                        id=message["id"]
+                                                        ).execute()
 
-    # Modification of res report
-    occ_file_path = f'{folder_name}{propertyCode}_Occupancy.xlsx'
+                for part in a_message['payload']['parts']:
+                    save_flag = True
+                    if part['filename']:
 
-    check_occ_file = os.path.isfile(occ_file_path)
+                        print("save flag : ", save_flag)
+                        if save_flag:
+                            if 'data' in part['body']:
+                                file_data = base64.urlsafe_b64decode(part['body']['data'].encode('UTF-8'))
+                            else:
+                                attachment_id = part['body']['attachmentId']
+                                attachment = service.users().messages().attachments().get(userId="me",
+                                                                                        messageId=message["id"],
+                                                                                        id=attachment_id).execute()
+                                data = attachment['data']
+                                file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
 
-    if check_occ_file:
-        
-        # Start Occupancy snapshot Report
-        try:
-        # Parsing the Excel file
-            date_set = set()
-            createdAt = "'" + str(arrow.now()) + "'"
-            updatedAt = "'" + str(arrow.now()) + "'"
-            createdAtEpoch =  int(arrow.utcnow().timestamp())
-            updatedAtEpoch =  int(arrow.utcnow().timestamp())
-            column_mapping = {
-                'Day_of_Week': 1,
-                'Day_of_Arrival': 2,
-                'Special_Event': 2,
-                'Out_of_Order': 2,
-                'Occupancy_On_Books_Current': 2,
-                'Occupancy_On_Books_Change': 3,
-                'Occupancy_Forecast_Current': 2,
-                'Occupancy_Forecast_Change': 2,
-                'Occupancy_Forecast%Current': 1,
-                'Occupancy_Forecast%Change': 1,
-                'Revenue_On_Books(USD)_Current': 1,
-                'Revenue_On_Books(USD)_Change': 1,
-                'Revenue_Forecast(USD)_Current': 1,
-                'Revenue_Forecast(USD)_Change': 1,
-                'ADR_On_Books(USD)_Current': 1,
-                'ADR_On_Books(USD)_Change': 1,
-                'ADR_Forecast(USD)_Current': 1,
-                'ADR_Forecast(USD)_Change': 1,
-                'RevPAR_On_Books(USD)_Current': 1,
-                'RevPAR_On_Books(USD)_Change': 1,
-                'RevPAR_Forecast(USD)_Current': 1,
-                'RevPAR_Forecast(USD)_Change': 1,
-                'Last_Room_Value_For_RC_DLX(USD)_Current': 1,
-                'Last_Room_Value_For_RC_DLX(USD)_Change': 1,
-                'Overbooking_Current': 1,
-                'Overbooking_Change': 1,
-                'BAR_by_Day_for_Room_Class_DLX(USD)_Current': 1,
-                'BAR_by_Day_for_Room_Class_DLX(USD)_Change': 1,
-                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': 1,
-                'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': 1,
-            }
+                            print("saving file of size " + str(sys.getsizeof(file_data)) + " bytes")
+                            # file_data
 
-            rows = []
-            skip_rows = 2
-            for idx, row in enumerate(pd.read_excel(occ_file_path, header=None).values):
-                if 'Day of Week' in str(row[0]):
-                    skip_rows = idx + 2
-                    break
+                            # Open file in binary write mode
+                            file_name = label_name.split(" ")[1]
+                            binary_file = open(f"{folder_name}{propertyCode}_{file_name}.xlsx", "wb")
+                            binary_file.write(file_data)
+                            binary_file.close()
+
+                            # save message asap
+                            archive_label = get_archive_label("Saved")
+                            label_apply_body = {
+                                "addLabelIds": archive_label["id"]
+                            }
+                            response = service.users().messages().modify(userId="me",
+                                                                        id=message["id"],
+                                                                        body=label_apply_body).execute()
+
+                        else:
+                            print("Attachment format match fail for message ")
+
+                saved_messages_ids = []
+                for message in messages:
+                    saved_messages_ids.append(message["id"])
+                archive_label = get_archive_label("Saved")
+                print(f"{archive_label['name']} : {archive_label['id']}")
+
+                # Apply archive label to saved messages
+                label_apply_body = {
+                    "addLabelIds": archive_label["id"],
+                    "ids": saved_messages_ids
+                }
+
+                if saved_messages_ids:
+                    response = service.users().messages().batchModify(userId="me",
+                                                                    body=label_apply_body
+                                                                    ).execute()
+                    saved_messages_count = len(saved_messages_ids)
+                    print(f"Saved label applied to {saved_messages_count} messages.")
+
+                else:
+                    print("No messages to save")
+
+        # Modification of res report
+        occ_file_path = f'{folder_name}{propertyCode}_Occupancy.xlsx'
+
+        check_occ_file = os.path.isfile(occ_file_path)
+
+        if check_occ_file:
             
-            print("## Skip Rows: ", skip_rows)
+            # Start Occupancy snapshot Report
+            try:
+            # Parsing the Excel file
+                date_set = set()
+                createdAt = "'" + str(arrow.now()) + "'"
+                updatedAt = "'" + str(arrow.now()) + "'"
+                createdAtEpoch =  int(arrow.utcnow().timestamp())
+                updatedAtEpoch =  int(arrow.utcnow().timestamp())
+                column_mapping = {
+                    'Day_of_Week': 1,
+                    'Day_of_Arrival': 2,
+                    'Special_Event': 2,
+                    'Out_of_Order': 2,
+                    'Occupancy_On_Books_Current': 2,
+                    'Occupancy_On_Books_Change': 3,
+                    'Occupancy_Forecast_Current': 2,
+                    'Occupancy_Forecast_Change': 2,
+                    'Occupancy_Forecast%Current': 1,
+                    'Occupancy_Forecast%Change': 1,
+                    'Revenue_On_Books(USD)_Current': 1,
+                    'Revenue_On_Books(USD)_Change': 1,
+                    'Revenue_Forecast(USD)_Current': 1,
+                    'Revenue_Forecast(USD)_Change': 1,
+                    'ADR_On_Books(USD)_Current': 1,
+                    'ADR_On_Books(USD)_Change': 1,
+                    'ADR_Forecast(USD)_Current': 1,
+                    'ADR_Forecast(USD)_Change': 1,
+                    'RevPAR_On_Books(USD)_Current': 1,
+                    'RevPAR_On_Books(USD)_Change': 1,
+                    'RevPAR_Forecast(USD)_Current': 1,
+                    'RevPAR_Forecast(USD)_Change': 1,
+                    'Last_Room_Value_For_RC_DLX(USD)_Current': 1,
+                    'Last_Room_Value_For_RC_DLX(USD)_Change': 1,
+                    'Overbooking_Current': 1,
+                    'Overbooking_Change': 1,
+                    'BAR_by_Day_for_Room_Class_DLX(USD)_Current': 1,
+                    'BAR_by_Day_for_Room_Class_DLX(USD)_Change': 1,
+                    'BAR_Restricted_by_LRV_for_Room_Class_DLX_Current': 1,
+                    'BAR_Restricted_by_LRV_for_Room_Class_DLX_Change': 1,
+                }
 
-            for row in pd.read_excel(occ_file_path, header=None, skiprows=skip_rows).values:
-                row_data = {}
-                current_col = 0
-                flag=0
-                for column, num_cols in column_mapping.items():
-                    cell_values = row[current_col:current_col + num_cols]
-                    cell_values = [str(value).replace('nan', '').strip() if pd.notna(value) else '' for value in cell_values]
-                    row_data[column] = ''.join(cell_values)
-                    current_col += num_cols
-                    if(column=='Day_of_Arrival' and row_data[column]!=''):
-                        date_set.add(row_data[column])
-                    if(row_data[column]!=''):
-                        flag=1
-                if(flag==1):
-                    rows.append(row_data)
-            df = pd.DataFrame(rows)
-            df.insert(0, column="propertyCode", value=propertyCode)
-            df.insert(1, column="pullDateId", value=pullDateId)
-            df.insert(2, column="createdAt", value=createdAt)
-            df.insert(3, column="updatedAt", value=updatedAt)
-            df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
-            df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['Day_of_Arrival'].astype(str)) 
-            df = df.reset_index(drop=True)
-            headers_list = [ "propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch",
-                            "uniqueKey","Day_of_Week","Day_of_Arrival","Special_Event","Out_of_Order","Occupancy_On_Books_Current",
-                            "Occupancy_On_Books_Change","Occupancy_Forecast_Current","Occupancy_Forecast_Change",
-                            "Occupancy_Forecast_Percent_Current","Occupancy_Forecast_Percent_Change","Revenue_On_Books_USD_Current",
-                            "Revenue_On_Books_USD_Change","Revenue_Forecast_USD_Current","Revenue_Forecast_USD_Change","ADR_On_Books_USD_Current",
-                            "ADR_On_Books_USD_Change","ADR_Forecast_USD_Current","ADR_Forecast_USD_Change","RevPAR_On_Books_USD_Current",
-                            "RevPAR_On_Books_USD_Change","RevPAR_Forecast_USD_Current","RevPAR_Forecast_USD_Change","Last_Room_Value_For_RC_DLX_USD_Current",
-                            "Last_Room_Value_For_RC_DLX_USD_Change","Overbooking_Current","Overbooking_Change","BAR_by_Day_for_Room_Class_DLX_USD_Current",
-                            "BAR_by_Day_for_Room_Class_DLX_USD_Change","BAR_Restricted_by_LRV_for_Room_Class_DLX_Current","BAR_Restricted_by_LRV_for_Room_Class_DLX_Change"]
+                rows = []
+                skip_rows = 2
+                for idx, row in enumerate(pd.read_excel(occ_file_path, header=None).values):
+                    if 'Day of Week' in str(row[0]):
+                        skip_rows = idx + 2
+                        break
+                
+                print("## Skip Rows: ", skip_rows)
+
+                for row in pd.read_excel(occ_file_path, header=None, skiprows=skip_rows).values:
+                    row_data = {}
+                    current_col = 0
+                    flag=0
+                    for column, num_cols in column_mapping.items():
+                        cell_values = row[current_col:current_col + num_cols]
+                        cell_values = [str(value).replace('nan', '').strip() if pd.notna(value) else '' for value in cell_values]
+                        row_data[column] = ''.join(cell_values)
+                        current_col += num_cols
+                        if(column=='Day_of_Arrival' and row_data[column]!=''):
+                            date_set.add(row_data[column])
+                        if(row_data[column]!=''):
+                            flag=1
+                    if(flag==1):
+                        rows.append(row_data)
+                df = pd.DataFrame(rows)
+                df.insert(0, column="propertyCode", value=propertyCode)
+                df.insert(1, column="pullDateId", value=pullDateId)
+                df.insert(2, column="createdAt", value=createdAt)
+                df.insert(3, column="updatedAt", value=updatedAt)
+                df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                df['Day_of_Arrival'] = pd.to_datetime(df['Day_of_Arrival']).dt.strftime('%Y-%m-%d')
+                df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['Day_of_Arrival'].astype(str)) 
+                df = df.reset_index(drop=True)
+                headers_list = [ "propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch",
+                                "uniqueKey","Day_of_Week","Day_of_Arrival","Special_Event","Out_of_Order","Occupancy_On_Books_Current",
+                                "Occupancy_On_Books_Change","Occupancy_Forecast_Current","Occupancy_Forecast_Change",
+                                "Occupancy_Forecast_Percent_Current","Occupancy_Forecast_Percent_Change","Revenue_On_Books_USD_Current",
+                                "Revenue_On_Books_USD_Change","Revenue_Forecast_USD_Current","Revenue_Forecast_USD_Change","ADR_On_Books_USD_Current",
+                                "ADR_On_Books_USD_Change","ADR_Forecast_USD_Current","ADR_Forecast_USD_Change","RevPAR_On_Books_USD_Current",
+                                "RevPAR_On_Books_USD_Change","RevPAR_Forecast_USD_Current","RevPAR_Forecast_USD_Change","Last_Room_Value_For_RC_DLX_USD_Current",
+                                "Last_Room_Value_For_RC_DLX_USD_Change","Overbooking_Current","Overbooking_Change","BAR_by_Day_for_Room_Class_DLX_USD_Current",
+                                "BAR_by_Day_for_Room_Class_DLX_USD_Change","BAR_Restricted_by_LRV_for_Room_Class_DLX_Current","BAR_Restricted_by_LRV_for_Room_Class_DLX_Change"]
+                
+                df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
+                occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
+                occ_result = list(occ_result)
+            except Exception:
+                occ_result = []
+                print("Occupancy Data not available")
             
-            df.to_csv(f"{folder_name}{propertyCode}_Occupancy.csv", index=False, header=headers_list)
-            occ_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Occupancy.csv", encoding="utf-8"))
-            occ_result = list(occ_result)
-        except Exception:
-            occ_result = []
-            print("Occupancy Data not available")
-        
-        
-        # End RBRC Report
-        low_input_date_str = min(date_set)
-        low_input_date_str = low_input_date_str[:10]
-        print("Occupancy RESULT", low_input_date_str)
-        # print(occ_result) #This can be uncommented to test/see the result of parsed data
+            
+            # End RBRC Report
+            low_input_date_str = min(date_set)
+            low_input_date_str = low_input_date_str[:10]
+            print("Occupancy RESULT", low_input_date_str)
+            # print(occ_result) #This can be uncommented to test/see the result of parsed data
 
-        if len(occ_result) > 0:
-            bulk_insert_IDeaSG3_occ(occ_result, low_input_date_str, propertyCode=propertyCode)
-            print("Occupancy DONE")
+            if len(occ_result) > 0:
+                error_temp = bulk_insert_IDeaSG3_occ(occ_result, low_input_date_str, propertyCode=propertyCode)
+                if(error_temp == ""):
+                    print("Occupancy DONE")
+                    update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+                else:
+                    print("OCC FAILED")
+                    errorMessage = " OCC Failed: " + error_temp
+                    update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=False)
 
-            update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            else:
+                print("File was blank!!!")
+                update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
         else:
-            print("File was blank!!!")
-            update_into_pulldate(pullDateId, ERROR_NOTE="File was blank!!!", IS_ERROR=True)
-    else:
-        msg = "File Not found!!!"
+            msg = "File Not found!!!"
+            update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+    except Exception as e:
+        msg = f"[{atica_property_code}] failed due to {e}"
+        print(msg)
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
+        return 0
+    
 
 
 if __name__ == '__main__':

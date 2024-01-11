@@ -63,11 +63,112 @@ def update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
 
 def bulk_insert_synxis_cloud_res(res_list):
     # Add new data of reservation
+    print("Data importing...")
     error_temp = ""
     try:
-        print("Data importing...")
         conn = db_config.get_db_connection()
-        conn.execute(db_models.synxis_cloud_reservation_model.insert(), res_list)
+        stmt = insert(db_models.synxis_cloud_reservation_model).values(res_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'Chain': stmt.excluded.Chain,
+                'Brand': stmt.excluded.Brand,
+                'Hotel': stmt.excluded.Hotel,
+                'Confirm_No': stmt.excluded.Confirm_No,
+                'Rez_Status_Desc': stmt.excluded.Rez_Status_Desc,
+                'Status_Dt': stmt.excluded.Status_Dt,
+                'Guest_Nm': stmt.excluded.Guest_Nm,
+                'Channel_Cd': stmt.excluded.Channel_Cd,
+                'Sec_Channel_Desc': stmt.excluded.Sec_Channel_Desc,
+                'Sub_Source': stmt.excluded.Sub_Source,
+                'Sub_Src_CD': stmt.excluded.Sub_Src_CD,
+                'Location': stmt.excluded.Location,
+                'Arrival_Dt': stmt.excluded.Arrival_Dt,
+                'Depart_Dt': stmt.excluded.Depart_Dt,
+                'Nights_Qty': stmt.excluded.Nights_Qty,
+                'Override_Oversell': stmt.excluded.Override_Oversell,
+                'Room_Qty': stmt.excluded.Room_Qty,
+                'Rate_Category_Name': stmt.excluded.Rate_Category_Name,
+                'Rate_Type_Code': stmt.excluded.Rate_Type_Code,
+                'Rez_Avg_Rate_Amt': stmt.excluded.Rez_Avg_Rate_Amt,
+                'Onshore_Rate_Type_Code': stmt.excluded.Onshore_Rate_Type_Code,
+                'Onshore_Rez_Avg_Rate_Amt': stmt.excluded.Onshore_Rez_Avg_Rate_Amt,
+                'Room_Type_Code': stmt.excluded.Room_Type_Code,
+                'Record_Locator': stmt.excluded.Record_Locator,
+                'Booker_Loyalty_Program_Level_List': stmt.excluded.Booker_Loyalty_Program_Level_List,
+                'Loyalty_Type': stmt.excluded.Loyalty_Type,
+                'Loyalty_Program': stmt.excluded.Loyalty_Program,
+                'Loyalty_Number': stmt.excluded.Loyalty_Number,
+                'Loyalty_Level_Code': stmt.excluded.Loyalty_Level_Code,
+                'Loyalty_Level_Name': stmt.excluded.Loyalty_Level_Name,
+                'Loyalty_Points_Payment': stmt.excluded.Loyalty_Points_Payment,
+                'Payment_Typ': stmt.excluded.Payment_Typ,
+                'VCC_Authorization_Amount': stmt.excluded.VCC_Authorization_Amount,
+                'VCC_Currency_Code': stmt.excluded.VCC_Currency_Code,
+                'VCC_Payment_Model': stmt.excluded.VCC_Payment_Model,
+                'VCC_Card_Activation_Start': stmt.excluded.VCC_Card_Activation_Start,
+                'VCC_Card_Activation_End': stmt.excluded.VCC_Card_Activation_End,
+                'Direct_Bill_Account_Number': stmt.excluded.Direct_Bill_Account_Number,
+                'Direct_Bill_Project_Number': stmt.excluded.Direct_Bill_Project_Number,
+                'Total_Points_Pymnt': stmt.excluded.Total_Points_Pymnt,
+                'Points_Refund': stmt.excluded.Points_Refund,
+                'Total_Cash_Pymnt': stmt.excluded.Total_Cash_Pymnt,
+                'Pay_At_Property': stmt.excluded.Pay_At_Property,
+                'Cash_Refund': stmt.excluded.Cash_Refund,
+                'Total_Price_For_Adult': stmt.excluded.Total_Price_For_Adult,
+                'Total_Adult_Occupancy': stmt.excluded.Total_Adult_Occupancy,
+                'Total_Price_For_Child_Age_Group1': stmt.excluded.Total_Price_For_Child_Age_Group1,
+                'Total_Child_Occupancy_For_Age_Group1': stmt.excluded.Total_Child_Occupancy_For_Age_Group1,
+                'Total_Price_For_Child_Age_Group2': stmt.excluded.Total_Price_For_Child_Age_Group2,
+                'Total_Child_Occupancy_For_Age_Group2': stmt.excluded.Total_Child_Occupancy_For_Age_Group2,
+                'Total_Price_For_Child_Age_Group3': stmt.excluded.Total_Price_For_Child_Age_Group3,
+                'Total_Child_Occupancy_For_Age_Group3': stmt.excluded.Total_Child_Occupancy_For_Age_Group3,
+                'Total_Price_For_Child_Age_Group4': stmt.excluded.Total_Price_For_Child_Age_Group4,
+                'Total_Child_Occupancy_For_Age_Group4': stmt.excluded.Total_Child_Occupancy_For_Age_Group4,
+                'Total_Price_For_Child_Age_Group5': stmt.excluded.Total_Price_For_Child_Age_Group5,
+                'Total_Child_Occupancy_For_Age_Group5': stmt.excluded.Total_Child_Occupancy_For_Age_Group5,
+                'Total_Price_For_Child_Unknown_Age_Group': stmt.excluded.Total_Price_For_Child_Unknown_Age_Group,
+                'Total_Child_Occupancy_For_Unknown_Age_Group': stmt.excluded.Total_Child_Occupancy_For_Unknown_Age_Group,
+                'Share_With': stmt.excluded.Share_With,
+                'Channel_Connect_Confirm_NO': stmt.excluded.Channel_Connect_Confirm_NO,
+                'PMS_Confirm_Code': stmt.excluded.PMS_Confirm_Code,
+                'Original_Room_Type_Code': stmt.excluded.Original_Room_Type_Code,
+                'Original_Rm_Typ_Nm': stmt.excluded.Original_Rm_Typ_Nm,
+                'Template_Code': stmt.excluded.Template_Code,
+                'Template_Name': stmt.excluded.Template_Name,
+                'Blacklist_Reason': stmt.excluded.Blacklist_Reason,
+                'Visa_Information': stmt.excluded.Visa_Information,
+                'Installment_Amount': stmt.excluded.Installment_Amount,
+                'Number_of_Installments': stmt.excluded.Number_of_Installments,
+                'Interest_Amount': stmt.excluded.Interest_Amount,
+                'Interest_Rate_Percentage': stmt.excluded.Interest_Rate_Percentage,
+                'Total_Installment_Amount': stmt.excluded.Total_Installment_Amount,
+                'Rate_Credential_ID': stmt.excluded.Rate_Credential_ID,
+                'Trace_Date': stmt.excluded.Trace_Date,
+                'Trace_Completion_Flag': stmt.excluded.Trace_Completion_Flag,
+                'Trace_Completion_Date': stmt.excluded.Trace_Completion_Date,
+                'Trace_Text': stmt.excluded.Trace_Text,
+                'RM_Upgrade_Reason_CD': stmt.excluded.RM_Upgrade_Reason_CD,
+                'Room_Upsell': stmt.excluded.Room_Upsell,
+                'Room_To_Charge': stmt.excluded.Room_To_Charge,
+                'Onhold_Duration': stmt.excluded.Onhold_Duration,
+                'AutoCancel_ReleaseDateTime_ScheduledOrActual': stmt.excluded.AutoCancel_ReleaseDateTime_ScheduledOrActual,
+                'Commission_Cd': stmt.excluded.Commission_Cd,
+                'Comm_Percent_Override_List': stmt.excluded.Comm_Percent_Override_List,
+                'Coupon_Offer': stmt.excluded.Coupon_Offer,
+                'Coupon_Discount_Total': stmt.excluded.Coupon_Discount_Total,
+                'Promotion': stmt.excluded.Promotion,
+                'Promo_Discount': stmt.excluded.Promo_Discount,
+                'Maximum_Discount_Applied': stmt.excluded.Maximum_Discount_Applied,
+                'Paynow_Discount': stmt.excluded.Paynow_Discount,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
         conn.commit()
         conn.close()
         print("Data imported")
@@ -78,13 +179,56 @@ def bulk_insert_synxis_cloud_res(res_list):
     return error_temp
 
 
-def bulk_insert_synxis_cloud_forecast(for_list):
-    # Add new data of reservation
+def bulk_insert_synxis_cloud_forecast(fore_list):
+    print("Data importing...")
     error_temp = ""
     try:
-        print("Data importing...")
         conn = db_config.get_db_connection()
-        conn.execute(db_models.synxis_cloud_forecast_model.insert(), for_list)
+        stmt = insert(db_models.synxis_cloud_forecast_model).values(fore_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'cal_dt': stmt.excluded.cal_dt,
+                'Total_Rooms': stmt.excluded.Total_Rooms,
+                'OOO_OOI': stmt.excluded.OOO_OOI,
+                'rentable_rooms': stmt.excluded.rentable_rooms,
+                'Rooms_Sold': stmt.excluded.Rooms_Sold,
+                'total_stayovers': stmt.excluded.total_stayovers,
+                'total_due_out': stmt.excluded.total_due_out,
+                'Total_Reservations': stmt.excluded.Total_Reservations,
+                'day_use_in_house': stmt.excluded.day_use_in_house,
+                'gtd': stmt.excluded.gtd,
+                'non_gtd': stmt.excluded.non_gtd,
+                'Not_Picked_Up': stmt.excluded.Not_Picked_Up,
+                'Left_To_Sell': stmt.excluded.Left_To_Sell,
+                'occ_per': stmt.excluded.occ_per,
+                'Total_Room_Revenue': stmt.excluded.Total_Room_Revenue,
+                'ADR': stmt.excluded.ADR,
+                'Adult_Child': stmt.excluded.Adult_Child,
+                'Sum_Total_Rooms': stmt.excluded.Sum_Total_Rooms,
+                'SumOOO_OOI': stmt.excluded.SumOOO_OOI,
+                'Sum_Rentable_Rooms': stmt.excluded.Sum_Rentable_Rooms,
+                'Sum_Rooms_Sold': stmt.excluded.Sum_Rooms_Sold,
+                'Sum_Stayovers': stmt.excluded.Sum_Stayovers,
+                'Sum_Checkouts': stmt.excluded.Sum_Checkouts,
+                'Sum_Arrivals': stmt.excluded.Sum_Arrivals,
+                'Sum_Day_Use': stmt.excluded.Sum_Day_Use,
+                'SumGtd': stmt.excluded.SumGtd,
+                'SumNonGtd': stmt.excluded.SumNonGtd,
+                'Sum_GroupsRoomsNotPickedUp': stmt.excluded.Sum_GroupsRoomsNotPickedUp,
+                'Sum_Rooms_Left_To_Sell': stmt.excluded.Sum_Rooms_Left_To_Sell,
+                'Sum_RoomsOccupied_Percentage': stmt.excluded.Sum_RoomsOccupied_Percentage,
+                'SumTotalRoomRevenue': stmt.excluded.SumTotalRoomRevenue,
+                'Sum_ADR': stmt.excluded.Sum_ADR,
+                'SUM_ADULT_CHILD': stmt.excluded.SUM_ADULT_CHILD,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
         conn.commit()
         conn.close()
         print("Data imported")
@@ -93,15 +237,59 @@ def bulk_insert_synxis_cloud_forecast(for_list):
         print(error_message)
         error_temp=error_message[:250]
     return error_temp
+
 
 
 def bulk_insert_synxis_cloud_revenue_recap(rev_list):
-    # Add new data of revenue
+    print("Data importing...")
     error_temp = ""
     try:
-        print("Data importing...")
         conn = db_config.get_db_connection()
-        conn.execute(db_models.synxis_cloud_revenue_recap_model.insert(), rev_list)
+        stmt = insert(db_models.synxis_cloud_revenue_recap_model).values(rev_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'Date': stmt.excluded.Date,
+                'report_type': stmt.excluded.report_type,
+                'report_type_values': stmt.excluded.report_type_values,
+                'Room_Nights': stmt.excluded.Room_Nights,
+                'Room': stmt.excluded.Room,
+                'F_B': stmt.excluded.F_B,
+                'Taxes': stmt.excluded.Taxes,
+                'Other': stmt.excluded.Other,
+                'Month_To_Date_Room_Nights': stmt.excluded.Month_To_Date_Room_Nights,
+                'Month_To_Date_Room': stmt.excluded.Month_To_Date_Room,
+                'Month_To_Date_F_B': stmt.excluded.Month_To_Date_F_B,
+                'Month_To_Date_Taxes': stmt.excluded.Month_To_Date_Taxes,
+                'Month_To_Date_Others': stmt.excluded.Month_To_Date_Others,
+                'Year_To_Date_Room_Nights': stmt.excluded.Year_To_Date_Room_Nights,
+                'Year_To_Date__Room': stmt.excluded.Year_To_Date__Room,
+                'Year_To_Date_F_B': stmt.excluded.Year_To_Date_F_B,
+                'Year_To_Date_Taxes': stmt.excluded.Year_To_Date_Taxes,
+                'Year_To_Date_Other': stmt.excluded.Year_To_Date_Other,
+                'Room_Nights_Total': stmt.excluded.Room_Nights_Total,
+                'Room_Total': stmt.excluded.Room_Total,
+                'F_B_Total': stmt.excluded.F_B_Total,
+                'Taxes_Total': stmt.excluded.Taxes_Total,
+                'Other_Total': stmt.excluded.Other_Total,
+                'Month_To_Date_Room_Nights_Total': stmt.excluded.Month_To_Date_Room_Nights_Total,
+                'Month_To_Date_Room_Total': stmt.excluded.Month_To_Date_Room_Total,
+                'Month_To_Date_F_B_total': stmt.excluded.Month_To_Date_F_B_total,
+                'Month_To_Date_Taxes_Total': stmt.excluded.Month_To_Date_Taxes_Total,
+                'Month_To_Date_Total': stmt.excluded.Month_To_Date_Total,
+                'Year_To_Date_Room_Nights_Total': stmt.excluded.Year_To_Date_Room_Nights_Total,
+                'Year_To_Date_Room_Total': stmt.excluded.Year_To_Date_Room_Total,
+                'Year_To_Date_F_B_Total': stmt.excluded.Year_To_Date_F_B_Total,
+                'Year_To_Date_Taxes_Total': stmt.excluded.Year_To_Date_Taxes_Total,
+                'Year_To_Date_Total': stmt.excluded.Year_To_Date_Total,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
         conn.commit()
         conn.close()
         print("Data imported")
@@ -113,12 +301,42 @@ def bulk_insert_synxis_cloud_revenue_recap(rev_list):
 
 
 def bulk_insert_synxis_cloud_monthly_summary(mon_list):
-    # Add new data of reservation
+    print("Data importing...")
     error_temp = ""
     try:
-        print("Data importing...")
         conn = db_config.get_db_connection()
-        conn.execute(db_models.synxis_cloud_monthly_summary_model.insert(), mon_list)
+        stmt = insert(db_models.synxis_cloud_monthly_summary_model).values(mon_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'BUSINESS_DT': stmt.excluded.BUSINESS_DT,
+                'OCCUPIED_ROOM_QTY': stmt.excluded.OCCUPIED_ROOM_QTY,
+                'RENTABLE_ROOM_QTY': stmt.excluded.RENTABLE_ROOM_QTY,
+                'OCCUPANCY_PERCENT': stmt.excluded.OCCUPANCY_PERCENT,
+                'ADR_WITH_COMPS': stmt.excluded.ADR_WITH_COMPS,
+                'TOTAL_FOOD_AND_BEV_REV': stmt.excluded.TOTAL_FOOD_AND_BEV_REV,
+                'TOTAL_ROOM_REV1': stmt.excluded.TOTAL_ROOM_REV1,
+                'TOTAL_TAX_REV': stmt.excluded.TOTAL_TAX_REV,
+                'TOTAL_OTH_REV': stmt.excluded.TOTAL_OTH_REV,
+                'TOTAL_REV': stmt.excluded.TOTAL_REV,
+                'Date': stmt.excluded.Date,
+                'OCCUPIED_ROOM_QTY_Total': stmt.excluded.OCCUPIED_ROOM_QTY_Total,
+                'RENTABLE_ROOM_QTY_Total': stmt.excluded.RENTABLE_ROOM_QTY_Total,
+                'Occupancy_Percent_Total': stmt.excluded.Occupancy_Percent_Total,
+                'ADR_Total': stmt.excluded.ADR_Total,
+                'FoodandBeverage': stmt.excluded.FoodandBeverage,
+                'RoomCharges': stmt.excluded.RoomCharges,
+                'Taxes': stmt.excluded.Taxes,
+                'Others': stmt.excluded.Others,
+                'Total': stmt.excluded.Total,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
         conn.commit()
         conn.close()
         print("Data imported")
@@ -387,7 +605,7 @@ if __name__ == '__main__':
             PULLED_DATE = CURRENT_DATE.date()
 
             # Add entry into pull date table
-            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_onboarding")
+            LAST_PULL_DATE_ID = insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME+"_manual_one_day")
 
             if LAST_PULL_DATE_ID is not None:
                 row = {

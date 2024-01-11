@@ -29,41 +29,48 @@ from sqlalchemy.dialects.postgresql import insert
 
 def bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_list, fore_start_date, fore_end_date):
     print("Data importing...")
-    conn = db_config.get_db_connection()
-    stmt = insert(db_models.bestrev_total_forecast_model).values(total_forecast_list)
-    conn.commit()
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['uniqueKey'],
-        set_={
-            'pullDateId': stmt.excluded.pullDateId,
-            'updatedAt': stmt.excluded.updatedAt,
-            'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
-            'Alert': stmt.excluded.Alert,
-            'Priority': stmt.excluded.Priority,
-            'StayDate': stmt.excluded.StayDate,
-            'DayofWeek': stmt.excluded.DayofWeek,
-            'Favorite': stmt.excluded.Favorite,
-            'Event': stmt.excluded.Event,
-            'BestWesternRate': stmt.excluded.BestWesternRate,
-            'RecommendedRate': stmt.excluded.RecommendedRate,
-            'RatetoUpload': stmt.excluded.RatetoUpload,
-            'RecommendationStatus': stmt.excluded.RecommendationStatus,
-            'MarketRate': stmt.excluded.MarketRate,
-            'AvailableRooms': stmt.excluded.AvailableRooms,
-            'TransientCapacity': stmt.excluded.TransientCapacity,
-            'TotalForecast_IncludesGroup': stmt.excluded.TotalForecast_IncludesGroup,
-            'OntheBooks_IncludesGroup': stmt.excluded.OntheBooks_IncludesGroup,
-            'AverageDailyRate': stmt.excluded.AverageDailyRate,
-            'RevPAR': stmt.excluded.RevPAR,
-            'Occupancy_IncludesGroup': stmt.excluded.Occupancy_IncludesGroup,
-            'ForecastOccupancy_IncludesGroup': stmt.excluded.ForecastOccupancy_IncludesGroup,
-        }
-    )
-    # Execute the insert statement
-    conn.execute(stmt)
-    conn.commit()
-    conn.close()
-    print("Data imported")
+    error_temp = ""
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.bestrev_total_forecast_model).values(total_forecast_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'Alert': stmt.excluded.Alert,
+                'Priority': stmt.excluded.Priority,
+                'StayDate': stmt.excluded.StayDate,
+                'DayofWeek': stmt.excluded.DayofWeek,
+                'Favorite': stmt.excluded.Favorite,
+                'Event': stmt.excluded.Event,
+                'BestWesternRate': stmt.excluded.BestWesternRate,
+                'RecommendedRate': stmt.excluded.RecommendedRate,
+                'RatetoUpload': stmt.excluded.RatetoUpload,
+                'RecommendationStatus': stmt.excluded.RecommendationStatus,
+                'MarketRate': stmt.excluded.MarketRate,
+                'AvailableRooms': stmt.excluded.AvailableRooms,
+                'TransientCapacity': stmt.excluded.TransientCapacity,
+                'TotalForecast_IncludesGroup': stmt.excluded.TotalForecast_IncludesGroup,
+                'OntheBooks_IncludesGroup': stmt.excluded.OntheBooks_IncludesGroup,
+                'AverageDailyRate': stmt.excluded.AverageDailyRate,
+                'RevPAR': stmt.excluded.RevPAR,
+                'Occupancy_IncludesGroup': stmt.excluded.Occupancy_IncludesGroup,
+                'ForecastOccupancy_IncludesGroup': stmt.excluded.ForecastOccupancy_IncludesGroup,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 
 def BestRev_Pms(row):
@@ -182,8 +189,8 @@ def BestRev_Pms(row):
         new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
         df = pd.read_csv(new_file, engine='python')
         if df.empty:
-            error_msg = "Total Forecast file is empty"
-            return error_msg
+            errorMessage = "Total Forecast file is empty"
+            return errorMessage
         df['Stay Date'] = pd.to_datetime(df['Stay Date'])
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
@@ -204,10 +211,10 @@ def BestRev_Pms(row):
 
         check_total_forecast_file = os.path.isfile(total_forecast_file_path)
 
-        error_msg = ""
+        errorMessage = ""
 
         if not check_total_forecast_file:
-            error_msg = error_msg + " Total Forecast file - N/A"
+            errorMessage = errorMessage + " Total Forecast file - N/A"
 
         if check_total_forecast_file:
             # Insert into Database
@@ -217,12 +224,17 @@ def BestRev_Pms(row):
             print(len(total_forecast_result))
             fore_start_date = arrow.now().format("YYYY-MM-DD")
             fore_end_date = arrow.now().shift(days=+365).format("YYYY-MM-DD")
-            bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_result, fore_start_date, fore_end_date)
-            print("TOTAL FORECAST DONE")
+            
+            error_temp = bulk_insert_bestrev_total_forecast(propertyCode, total_forecast_result, fore_start_date, fore_end_date)
+            if(error_temp == ""):
+                print("TOTAL FORECAST DONE")
+                update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
+            else:
+                print("TOTAL FORECAST FAILED")
+                errorMessage = errorMessage + " FORECAST Failed: " + error_temp
 
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
         else:
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
+            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=errorMessage, IS_ERROR=True)
     except Exception as e:
         print(e)
         update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)

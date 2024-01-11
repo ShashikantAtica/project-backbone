@@ -494,10 +494,11 @@ def AutoClerk_Pms(row):
         print(e)
         if driver:
             driver.quit()
-        msg = f"[{atica_property_code}] Somethings went wrong."
+        msg = f"[{atica_property_code}] Somethings went wrong. Due to {e}"
         print(msg)
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
         return 0
+    
 
 
 def insert_into_pulldate(PROPERTY_CODE, PULLED_DATE, PMS_NAME):
