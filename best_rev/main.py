@@ -189,8 +189,8 @@ def BestRev_Pms(row):
         new_file = os.path.join(save_dir, f'{propertyCode}_TotalForecast.csv')
         df = pd.read_csv(new_file, engine='python')
         if df.empty:
-            error_msg = "Total Forecast file is empty"
-            return error_msg
+            errorMessage = "Total Forecast file is empty"
+            return errorMessage
         df['Stay Date'] = pd.to_datetime(df['Stay Date'])
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
@@ -211,10 +211,10 @@ def BestRev_Pms(row):
 
         check_total_forecast_file = os.path.isfile(total_forecast_file_path)
 
-        error_msg = ""
+        errorMessage = ""
 
         if not check_total_forecast_file:
-            error_msg = error_msg + " Total Forecast file - N/A"
+            errorMessage = errorMessage + " Total Forecast file - N/A"
 
         if check_total_forecast_file:
             # Insert into Database
@@ -234,7 +234,7 @@ def BestRev_Pms(row):
                 errorMessage = errorMessage + " FORECAST Failed: " + error_temp
 
         else:
-            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=error_msg, IS_ERROR=True)
+            update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=errorMessage, IS_ERROR=True)
     except Exception as e:
         print(e)
         update_into_pulldate(LAST_PULL_DATE_ID, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)
