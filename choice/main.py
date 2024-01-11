@@ -150,42 +150,42 @@ def bulk_insert_choice_occ(propertyCode, occ_list, occ_before, occ_after):
         error_temp=error_message[:250]
     return error_temp
 
+#THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
+# def bulk_insert_choice_cancel(propertyCode, cancel_list, cancel_before, cancel_after):
+#     start_date = "'" + cancel_before.format("YYYY-MM-DD") + "'"
+#     print("start_date :: ", start_date)
 
-def bulk_insert_choice_cancel(propertyCode, cancel_list, cancel_before, cancel_after):
-    start_date = "'" + cancel_before.format("YYYY-MM-DD") + "'"
-    print("start_date :: ", start_date)
+#     end_date = "'" + cancel_after.format("YYYY-MM-DD") + "'"
+#     print("end_date :: ", end_date)
+#     db_propertyCode = "'" + propertyCode + "'"
 
-    end_date = "'" + cancel_after.format("YYYY-MM-DD") + "'"
-    print("end_date :: ", end_date)
-    db_propertyCode = "'" + propertyCode + "'"
+#     # Delete existing data of occ (up to 90 Days)
+#     conn = db_config.get_db_connection()
+#     conn.execute(text(f'DELETE FROM choice_cancellation where "CxlDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+#     conn.commit()
+#     conn.close()
 
-    # Delete existing data of occ (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM choice_cancellation where "CxlDate" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of occ (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_cancellation_model.insert(), cancel_list)
-    conn.close()
+#     # Add new data of occ (up to 90 Days)
+#     conn = db_config.get_db_connection()
+#     conn.execute(db_models.choice_cancellation_model.insert(), cancel_list)
+#     conn.close()
 
 
-def bulk_insert_choice_revenue(propertyCode, revenue_list):
-    property_code = "'" + propertyCode + "'"
-    print("property_code :: ", property_code)
+# def bulk_insert_choice_revenue(propertyCode, revenue_list):
+#     property_code = "'" + propertyCode + "'"
+#     print("property_code :: ", property_code)
 
-    # Delete existing data of occ (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM choice_revenue where "propertyCode" = {property_code}'))
-    conn.commit()
-    conn.close()
+#     # Delete existing data of occ (up to 90 Days)
+#     conn = db_config.get_db_connection()
+#     conn.execute(text(f'DELETE FROM choice_revenue where "propertyCode" = {property_code}'))
+#     conn.commit()
+#     conn.close()
 
-    # Add new data of occ (up to 90 Days)
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_revenue_model.insert(), revenue_list)
-    conn.commit()
-    conn.close()
+#     # Add new data of occ (up to 90 Days)
+#     conn = db_config.get_db_connection()
+#     conn.execute(db_models.choice_revenue_model.insert(), revenue_list)
+#     conn.commit()
+#     conn.close()
 
 
 def bulk_insert_choice_revenue_detail(propertyCode, revenue_detail_list, revenue_before, revenue_after):
@@ -553,162 +553,164 @@ def Choice_Pms(row):
                                    'OccPercent', 'RoomRev', 'RevPAR', 'ADR', 'Ppl']
                         read.to_csv(filename, header=headers, index=False)
                     # End Occupancy Report
+                        
+                    #THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
+                        
+                    # # Start Cancellation Report
+                    # cancellation_dataframe = []
+                    # start_date = row['res_before']
+                    # end_date = row['res_after']
+                    # curr = start_date
+                    # while curr <= end_date:
+                    #     start = curr
+                    #     end = curr.shift(days=+45)
+                    #     if end > end_date:
+                    #         end = end_date
+                    #     curr = curr.shift(days=+46)
 
-                    # Start Cancellation Report
-                    cancellation_dataframe = []
-                    start_date = row['res_before']
-                    end_date = row['res_after']
-                    curr = start_date
-                    while curr <= end_date:
-                        start = curr
-                        end = curr.shift(days=+45)
-                        if end > end_date:
-                            end = end_date
-                        curr = curr.shift(days=+46)
+                    #     cancellation_data_post = {
+                    #         "ie": "csv",
+                    #         "locale": "en_US",
+                    #         "JOD": "cancellation_summary_csv",
+                    #         "userId": username,
+                    #         "businessDate": current_date.format("M/D/YYYY"),
+                    #         "property": external_property_code,
+                    #         "CSV": "true",
+                    #         "fileName": f"Cancellation Summary Report {external_property_code}",
+                    #         "reportId": "166",
+                    #         "startDate": start.format("M/D/YYYY"),
+                    #         "endDate": end.format("M/D/YYYY"),
+                    #         "cancelCodes": "*",
+                    #         "reportServerKey": serverkey,
+                    #         "reportServerUsername": username,
+                    #         "fullPageRequestTime": int(time.time())
+                    #     }
 
-                        cancellation_data_post = {
-                            "ie": "csv",
-                            "locale": "en_US",
-                            "JOD": "cancellation_summary_csv",
-                            "userId": username,
-                            "businessDate": current_date.format("M/D/YYYY"),
-                            "property": external_property_code,
-                            "CSV": "true",
-                            "fileName": f"Cancellation Summary Report {external_property_code}",
-                            "reportId": "166",
-                            "startDate": start.format("M/D/YYYY"),
-                            "endDate": end.format("M/D/YYYY"),
-                            "cancelCodes": "*",
-                            "reportServerKey": serverkey,
-                            "reportServerUsername": username,
-                            "fullPageRequestTime": int(time.time())
-                        }
+                    #     if property_type == 'Skytouch':
+                    #         cancellation_data_post['commaSeparatedAccounts'] = ""
+                    #         cancellation_data_post['activityDateType'] = ""
 
-                        if property_type == 'Skytouch':
-                            cancellation_data_post['commaSeparatedAccounts'] = ""
-                            cancellation_data_post['activityDateType'] = ""
+                    #     cancel_page_get = s.post(f'{domain_url}/CancellationSummaryReport.go')
 
-                        cancel_page_get = s.post(f'{domain_url}/CancellationSummaryReport.go')
+                    #     cancel_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf',
+                    #                                data=cancellation_data_post)
+                    #     report_type = '[Cancellation]'
+                    #     print(f"[{atica_property_code}]{report_type} Sent request!")
 
-                        cancel_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf',
-                                                   data=cancellation_data_post)
-                        report_type = '[Cancellation]'
-                        print(f"[{atica_property_code}]{report_type} Sent request!")
+                    #     if cancel_report_get.status_code == 200:
+                    #         temp = tempfile.TemporaryFile()
+                    #         temp.write(cancel_report_get.content)
+                    #         temp.seek(0)
+                    #         read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
+                    #         cancellation_dataframe.append(read_xl)
+                    #         temp.close()
+                    #         print(
+                    #             f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+                    #     else:
+                    #         print(
+                    #             f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
 
-                        if cancel_report_get.status_code == 200:
-                            temp = tempfile.TemporaryFile()
-                            temp.write(cancel_report_get.content)
-                            temp.seek(0)
-                            read_xl = pd.read_csv(BytesIO(temp.read()), index_col=False)
-                            cancellation_dataframe.append(read_xl)
-                            temp.close()
-                            print(
-                                f"[{atica_property_code}]{report_type} successfully pulled for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
-                        else:
-                            print(
-                                f"[{atica_property_code}]{report_type} failed to pull for {start.format('YYYY-MM-DD')} to {end.format('YYYY-MM-DD')}")
+                    # cancellation_report = pd.concat(cancellation_dataframe, ignore_index=True)
 
-                    cancellation_report = pd.concat(cancellation_dataframe, ignore_index=True)
+                    # filename = f'{folder_name}{propertyCode}_Cancellation.csv'
+                    # cancellation_report.to_csv(filename, index=False)
+                    # cancellation_binary_stream = open(filename, 'rb')
+                    # cancellation_binary_data = cancellation_binary_stream.read()
 
-                    filename = f'{folder_name}{propertyCode}_Cancellation.csv'
-                    cancellation_report.to_csv(filename, index=False)
-                    cancellation_binary_stream = open(filename, 'rb')
-                    cancellation_binary_data = cancellation_binary_stream.read()
+                    # if not ignore_size_check and len(cancellation_binary_data) < 5000:
+                    #     print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
+                    #     # os.remove(filename)
+                    # else:
+                    #     print(f"[{atica_property_code}]{report_type} Uploading Cancellation report")
+                    #     read = pd.read_csv(filename)
+                    #     read.drop(columns=['Unnamed: 0'], inplace=True)
+                    #     read.dropna(axis=0, inplace=True)
+                    #     read.insert(0, column="propertyCode", value=propertyCode)
+                    #     read.insert(1, column="pullDateId", value=pullDateId)
+                    #     read.insert(2, column="createdAt", value=createdAt)
+                    #     read.insert(3, column="updatedAt", value=updatedAt)
+                    #     read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                    #     read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                    #     read['Cxl Date'] = pd.to_datetime(read['Cxl Date'], format='mixed', errors='coerce')
+                    #     read['# Resv'] = read['# Resv'].fillna(0).astype(int)
+                    #     read['Room nights'] = read['Room nights'].fillna(0).astype(int)
+                    #     headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "CancellationReason", "CxlDate", "Resv", "RoomNights",
+                    #                     "RoomRev"]
+                    #     read.to_csv(filename, index=False, header=headers_list)
+                    # # End Cancellation Report
 
-                    if not ignore_size_check and len(cancellation_binary_data) < 5000:
-                        print(f"[{atica_property_code}]{report_type} Report size < 5 kb not sending, having only header")
-                        # os.remove(filename)
-                    else:
-                        print(f"[{atica_property_code}]{report_type} Uploading Cancellation report")
-                        read = pd.read_csv(filename)
-                        read.drop(columns=['Unnamed: 0'], inplace=True)
-                        read.dropna(axis=0, inplace=True)
-                        read.insert(0, column="propertyCode", value=propertyCode)
-                        read.insert(1, column="pullDateId", value=pullDateId)
-                        read.insert(2, column="createdAt", value=createdAt)
-                        read.insert(3, column="updatedAt", value=updatedAt)
-                        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-                        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                        read['Cxl Date'] = pd.to_datetime(read['Cxl Date'], format='mixed', errors='coerce')
-                        read['# Resv'] = read['# Resv'].fillna(0).astype(int)
-                        read['Room nights'] = read['Room nights'].fillna(0).astype(int)
-                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "CancellationReason", "CxlDate", "Resv", "RoomNights",
-                                        "RoomRev"]
-                        read.to_csv(filename, index=False, header=headers_list)
-                    # End Cancellation Report
+                    # # Start Revenue By Rate Code Report
+                    # revenue_data_post = {
+                    #     "JOD": "apache_revenue_by_rate_code",
+                    #     "locale": "en_US",
+                    #     "ARG0": external_property_code,
+                    #     "ARG1": username,
+                    #     "ARG2": arrow.now().shift(days=-2).format("M/D/YYYY"),
+                    #     "ARG3": "",
+                    #     "ARG4": "",
+                    #     "ARG5": "",
+                    #     "ARG6": "",
+                    #     "ARG7": "",
+                    #     "ARG8": "",
+                    #     "ARG9": "",
+                    #     "ARG10": "",
+                    #     "ARG11": "",
+                    #     "ARG12": "",
+                    #     "ARG13": "",
+                    #     "ARG14": "",
+                    #     "ARG15": "",
+                    #     "CSV": "true",
+                    #     "CSV_SUPPRESS_HEADERS": "false",
+                    #     "reportId": "76",
+                    #     "updateCounter": "Y",
+                    #     "includeCheckedOut": "",
+                    #     "includeInHouse": "",
+                    #     "altLocale": "",
+                    #     "reportName": "",
+                    #     "isGuestServiceEnabled": "",
+                    #     "sortorder": "",
+                    #     "showCurrencySymbol": "",
+                    #     "commaSeparatedAccounts": "",
+                    #     "activityDateType": "",
+                    #     "reportServerKey": serverkey,
+                    #     "reportServerUsername": username,
+                    #     "fullPageRequestTime": int(time.time())
+                    # }
 
-                    # Start Revenue By Rate Code Report
-                    revenue_data_post = {
-                        "JOD": "apache_revenue_by_rate_code",
-                        "locale": "en_US",
-                        "ARG0": external_property_code,
-                        "ARG1": username,
-                        "ARG2": arrow.now().shift(days=-2).format("M/D/YYYY"),
-                        "ARG3": "",
-                        "ARG4": "",
-                        "ARG5": "",
-                        "ARG6": "",
-                        "ARG7": "",
-                        "ARG8": "",
-                        "ARG9": "",
-                        "ARG10": "",
-                        "ARG11": "",
-                        "ARG12": "",
-                        "ARG13": "",
-                        "ARG14": "",
-                        "ARG15": "",
-                        "CSV": "true",
-                        "CSV_SUPPRESS_HEADERS": "false",
-                        "reportId": "76",
-                        "updateCounter": "Y",
-                        "includeCheckedOut": "",
-                        "includeInHouse": "",
-                        "altLocale": "",
-                        "reportName": "",
-                        "isGuestServiceEnabled": "",
-                        "sortorder": "",
-                        "showCurrencySymbol": "",
-                        "commaSeparatedAccounts": "",
-                        "activityDateType": "",
-                        "reportServerKey": serverkey,
-                        "reportServerUsername": username,
-                        "fullPageRequestTime": int(time.time())
-                    }
+                    # if property_type == 'Skytouch':
+                    #     revenue_data_post['commaSeparatedAccounts'] = ""
+                    #     revenue_data_post['activityDateType'] = ""
 
-                    if property_type == 'Skytouch':
-                        revenue_data_post['commaSeparatedAccounts'] = ""
-                        revenue_data_post['activityDateType'] = ""
+                    # revenue_page_get = s.post(f'{domain_url}/RevenueByRateCodeReport.go')
 
-                    revenue_page_get = s.post(f'{domain_url}/RevenueByRateCodeReport.go')
+                    # revenue_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=revenue_data_post)
+                    # report_type = '[Revenue]'
+                    # print(f"[{atica_property_code}]{report_type} Sent request!")
 
-                    revenue_report_get = s.post(f'{domain_url}/ReportProxyServlet.proxy?ie=pdf', data=revenue_data_post)
-                    report_type = '[Revenue]'
-                    print(f"[{atica_property_code}]{report_type} Sent request!")
-
-                    if not revenue_report_get.ok:
-                        print(
-                            f"[{atica_property_code}]{report_type} Something went wrong for the report: {revenue_report_get.status_code} {revenue_report_get.reason}")
-                    else:
-                        print(f"[{atica_property_code}]{report_type} Uploading Revenue report")
-                        filename = f'{folder_name}{propertyCode}_Revenue.csv'
-                        with open(filename, 'wb') as f:
-                            f.write(revenue_report_get.content)
-                            f.close()
-                        read = pd.read_csv(filename)
-                        read.insert(0, column="propertyCode", value=propertyCode)
-                        read.insert(1, column="pullDateId", value=pullDateId)
-                        read.insert(2, column="createdAt", value=createdAt)
-                        read.insert(3, column="updatedAt", value=updatedAt)
-                        read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-                        read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                        read['%Room Nights'] = read['%Room Nights'].fillna(0).astype(int)
-                        headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "IDS_RATE_CODE", "RoomNights", "RoomNightsPer",
-                                        "RoomRevenue", "RoomRevenuePer", "DailyAVG", "PTDRoomNights", "PTDRoomNightsPer",
-                                        "PTDRoomRevenue", "PTDRoomRevenuePer", "PTD_AVG", "YTDRoomNights",
-                                        "YTDRoomNightsPer",
-                                        "YTDRoomRevenue", "YTDRoomRevenuePer", "YTD_AVG"]
-                        read.to_csv(filename, index=False, header=headers_list)
-                    # End Revenue By Rate Code Report
+                    # if not revenue_report_get.ok:
+                    #     print(
+                    #         f"[{atica_property_code}]{report_type} Something went wrong for the report: {revenue_report_get.status_code} {revenue_report_get.reason}")
+                    # else:
+                    #     print(f"[{atica_property_code}]{report_type} Uploading Revenue report")
+                    #     filename = f'{folder_name}{propertyCode}_Revenue.csv'
+                    #     with open(filename, 'wb') as f:
+                    #         f.write(revenue_report_get.content)
+                    #         f.close()
+                    #     read = pd.read_csv(filename)
+                    #     read.insert(0, column="propertyCode", value=propertyCode)
+                    #     read.insert(1, column="pullDateId", value=pullDateId)
+                    #     read.insert(2, column="createdAt", value=createdAt)
+                    #     read.insert(3, column="updatedAt", value=updatedAt)
+                    #     read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                    #     read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                    #     read['%Room Nights'] = read['%Room Nights'].fillna(0).astype(int)
+                    #     headers_list = ["propertyCode", "pullDateId", "createdAt", "updatedAt", "createdAtEpoch", "updatedAtEpoch", "IDS_RATE_CODE", "RoomNights", "RoomNightsPer",
+                    #                     "RoomRevenue", "RoomRevenuePer", "DailyAVG", "PTDRoomNights", "PTDRoomNightsPer",
+                    #                     "PTDRoomRevenue", "PTDRoomRevenuePer", "PTD_AVG", "YTDRoomNights",
+                    #                     "YTDRoomNightsPer",
+                    #                     "YTDRoomRevenue", "YTDRoomRevenuePer", "YTD_AVG"]
+                    #     read.to_csv(filename, index=False, header=headers_list)
+                    # # End Revenue By Rate Code Report
 
                     # Start Revenue By Rate Code Detail Report
                     revenue_detail_dataframe = []
@@ -1119,11 +1121,13 @@ def Choice_Pms(row):
             if not check_occupancy_file:
                 errorMessage = errorMessage + " Occupancy file - N/A"
 
-            if not check_cancellation_file:
-                errorMessage = errorMessage + " Cancellation file - N/A"
+            #THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
+                
+            # if not check_cancellation_file:
+            #     errorMessage = errorMessage + " Cancellation file - N/A"
 
-            if not check_revenue_file:
-                errorMessage = errorMessage + " Revenue file - N/A"
+            # if not check_revenue_file:
+            #     errorMessage = errorMessage + " Revenue file - N/A"
 
             if not check_revenue_detail_file:
                 errorMessage = errorMessage + " Revenue Detail file - N/A"
@@ -1163,29 +1167,31 @@ def Choice_Pms(row):
                 else:
                     errorMessage = errorMessage + "OCC File Was Blank, "
 
-            if check_cancellation_file:
+            #THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
+                    
+            # if check_cancellation_file:
 
-                fileCount = fileCount + 1
-                cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv", encoding="utf-8"))
-                cancel_result = list(cancel_result)
-                print(len(cancel_result))
-                if len(cancel_result) > 0:
-                    bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
-                    print("CANCELLATION DONE")
-                else:
-                    errorMessage = errorMessage + "CANCELLATION File Was Blank, "
+            #     fileCount = fileCount + 1
+            #     cancel_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Cancellation.csv", encoding="utf-8"))
+            #     cancel_result = list(cancel_result)
+            #     print(len(cancel_result))
+            #     if len(cancel_result) > 0:
+            #         bulk_insert_choice_cancel(propertyCode, cancel_result, row['res_before'], row['res_after'])
+            #         print("CANCELLATION DONE")
+            #     else:
+            #         errorMessage = errorMessage + "CANCELLATION File Was Blank, "
 
-            if check_revenue_file:
+            # if check_revenue_file:
 
-                fileCount = fileCount + 1
-                revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv", encoding="utf-8"))
-                revenue_result = list(revenue_result)
-                print(len(revenue_result))
-                if len(revenue_result) > 0:
-                    bulk_insert_choice_revenue(propertyCode, revenue_result)
-                    print("REVENUE DONE")
-                else:
-                    errorMessage = errorMessage + "REVENUE File Was Blank, "
+            #     fileCount = fileCount + 1
+            #     revenue_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Revenue.csv", encoding="utf-8"))
+            #     revenue_result = list(revenue_result)
+            #     print(len(revenue_result))
+            #     if len(revenue_result) > 0:
+            #         bulk_insert_choice_revenue(propertyCode, revenue_result)
+            #         print("REVENUE DONE")
+            #     else:
+            #         errorMessage = errorMessage + "REVENUE File Was Blank, "
 
             if check_revenue_detail_file:
 
@@ -1251,7 +1257,7 @@ def Choice_Pms(row):
                 else:
                     errorMessage = errorMessage + "Cancellation List File Was Blank, "
             
-            if (fileCount == 8):
+            if (fileCount == 6):
                 if (errorMessage == ""):
                     update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)
                 else:
