@@ -308,7 +308,7 @@ def Choice_Pms(row):
     propertyCode = row['propertyCode']
     pullDateId = row['pullDateId']
     platform = "PMS"
-    folder_name = "./reports/"
+    folder_name = "../reports/"
 
     username = None
     password = None
