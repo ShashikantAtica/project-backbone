@@ -229,15 +229,9 @@ if __name__ == '__main__':
         pass
 
     result = None
-    if propertycode is None:
-        print("All properties run")
-        conn = db_config.get_db_connection()
-        res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}';"""))
-        result = res.fetchall()
-        columns = res.keys()
-        results_as_dict = [dict(zip(columns, row)) for row in result]
-        conn.close()
-        print("Fetched successfully")
+    if propertycode is None or localfilepath is None  or reporttype is None:
+       print("Please enter all inputs, Recheck!")
+       results_as_dict = None
     else:
         print(f"{propertycode} property run")
         conn = db_config.get_db_connection()
