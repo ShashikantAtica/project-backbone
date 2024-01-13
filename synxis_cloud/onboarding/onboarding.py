@@ -329,25 +329,22 @@ if __name__ == '__main__':
 
     propertycode = None
     reporttype = None
-    filename = None
     localfilepath = None
 
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("--propertycode", type=str, required=False, help="Type in the propertycode")
         parser.add_argument("--reporttype", type=str, required=False, help="Type in the reporttype")
-        parser.add_argument("--filename", type=str, required=False, help="Type in the filename")
         parser.add_argument("--localfilepath", type=str, required=False, help="Type in the localfilepath")
         args = parser.parse_args()
         propertycode = args.propertycode
         reporttype = args.reporttype
-        filename = args.filename
         localfilepath = args.localfilepath
         print(f"propertycode :: {propertycode}")
         print(f"reporttype :: {reporttype}")
-        print(f"filename :: {filename}")
         print(f"localfilepath :: {localfilepath}")
     except:
+        print("Something wents wrong with Inputs!")
         pass
 
     result = None
