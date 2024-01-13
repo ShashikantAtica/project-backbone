@@ -1390,10 +1390,12 @@ if __name__ == '__main__':
         propertycode = args.propertycode
         propertyname = args.propertyname
         externalpropertycode = args.externalpropertycode
+        propertyname = propertyname.replace("#", " ")
         print(f"propertycode :: {propertycode}")
         print(f"propertyname :: {propertyname}")
         print(f"externalpropertycode :: {externalpropertycode}")
     except:
+        print("Something wents wrong with Inputs!")
         pass
 
     propertyName = propertyname
@@ -1416,7 +1418,6 @@ if __name__ == '__main__':
     "marriott_json": marriott_json
     }
 
-    insert_into_tblproperties(property_object)
 
     result = None
     if propertycode is None or propertyname is None  or externalpropertycode is None:
@@ -1424,6 +1425,9 @@ if __name__ == '__main__':
        results_as_dict = None
     else:
         print(f"{propertycode} property run")
+
+        insert_into_tblproperties(property_object)
+        
         conn = db_config.get_db_connection()
         res = conn.execute(text(f"""SELECT * FROM tbl_properties WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';"""))
         result = res.fetchall()
