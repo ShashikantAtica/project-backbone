@@ -91,7 +91,7 @@ def bulk_insert_choice_res(propertyCode, res_list, res_before, res_after):
                 'Package': stmt.excluded.Package,
                 'CancellationDate': stmt.excluded.CancellationDate,
                 'CXLUserID': stmt.excluded.CXLUserID,
-                
+
             }
         )
         # Execute the insert statement
@@ -297,6 +297,18 @@ def Choice_Pms(row):
         domain_url = "https://www.choiceadvantage.com/choicehotels"
 
         try:
+            file_paths = [
+                f'{folder_name}{propertyCode}_Reservation.csv',
+                f'{folder_name}{propertyCode}_Occupancy.csv',
+                f'{folder_name}{propertyCode}_Cancellation.csv',
+                f'{folder_name}{propertyCode}_Revenue.csv',
+                f'{folder_name}{propertyCode}_Revenue_Detail.csv',
+                f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv',
+            ]
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
             with requests.Session() as s:
                 s.headers.update({'Upgrade-Insecure-Requests': '1',
                                   'User-Agent': 'Mozilla/5.0 '
@@ -433,6 +445,7 @@ def Choice_Pms(row):
                         read = pd.read_csv(filename)
                         if 'IDS_ACCOUNT' in read.columns:
                             read.rename(columns={"IDS_ACCOUNT": "Account"}, inplace=True)
+                        read.dropna(subset=['Account'], inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read.insert(2, column="createdAt", value=createdAt)
@@ -536,6 +549,10 @@ def Choice_Pms(row):
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading occupancies")
                         read = pd.read_csv(filename)
+                        try:
+                            read.dropna(subset=['﻿IDS_DATE'], inplace=True)
+                        except Exception:
+                            read.dropna(subset=['IDS_DATE'], inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read.insert(2, column="createdAt", value=createdAt)
@@ -553,9 +570,9 @@ def Choice_Pms(row):
                                    'OccPercent', 'RoomRev', 'RevPAR', 'ADR', 'Ppl']
                         read.to_csv(filename, header=headers, index=False)
                     # End Occupancy Report
-                        
+
                     #THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
-                        
+
                     # # Start Cancellation Report
                     # cancellation_dataframe = []
                     # start_date = row['res_before']
@@ -792,6 +809,10 @@ def Choice_Pms(row):
                     else:
                         print(f"[{atica_property_code}]{report_type} Uploading Revenue Detail report")
                         read = pd.read_csv(filename)
+                        try:
+                            read.dropna(subset=['﻿IDS_DATE_DAY'], inplace=True)
+                        except Exception:
+                            read.dropna(subset=['IDS_DATE_DAY'], inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read.insert(2, column="createdAt", value=createdAt)
@@ -885,7 +906,7 @@ def Choice_Pms(row):
                     read.insert(3, column="updatedAt", value=updatedAt)
                     read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                     read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                    read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'], format="%m/%d/%y", errors='coerce')
+                    read['Fixed Cut Off Date'] = pd.to_datetime(read['Fixed Cut Off Date'], format="%m/%d/%y", errors='coerce').dt.strftime('%Y-%m-%d')
                     read['Block Date'] = pd.to_datetime(read['Block Date'], format="%m/%d/%y", errors='coerce')
                     read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read["Group Name"].astype(str) + "_" + read["Fixed Cut Off Date"].astype(str) + "_" + read["Room Type"].astype(str) + "_" + read["Block Date"].astype(str))
 
@@ -1017,16 +1038,16 @@ def Choice_Pms(row):
                         curr = curr.shift(days=+46)
 
                         noshow_data_post = {
-                            'JOD': 'apache_no_show', 
-                            'locale': 'en_US', 
-                            'property': external_property_code, 
-                            'userId': username, 
-                            'reportId': '48', 
-                            'updateCounter': 'Y', 
-                            'creditCardStatusTypeXML': '', 
+                            'JOD': 'apache_no_show',
+                            'locale': 'en_US',
+                            'property': external_property_code,
+                            'userId': username,
+                            'reportId': '48',
+                            'updateCounter': 'Y',
+                            'creditCardStatusTypeXML': '',
                             'isNoShowBatchEnabled': 'Y',
-                            'CSV': 'true', 
-                            'CSV_SUPPRESS_HEADERS': 'false', 
+                            'CSV': 'true',
+                            'CSV_SUPPRESS_HEADERS': 'false',
                             'startDatePastCurrent': start.format("M/D/YYYY"),
                             'endDatePastCurrent': end.format("M/D/YYYY"),
                             'ARG2': current_date.format("M/D/YYYY"),
@@ -1079,14 +1100,14 @@ def Choice_Pms(row):
                         read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                         read['Account'] = read['Account'].fillna(0).astype(int)
                         read.insert(6, column="uniqueKey", value=read["Account"].astype(str))
-                        
+
                         headers = ['propertyCode','pullDateId','createdAt','updatedAt','createdAtEpoch',
                                    'updatedAtEpoch','uniqueKey','account','guestName','arrival','departure',
                                    'source','GTD','ratePlan','rate','balance','payment','authStatus']
                         read.to_csv(filename, header=headers, index=False)
 
                     # End noshow Report
-                        
+
             reservation_file_path = f'{folder_name}{propertyCode}_Reservation.csv'
             occupancy_file_path = f'{folder_name}{propertyCode}_Occupancy.csv'
             cancellation_file_path = f'{folder_name}{propertyCode}_Cancellation.csv'
@@ -1095,8 +1116,8 @@ def Choice_Pms(row):
             group_pickup_detail_file_path = f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv'
             Noshow_file_path = f'{folder_name}{propertyCode}_Noshow.csv'
             cancellation_list_file_path = f'{folder_name}{propertyCode}_Cancellation_List_Final.csv'
-            
-            
+
+
             check_cancellation_list_file = os.path.isfile(cancellation_list_file_path)
             check_Noshow_file = os.path.isfile(Noshow_file_path)
             check_reservation_file = os.path.isfile(reservation_file_path)
@@ -1114,7 +1135,7 @@ def Choice_Pms(row):
 
             if not check_cancellation_list_file:
                 errorMessage = errorMessage + " Cancellation List file - N/A"
-            
+
             if not check_reservation_file:
                 errorMessage = errorMessage + " Reservation file - N/A"
 
@@ -1122,7 +1143,7 @@ def Choice_Pms(row):
                 errorMessage = errorMessage + " Occupancy file - N/A"
 
             #THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
-                
+
             # if not check_cancellation_file:
             #     errorMessage = errorMessage + " Cancellation file - N/A"
 
@@ -1144,7 +1165,7 @@ def Choice_Pms(row):
                 if len(res_result) > 0:
                     error_temp = bulk_insert_choice_res(propertyCode, res_result, row['res_before'], row['res_after'])
                     if(error_temp == ""):
-                        print("RES DONE")   
+                        print("RES DONE")
                     else:
                         print("RES FAILED")
                         errorMessage = errorMessage + " RES Failed: " + error_temp
@@ -1160,7 +1181,7 @@ def Choice_Pms(row):
                 if len(occ_result) > 0:
                     error_temp = bulk_insert_choice_occ(propertyCode, occ_result, row['occ_before'], row['occ_after'])
                     if(error_temp == ""):
-                        print("OCC DONE")   
+                        print("OCC DONE")
                     else:
                         print("OCC FAILED")
                         errorMessage = errorMessage + " OCC Failed: " + error_temp
@@ -1168,7 +1189,7 @@ def Choice_Pms(row):
                     errorMessage = errorMessage + "OCC File Was Blank, "
 
             #THESE REPORTS NOT BEING CONSUMED, COMMENTED OUT FOR FUTURE USE
-                    
+
             # if check_cancellation_file:
 
             #     fileCount = fileCount + 1
@@ -1217,7 +1238,7 @@ def Choice_Pms(row):
                 print(len(group_pickup_detail_result))
                 if len(group_pickup_detail_result) > 0:
                     error_temp = bulk_insert_choice_group_pickup_detail(propertyCode, group_pickup_detail_result, row['res_before'], row['res_after'])
-                    if(error_temp == ""):  
+                    if(error_temp == ""):
                         print("GROUP PICKUP DETAIL DONE")
                     else:
                         print("GROUP PICKUP DETAIL FAILED")
@@ -1240,7 +1261,7 @@ def Choice_Pms(row):
                         errorMessage = errorMessage + " Noshow Failed: " + error_temp
                 else:
                     errorMessage = errorMessage + "Noshow File Was Blank, "
-            
+
             if check_cancellation_list_file:
 
                 fileCount = fileCount + 1
@@ -1250,13 +1271,13 @@ def Choice_Pms(row):
                 if len(cancellation_list_result) > 0:
                     error_temp = bulk_insert_choice_cancellation_list(propertyCode, cancellation_list_result, row['res_before'], row['res_after'])
                     if(error_temp == ""):
-                        print("CANCELLATION LIST DONE")   
+                        print("CANCELLATION LIST DONE")
                     else:
                         print("CANCELLATION LIST FAILED")
                         errorMessage = errorMessage + " CANCELLATION LIST Failed: " + error_temp
                 else:
                     errorMessage = errorMessage + "Cancellation List File Was Blank, "
-            
+
             if (fileCount == 6):
                 if (errorMessage == ""):
                     update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False)

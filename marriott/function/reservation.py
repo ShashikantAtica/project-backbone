@@ -50,6 +50,11 @@ def process_report(session, payload):
         raise Exception('Report could not be exported!')
     csv = download(session, report_query, download_uri)
     folder_name = "./reports/"
+
+    reservation_file = f'{folder_name}{property_code}_Reservation.csv'
+    if os.path.exists(reservation_file):
+        os.remove(reservation_file)
+
     filename = f'{folder_name}{property_code}_Reservation.xlsx'
     open(filename, "wb").write(csv)
     read = pd.read_excel(filename)

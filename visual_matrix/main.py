@@ -110,6 +110,15 @@ def VisualMatrix_Pms(row):
         update_into_pulldate(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
     else:
         try:
+            file_paths = [
+                f'{folder_name}{propertyCode}_Front_Office_Arrival.csv',
+                f'{folder_name}{propertyCode}_Front_Office_Arrival.xls',
+                f'{folder_name}{propertyCode}_Occupancy.csv',
+                f'{folder_name}{propertyCode}_Occupancy.xls',
+            ]
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
             with requests.Session() as s:
                 s.headers.update({'Upgrade-Insecure-Requests': '1',
                                   'User-Agent': 'Mozilla/5.0 '
@@ -214,6 +223,7 @@ def VisualMatrix_Pms(row):
                         open(filename, "wb").write(occupancy_response.content)
 
                         read = pd.read_excel(filename, skiprows=11)
+                        read.dropna(subset=['Date'], inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read.insert(2, column="createdAt", value=createdAt)

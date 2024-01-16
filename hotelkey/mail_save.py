@@ -423,6 +423,7 @@ def Hotelkey_Pms(row):
             read['Arrival\nDate'] = pd.to_datetime(read['Arrival\nDate'], format="mixed", errors='coerce')
             read['Depart\nDate'] = pd.to_datetime(read['Depart\nDate'], format="mixed", errors='coerce')
             read['Creation Date'] = pd.to_datetime(read['Creation Date'], format="mixed", errors='coerce')
+            read.dropna(subset=["Res #"], inplace=True)
             read.insert(0, column="propertyCode", value=propertyCode)
             read.insert(1, column="pullDateId", value=pullDateId)
             read.insert(2, column="createdAt", value=createdAt)
@@ -458,6 +459,7 @@ def Hotelkey_Pms(row):
             # Forecast Data Clean and Insert
             read = pd.read_csv(occupancy_file_path)
             read['Date'] = pd.to_datetime(read['Date'])
+            read.dropna(subset=['Date'], inplace=True)
             read.insert(0, column="propertyCode", value=propertyCode)
             read.insert(1, column="pullDateId", value=pullDateId)
             read.insert(2, column="createdAt", value=createdAt)
