@@ -121,6 +121,15 @@ def AutoClerk_Pms(row):
     save_dir = os.path.abspath(f'./reports/{propertyCode}/')
     driver = None
     try:
+        file_paths = [
+            f'{folder_name}Occupancy.csv',
+            f'{folder_name}Reservation.csv',
+            f'{folder_name}groupBlockSummary.csv',
+        ]
+        for file_path in file_paths:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
@@ -201,8 +210,7 @@ def AutoClerk_Pms(row):
         time.sleep(5)
 
         new_file_name = os.path.join(save_dir, "Occupancy.csv")
-        if os.path.exists(new_file_name):
-            os.remove(new_file_name)
+
         os.rename(filepath, new_file_name)
 
         print(f"{report_type} report saved successfully")
@@ -351,6 +359,7 @@ def AutoClerk_Pms(row):
                                   'UnusedGroupBlocks',
                                   'Occup', 'A', 'C', 'I', 'RoomRevenue', 'ADR', 'REVPAR', 'OOORooms', 'UnusedAllotment',
                                   'AvailRooms']
+            shifted_df.dropna(subset=["Date"], inplace=True)
             shifted_df.insert(0, column="propertyCode", value=propertyCode)
             shifted_df.insert(1, column="pullDateId", value=pullDateId)
             shifted_df.insert(2, column="createdAt", value=createdAt)
@@ -422,6 +431,7 @@ def AutoClerk_Pms(row):
             df['Date/Time'] = pd.to_datetime(df["Date/Time"]).dt.date
             df['arrival date'] = pd.to_datetime(df['arrival date'], format='mixed', errors='coerce')
             df['departure date'] = pd.to_datetime(df['departure date'], format='mixed', errors='coerce')
+            df.dropna(subset=["Myhms Conf"], inplace=True)
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)
@@ -455,6 +465,7 @@ def AutoClerk_Pms(row):
             df['Arrive'] = pd.to_datetime(df['Arrive'], errors='coerce', format='%m/%d/%y')
             df['Depart'] = pd.to_datetime(df['Depart'], errors='coerce', format='%m/%d/%y')
             df['CutoffDate'] = pd.to_datetime(df['CutoffDate'], errors='coerce', format='%m/%d/%y')
+            df.dropna(subset=["Confirmation"], inplace=True)
             df.insert(0, column="propertyCode", value=propertyCode)
             df.insert(1, column="pullDateId", value=pullDateId)
             df.insert(2, column="createdAt", value=createdAt)

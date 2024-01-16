@@ -369,6 +369,7 @@ def IHG_Pms(row):
             read = pd.read_excel(reservation_file_path)
             read['Arrival Date'] = pd.to_datetime(read['Arrival Date'])
             read.columns = read.columns.str.replace(' ', '', regex=True)
+            read.dropna(subset=["ConfirmationNumber"], inplace=True)
             read.insert(0, column="propertyCode", value=propertyCode)
             read.insert(1, column="pullDateId", value=pullDateId)
             read.insert(2, column="createdAt", value=createdAt)
@@ -396,7 +397,7 @@ def IHG_Pms(row):
             # Occupancy Data Clean and Insert
             read = pd.read_excel(occupancy_file_path)
             read['Date'] = pd.to_datetime(read['Date'])
-
+            read.dropna(subset=['Date'], inplace=True)
             read.insert(0, column="propertyCode", value=propertyCode)
             read.insert(1, column="pullDateId", value=pullDateId)
             read.insert(2, column="createdAt", value=createdAt)

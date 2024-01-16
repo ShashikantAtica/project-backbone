@@ -28,6 +28,9 @@ def get_total_yield_report_url(payload):
         start_date = payload['fore_before']
 
         folder_name = "./reports/"
+        total_yield_file = f'{folder_name}{external_property_code}_Total_Yield.csv'
+        if os.path.exists(total_yield_file):
+            os.remove(total_yield_file)
         save_dir = os.path.abspath('reports/')
         driver = None
         chrome_options = Options()
@@ -135,6 +138,7 @@ def get_total_yield_report_url(payload):
             pivoted_df = df.T
             pivoted_df = pivoted_df.dropna(axis=1, how='all')
             pivoted_df.iloc[0, 0] = "Date"
+            pivoted_df.dropna(subset=['Date'], inplace=True)
             pivoted_df.insert(0, column="propertyCode", value=payload['propertyCode'])
             pivoted_df.insert(1, column="pullDateId", value=payload['pullDateId'])
             pivoted_df.insert(2, column="createdAt", value=createdAt)

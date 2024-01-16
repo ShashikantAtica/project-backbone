@@ -68,6 +68,10 @@ def process_report(session, payload):
     start_date = payload['fore_before']
     folder_name = "./reports/"
 
+    realized_activity_file = f'{folder_name}{property_code}_Realized_Activity.csv'
+    if os.path.exists(realized_activity_file):
+        os.remove(realized_activity_file)
+
     createdAt = "'" + str(arrow.now()) + "'"
     updatedAt = "'" + str(arrow.now()) + "'"
     createdAtEpoch =  int(arrow.utcnow().timestamp())
@@ -78,6 +82,7 @@ def process_report(session, payload):
     filename = f'{folder_name}{property_code}_Realized_Activity.xls'
     open(filename, "wb").write(realized_activity_report)
     read = pd.read_excel(filename, skipfooter=7)
+    read.dropna(subset=['Arrival Date'], inplace=True)
     read.insert(0, column="propertyCode", value=payload['propertyCode'])
     read.insert(1, column="pullDateId", value=payload['pullDateId'])
     read.insert(2, column="createdAt", value=createdAt)

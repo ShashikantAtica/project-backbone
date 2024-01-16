@@ -607,49 +607,57 @@ def Synxis_Cloud_Pms(row):
         if check_reservation_file:
 
             fileCount=fileCount+1
-            # Reservation Data Clean and Insert
-            read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
-            read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed', errors='coerce')
-            read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed', errors='coerce')
-            read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed', errors='coerce')
-            read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed', errors='coerce')
-            read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed', errors='coerce')
-            read.insert(0, column="propertyCode", value=propertyCode)
-            read.insert(1, column="pullDateId", value=pullDateId)
-            read.insert(2, column="createdAt", value=createdAt)
-            read.insert(3, column="updatedAt", value=updatedAt)
-            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            read['Total_Cash_Pymnt'] = read['Total_Cash_Pymnt'].apply(str).str.replace(',', '').astype(float)
-            read['Pay_At_Property'] = read['Pay_At_Property'].apply(str).str.replace(',', '').astype(float)
-            read['Cash_Refund'] = read['Cash_Refund'].apply(str).str.replace(',', '').astype(float)
-            read['Pay_At_Property'] = read['Pay_At_Property'].fillna(0).astype(int)
-            read['Total_Price_For_Adult'] = read['Total_Price_For_Adult'].fillna(0).astype(int)
-            read['Total_Price_For_Child_Age_Group1'] = read['Total_Price_For_Child_Age_Group1'].fillna(0).astype(int)
-            read['Total_Price_For_Child_Age_Group2'] = read['Total_Price_For_Child_Age_Group2'].fillna(0).astype(int)
-            read['Total_Price_For_Child_Age_Group3'] = read['Total_Price_For_Child_Age_Group3'].fillna(0).astype(int)
-            read['Total_Price_For_Child_Age_Group4'] = read['Total_Price_For_Child_Age_Group4'].fillna(0).astype(int)
-            read['Total_Price_For_Child_Age_Group5'] = read['Total_Price_For_Child_Age_Group5'].fillna(0).astype(int)
-            read['Total_Price_For_Child_Unknown_Age_Group'] = read['Total_Price_For_Child_Unknown_Age_Group'].fillna(0).astype(int)
-            read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
-            read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
-            read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
-            read['Nights_Qty'] = read['Nights_Qty'].fillna(0).astype(int)
-            read['Room_Qty'] = read['Room_Qty'].fillna(0).astype(int)
-            read['Total_Adult_Occupancy'] = read['Total_Adult_Occupancy'].fillna(0).astype(int)
-            read['Total_Child_Occupancy_For_Age_Group1'] = read['Total_Child_Occupancy_For_Age_Group1'].fillna(0).astype(int)
-            read['Total_Child_Occupancy_For_Age_Group2'] = read['Total_Child_Occupancy_For_Age_Group2'].fillna(0).astype(int)
-            read['Total_Child_Occupancy_For_Age_Group3'] = read['Total_Child_Occupancy_For_Age_Group3'].fillna(0).astype(int)
-            read['Total_Child_Occupancy_For_Age_Group4'] = read['Total_Child_Occupancy_For_Age_Group4'].fillna(0).astype(int)
-            read['Total_Child_Occupancy_For_Age_Group5'] = read['Total_Child_Occupancy_For_Age_Group5'].fillna(0).astype(int)
-            read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
-            #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
-            read = read[read['Confirm_No'].str.len() >= 1]
-            read.insert(6, column="uniqueKey", value=read['Confirm_No'].astype(str))
-            read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
-        
-            res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
-            res_result = list(res_result)
+
+            try:
+                # Reservation Data Clean and Insert
+                read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+                read.dropna(subset=['Confirm_No'], inplace=True)
+                read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed', errors='coerce')
+                read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed', errors='coerce')
+                read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed', errors='coerce')
+                read['VCC_Card_Activation_Start'] = pd.to_datetime(read['VCC_Card_Activation_Start'], format='mixed', errors='coerce')
+                read['VCC_Card_Activation_End'] = pd.to_datetime(read['VCC_Card_Activation_End'], format='mixed', errors='coerce')
+                read.insert(0, column="propertyCode", value=propertyCode)
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read['Total_Cash_Pymnt'] = read['Total_Cash_Pymnt'].apply(str).str.replace(',', '').astype(float)
+                read['Pay_At_Property'] = read['Pay_At_Property'].apply(str).str.replace(',', '').astype(float)
+                read['Cash_Refund'] = read['Cash_Refund'].apply(str).str.replace(',', '').astype(float)
+                read['Pay_At_Property'] = read['Pay_At_Property'].fillna(0).astype(int)
+                read['Total_Price_For_Adult'] = read['Total_Price_For_Adult'].fillna(0).astype(int)
+                read['Total_Price_For_Child_Age_Group1'] = read['Total_Price_For_Child_Age_Group1'].fillna(0).astype(int)
+                read['Total_Price_For_Child_Age_Group2'] = read['Total_Price_For_Child_Age_Group2'].fillna(0).astype(int)
+                read['Total_Price_For_Child_Age_Group3'] = read['Total_Price_For_Child_Age_Group3'].fillna(0).astype(int)
+                read['Total_Price_For_Child_Age_Group4'] = read['Total_Price_For_Child_Age_Group4'].fillna(0).astype(int)
+                read['Total_Price_For_Child_Age_Group5'] = read['Total_Price_For_Child_Age_Group5'].fillna(0).astype(int)
+                read['Total_Price_For_Child_Unknown_Age_Group'] = read['Total_Price_For_Child_Unknown_Age_Group'].fillna(0).astype(int)
+                read['Coupon_Discount_Total'] = read['Coupon_Discount_Total'].fillna(0).astype(int)
+                read['Promo_Discount'] = read['Promo_Discount'].fillna(0).astype(int)
+                read['Paynow_Discount'] = read['Paynow_Discount'].fillna(0).astype(int)
+                read['Nights_Qty'] = read['Nights_Qty'].fillna(0).astype(int)
+                read['Room_Qty'] = read['Room_Qty'].fillna(0).astype(int)
+                read['Total_Adult_Occupancy'] = read['Total_Adult_Occupancy'].fillna(0).astype(int)
+                read['Total_Child_Occupancy_For_Age_Group1'] = read['Total_Child_Occupancy_For_Age_Group1'].fillna(0).astype(int)
+                read['Total_Child_Occupancy_For_Age_Group2'] = read['Total_Child_Occupancy_For_Age_Group2'].fillna(0).astype(int)
+                read['Total_Child_Occupancy_For_Age_Group3'] = read['Total_Child_Occupancy_For_Age_Group3'].fillna(0).astype(int)
+                read['Total_Child_Occupancy_For_Age_Group4'] = read['Total_Child_Occupancy_For_Age_Group4'].fillna(0).astype(int)
+                read['Total_Child_Occupancy_For_Age_Group5'] = read['Total_Child_Occupancy_For_Age_Group5'].fillna(0).astype(int)
+                read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
+                #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
+                read = read[read['Confirm_No'].str.len() >= 1]
+                read.insert(6, column="uniqueKey", value=read['Confirm_No'].astype(str))
+                read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
+            
+                res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
+                res_result = list(res_result)
+            except Exception:
+                res_result = []
+                print("Reservation Data not available")
+
+
             if len(res_result) > 0:
                 error_temp = bulk_insert_synxis_cloud_res(res_result, propertyCode, row['res_before'], row['res_after'])
                 if(error_temp == ""):
@@ -664,22 +672,30 @@ def Synxis_Cloud_Pms(row):
 
             date_set_forecast=set()
             fileCount=fileCount+1
-            # Forecast Data Clean and Insert
-            read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
-            read['cal_dt'] = pd.to_datetime(read['cal_dt'], format='mixed', errors='coerce').dt.strftime('%Y-%m-%d')
-            read.insert(0, column="propertyCode", value=propertyCode)
-            read.insert(1, column="pullDateId", value=pullDateId)
-            read.insert(2, column="createdAt", value=createdAt)
-            read.insert(3, column="updatedAt", value=updatedAt)
-            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['cal_dt'].astype(str)) 
-            date_set_forecast = set(read['cal_dt'])
-            date_set_forecast.discard(pd.NaT)
-            read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
 
-            fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
-            fore_result = list(fore_result)
+            try:
+                # Forecast Data Clean and Insert
+                read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
+                read['cal_dt'] = pd.to_datetime(read['cal_dt'], format='mixed', errors='coerce').dt.strftime('%Y-%m-%d')
+                read.dropna(subset=['cal_dt'], inplace=True)
+                read.insert(0, column="propertyCode", value=propertyCode)
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['cal_dt'].astype(str)) 
+                date_set_forecast = set(read['cal_dt'])
+                date_set_forecast.discard(pd.NaT)
+                read.to_csv(f"{attachment_format}/{propertyCode}_Forecast.csv", index=False)
+
+                fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
+                fore_result = list(fore_result)
+            except Exception:
+                fore_result = []
+                print("Forecast Data not available")
+
+
             if len(fore_result) > 0:
                 error_temp = bulk_insert_synxis_cloud_forecast(fore_result, propertyCode, min(date_set_forecast), max(date_set_forecast))
                 if(error_temp == ""):
@@ -693,30 +709,38 @@ def Synxis_Cloud_Pms(row):
         if check_revenue_file:
 
             fileCount=fileCount+1
-            # Revenue Recap Data Clean and Insert
-            date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
-            date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
-            read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
-            read.insert(0, column="propertyCode", value=propertyCode)
-            read.insert(1, column="pullDateId", value=pullDateId)
-            read.insert(2, column="createdAt", value=createdAt)
-            read.insert(3, column="updatedAt", value=updatedAt)
-            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            read.insert(6, column="Date", value=date)
-            read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
-            read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
-            read['F_B'] = read['F_B'].fillna(0).astype(int)
-            read['Other'] = read['Other'].fillna(0).astype(int)
-            read['Month_To_Date_F_B'] = read['Month_To_Date_F_B'].fillna(0).astype(int)
-            read['Year_To_Date_F_B'] = read['Year_To_Date_F_B'].apply(str).str.replace(',', '').astype(float)
-            read['F_B_Total'] = read['F_B_Total'].fillna(0).astype(int)
-            read['Other_Total'] = read['Other_Total'].fillna(0).astype(int)
-            read['Month_To_Date_F_B_total'] = read['Month_To_Date_F_B_total'].fillna(0).astype(float)
-            read['Year_To_Date_F_B_Total'] = read['Year_To_Date_F_B_Total'].apply(str).str.replace(',', '').astype(float)
-            read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
-            rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
-            rev_result = list(rev_result)
+
+            try:
+                # Revenue Recap Data Clean and Insert
+                date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
+                date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
+                read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
+                read.insert(0, column="propertyCode", value=propertyCode)
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read.insert(6, column="Date", value=date)
+                read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
+                read.dropna(subset=['Date'], inplace=True)
+                read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
+                read['F_B'] = read['F_B'].fillna(0).astype(int)
+                read['Other'] = read['Other'].fillna(0).astype(int)
+                read['Month_To_Date_F_B'] = read['Month_To_Date_F_B'].fillna(0).astype(int)
+                read['Year_To_Date_F_B'] = read['Year_To_Date_F_B'].apply(str).str.replace(',', '').astype(float)
+                read['F_B_Total'] = read['F_B_Total'].fillna(0).astype(int)
+                read['Other_Total'] = read['Other_Total'].fillna(0).astype(int)
+                read['Month_To_Date_F_B_total'] = read['Month_To_Date_F_B_total'].fillna(0).astype(float)
+                read['Year_To_Date_F_B_Total'] = read['Year_To_Date_F_B_Total'].apply(str).str.replace(',', '').astype(float)
+                read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
+                rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
+                rev_result = list(rev_result)
+            except Exception:
+                rev_result = []
+                print("Revenue Data not available")
+
+
             if len(rev_result) > 0:
                 error_temp = bulk_insert_synxis_cloud_revenue_recap(rev_result, propertyCode, date)
                 if(error_temp == ""):
@@ -731,24 +755,31 @@ def Synxis_Cloud_Pms(row):
             
             date_set_monthly=set()
             fileCount=fileCount+1
-            # Monthly Summary Data Clean and Insert
-            read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
-            read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)").dt.strftime('%Y-%m-%d')
-            read.insert(0, column="propertyCode", value=propertyCode)
-            read.insert(1, column="pullDateId", value=pullDateId)
-            read.insert(2, column="createdAt", value=createdAt)
-            read.insert(3, column="updatedAt", value=updatedAt)
-            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['BUSINESS_DT'].astype(str)) 
-            read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
-            read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
-            date_set_monthly = set(read['BUSINESS_DT'])
-            date_set_monthly.discard(pd.NaT)
-            read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
+            
+            try:
+                # Monthly Summary Data Clean and Insert
+                read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
+                read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)").dt.strftime('%Y-%m-%d')
+                read.dropna(subset=['BUSINESS_DT'], inplace=True)  
+                read.insert(0, column="propertyCode", value=propertyCode)
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['BUSINESS_DT'].astype(str)) 
+                read['TOTAL_FOOD_AND_BEV_REV'] = read['TOTAL_FOOD_AND_BEV_REV'].fillna(0).astype(int)
+                read['FoodandBeverage'] = read['FoodandBeverage'].apply(str).str.replace(',', '').astype(float)
+                date_set_monthly = set(read['BUSINESS_DT'])
+                date_set_monthly.discard(pd.NaT)
+                read.to_csv(f"{attachment_format}/{propertyCode}_Monthly.csv", index=False)
 
-            monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
-            monthly_result = list(monthly_result)
+                monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
+                monthly_result = list(monthly_result)
+            except Exception:
+                monthly_result = []
+                print("Monthly Summary Data not available")
+
             
             if len(monthly_result) > 0:
                 error_temp = bulk_insert_synxis_cloud_monthly_summary(monthly_result, propertyCode, min(date_set_monthly), max(date_set_monthly))
