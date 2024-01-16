@@ -810,9 +810,9 @@ def Choice_Pms(row):
                         print(f"[{atica_property_code}]{report_type} Uploading Revenue Detail report")
                         read = pd.read_csv(filename)
                         try:
-                            read.dropna(subset=['﻿IDS_DATE_DAY', 'Rate Code'], inplace=True)
+                            read.dropna(subset=['﻿IDS_DATE_DAY'], inplace=True)
                         except Exception:
-                            read.dropna(subset=['IDS_DATE_DAY', 'Rate Code'], inplace=True)
+                            read.dropna(subset=['IDS_DATE_DAY'], inplace=True)
                         read.insert(0, column="propertyCode", value=propertyCode)
                         read.insert(1, column="pullDateId", value=pullDateId)
                         read.insert(2, column="createdAt", value=createdAt)
@@ -899,7 +899,7 @@ def Choice_Pms(row):
                     group_pickup_detail_report.to_csv(filename, index=False)
                     print(f"[{atica_property_code}]{report_type} Uploading Group Pickup Detail report")
                     read = pd.read_csv(filename)
-                    read.dropna(subset=["Group Name", "Fixed Cut Off Date", "Room Type", 'Block Date'], inplace=True)
+                    read.dropna(subset=['Block Date'], inplace=True)
                     read.insert(0, column="propertyCode", value=propertyCode)
                     read.insert(1, column="pullDateId", value=pullDateId)
                     read.insert(2, column="createdAt", value=createdAt)

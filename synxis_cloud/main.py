@@ -707,7 +707,7 @@ def Synxis_Cloud_Pms(row):
             read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             read.insert(6, column="Date", value=date)
             read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
-            read.dropna(subset=['Date', 'report_type_values'], inplace=True)
+            read.dropna(subset=['Date'], inplace=True)
             read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
             read['F_B'] = read['F_B'].fillna(0).astype(int)
             read['Other'] = read['Other'].fillna(0).astype(int)
