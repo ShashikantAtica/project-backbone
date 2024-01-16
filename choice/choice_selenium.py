@@ -73,6 +73,10 @@ def choice_cancellation(row):
         username = json_dict['u']
         password = json_dict['p']
 
+        cancellation_list_file = f'{folder_name}{propertyCode}_Cancellation_List.csv'
+        if os.path.exists(cancellation_list_file):
+            os.remove(cancellation_list_file)
+
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
@@ -152,6 +156,7 @@ def choice_cancellation(row):
         updatedAt = "'" + str(arrow.now()) + "'"
         createdAtEpoch = int(arrow.utcnow().timestamp())
         updatedAtEpoch = int(arrow.utcnow().timestamp())
+        df.dropna(subset=["Account"], inplace=True)
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
         df.insert(2, column="createdAt", value=createdAt)

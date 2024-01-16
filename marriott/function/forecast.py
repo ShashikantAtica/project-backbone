@@ -71,6 +71,9 @@ def process_report(session, payload):
     end_date = payload['fore_after']
     csv = get_report(session, property_code, payload['forecast_platform'], start_date, end_date)
     folder_name = "./reports/"
+    forecast_file = f'{folder_name}{property_code}_Forecast.csv'
+    if os.path.exists(forecast_file):
+        os.remove(forecast_file)
     filename = f'{folder_name}{property_code}_Forecast.xlsx'
     open(filename, "wb").write(csv)
     read = pd.read_excel(filename, skiprows=8)
@@ -150,6 +153,7 @@ def process_report(session, payload):
             read[column] = 0
 
     read.columns = columns
+    read.dropna(subset=['ArrivalDate'], inplace=True)
     read.insert(0, column="propertyCode", value=payload['propertyCode'])
     read.insert(1, column="pullDateId", value=payload['pullDateId'])
     read.insert(2, column="createdAt", value=createdAt)

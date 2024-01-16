@@ -609,6 +609,7 @@ def Synxis_Cloud_Pms(row):
             fileCount=fileCount+1
             # Reservation Data Clean and Insert
             read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+            read.dropna(subset=['Confirm_No'], inplace=True)
             read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed', errors='coerce')
             read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed', errors='coerce')
             read['Depart_Dt'] = pd.to_datetime(read['Depart_Dt'], format='mixed', errors='coerce')
@@ -667,6 +668,7 @@ def Synxis_Cloud_Pms(row):
             # Forecast Data Clean and Insert
             read = pd.read_csv(forecast_file_path, skipfooter=3, engine='python')
             read['cal_dt'] = pd.to_datetime(read['cal_dt'], format='mixed', errors='coerce').dt.strftime('%Y-%m-%d')
+            read.dropna(subset=['cal_dt'], inplace=True)
             read.insert(0, column="propertyCode", value=propertyCode)
             read.insert(1, column="pullDateId", value=pullDateId)
             read.insert(2, column="createdAt", value=createdAt)
@@ -705,6 +707,7 @@ def Synxis_Cloud_Pms(row):
             read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             read.insert(6, column="Date", value=date)
             read.loc[:, 'Date'] = pd.to_datetime(read['Date'], format='%d %b %Y', errors='coerce').dt.date
+            read.dropna(subset=['Date'], inplace=True)
             read.insert(7, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str) + "_" + read['report_type_values'].astype(str))            
             read['F_B'] = read['F_B'].fillna(0).astype(int)
             read['Other'] = read['Other'].fillna(0).astype(int)
@@ -734,6 +737,7 @@ def Synxis_Cloud_Pms(row):
             # Monthly Summary Data Clean and Insert
             read = pd.read_csv(monthly_file_path, skipfooter=3, engine='python')
             read['BUSINESS_DT'] = pd.to_datetime(read['BUSINESS_DT'], format="%b %d, %Y(%a)").dt.strftime('%Y-%m-%d')
+            read.dropna(subset=['BUSINESS_DT'], inplace=True)
             read.insert(0, column="propertyCode", value=propertyCode)
             read.insert(1, column="pullDateId", value=pullDateId)
             read.insert(2, column="createdAt", value=createdAt)

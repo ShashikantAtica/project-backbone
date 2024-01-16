@@ -192,6 +192,7 @@ def BestRev_Pms(row):
             errorMessage = "Total Forecast file is empty"
             return errorMessage
         df['Stay Date'] = pd.to_datetime(df['Stay Date'])
+        df.dropna(subset=['Stay Date'], inplace=True)
         df.insert(0, column="propertyCode", value=propertyCode)
         df.insert(1, column="pullDateId", value=pullDateId)
         df.insert(2, column="createdAt", value=createdAt)

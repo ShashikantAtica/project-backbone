@@ -20,7 +20,7 @@ import xml.etree.ElementTree as Xet
 import pandas as pd
 
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore")
 
 from utils.db import db_config
 from utils.db import db_models
@@ -623,6 +623,7 @@ def OperaCloud_Pms(row):
                                 "SHARE_AMOUNT_PER_STAY": SHARE_AMOUNT_PER_STAY})
 
                 df = pd.DataFrame(rows, columns=cols)
+                df.dropna(subset=["RESV_NAME_ID"], inplace=True)
                 df.insert(0, column="propertyCode", value=propertyCode)
                 df.insert(1, column="pullDateId", value=pullDateId)
                 df.insert(2, column="createdAt", value=createdAt)
@@ -630,9 +631,9 @@ def OperaCloud_Pms(row):
                 df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                 df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                 df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df["RESV_NAME_ID"].astype(str))
-                df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
-                df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
-                df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
+                df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'], format="%m/%d/%y", errors="coerce").dt.strftime("%Y-%m-%d")
+                df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'], format="%m/%d/%y", errors="coerce").dt.strftime("%Y-%m-%d")
+                df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'], format="%m/%d/%y", errors="coerce").dt.strftime("%Y-%m-%d")
                 df.to_csv(f"{folder_name}{propertyCode}_Reservations.csv", index=False)
 
                 res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
@@ -741,6 +742,7 @@ def OperaCloud_Pms(row):
                         'CF_BLK_NON_DED_REV': CF_BLK_NON_DED_REV
                     })
                 df = pd.DataFrame(rows, columns=cols)
+                df.dropna(subset=["CHAR_CONSIDERED_DATE"], inplace=True)
                 df.insert(0, column="propertyCode", value=propertyCode)
                 df.insert(1, column="pullDateId", value=pullDateId)
                 df.insert(2, column="createdAt", value=createdAt)
@@ -822,6 +824,7 @@ def OperaCloud_Pms(row):
                         'CF_BLK_NON_DED_REV': CF_BLK_NON_DED_REV
                     })
                 df = pd.DataFrame(rows, columns=cols)
+                df.dropna(subset=['CHAR_CONSIDERED_DATE'], inplace=True)
                 df.insert(0, column="propertyCode", value=propertyCode)
                 df.insert(1, column="pullDateId", value=pullDateId)
                 df.insert(2, column="createdAt", value=createdAt)
@@ -875,6 +878,7 @@ def OperaCloud_Pms(row):
             arrival_data_concat = pd.DataFrame(arrival_dataframe)
             headers = arrival_data_concat.columns[1:]
             final_df = arrival_data_concat[headers]
+            final_df.dropna(subset=["RESV_NAME_ID"], inplace=True)
             final_df.insert(0, column="propertyCode", value=propertyCode)
             final_df.insert(1, column="pullDateId", value=pullDateId)
             final_df.insert(2, column="createdAt", value=createdAt)
@@ -882,12 +886,12 @@ def OperaCloud_Pms(row):
             final_df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
             final_df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
             final_df.insert(6, column="uniqueKey", value=final_df["propertyCode"].astype(str) + "_" + final_df["RESV_NAME_ID"].astype(str))
-            final_df['UPDATE_DATE'] = pd.to_datetime(final_df['UPDATE_DATE'])
-            final_df['TRUNC_BEGIN'] = pd.to_datetime(final_df['TRUNC_BEGIN'])
-            final_df['TRUNC_END'] = pd.to_datetime(final_df['TRUNC_END'])
-            final_df['ARRIVAL'] = pd.to_datetime(final_df['ARRIVAL'])
-            final_df['DEPARTURE'] = pd.to_datetime(final_df['DEPARTURE'])
-            final_df['BEGIN_DATE'] = pd.to_datetime(final_df['BEGIN_DATE'])
+            final_df['UPDATE_DATE'] = pd.to_datetime(final_df['UPDATE_DATE'], format="%d-%b-%y", errors="coerce").dt.strftime('%Y-%m-%d')
+            final_df['TRUNC_BEGIN'] = pd.to_datetime(final_df['TRUNC_BEGIN'], format="%d-%b-%y", errors="coerce").dt.strftime('%Y-%m-%d')
+            final_df['TRUNC_END'] = pd.to_datetime(final_df['TRUNC_END'], format="%d-%b-%y", errors="coerce").dt.strftime('%Y-%m-%d')
+            final_df['ARRIVAL'] = pd.to_datetime(final_df['ARRIVAL'], format="%m/%d/%y", errors="coerce").dt.strftime('%Y-%m-%d')
+            final_df['DEPARTURE'] = pd.to_datetime(final_df['DEPARTURE'], format="%m/%d/%y", errors="coerce").dt.strftime('%Y-%m-%d')
+            final_df['BEGIN_DATE'] = pd.to_datetime(final_df['BEGIN_DATE'], format="%d-%b-%y", errors="coerce").dt.strftime('%Y-%m-%d')
             final_df.to_csv(f"{folder_name}{propertyCode}_Arrival.csv", index=False)
 
             arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Arrival.csv", encoding="utf-8"))
@@ -976,8 +980,8 @@ def OperaCloud_Pms(row):
                 df.insert(3, column="updatedAt", value=updatedAt)
                 df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                 df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-                df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE']).dt.strftime('%Y-%m-%d')
-                df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'])
+                df['BUSINESS_DATE'] = pd.to_datetime(df['BUSINESS_DATE'], format="%d-%b-%y", errors="coerce").dt.strftime('%Y-%m-%d')
+                df['CHAR_BUSINESS_DATE'] = pd.to_datetime(df['CHAR_BUSINESS_DATE'], format="%m/%d/%y", errors="coerce").dt.strftime('%Y-%m-%d')
                 df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df['BUSINESS_DATE'].astype(str) + "_" + df['MASTER_VALUE'].astype(str))
                 date_set = set(df['BUSINESS_DATE'])
                 date_set.discard(pd.NaT) #to avoid any null value in set that can be minimum of set
