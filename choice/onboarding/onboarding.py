@@ -332,6 +332,21 @@ def Choice_Pms(row):
         domain_url = "https://www.choiceadvantage.com/choicehotels"
 
         try:
+            file_paths = [
+                f'{folder_name}{propertyCode}_Reservation.csv',
+                f'{folder_name}{propertyCode}_Occupancy.csv',
+                f'{folder_name}{propertyCode}_Cancellation.csv',
+                f'{folder_name}{propertyCode}_Revenue.csv',
+                f'{folder_name}{propertyCode}_Revenue_Detail.csv',
+                f'{folder_name}{propertyCode}_Group_Pickup_Detail.csv',
+                f'{folder_name}{propertyCode}_Cancelltion_List.csv',
+                f'{folder_name}{propertyCode}_Cancellation_List_Final.csv',
+                f'{folder_name}{propertyCode}_Noshow.csv',
+            ]
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    
             with requests.Session() as s:
                 s.headers.update({'Upgrade-Insecure-Requests': '1',
                                   'User-Agent': 'Mozilla/5.0 '
