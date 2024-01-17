@@ -900,6 +900,7 @@ def OperaCloud_Pms(row):
                 final_df['ARRIVAL'] = pd.to_datetime(final_df['ARRIVAL'])
                 final_df['DEPARTURE'] = pd.to_datetime(final_df['DEPARTURE'])
                 final_df['BEGIN_DATE'] = pd.to_datetime(final_df['BEGIN_DATE'])
+                final_df['LIST_G_COMMENT_RESV_NAME_ID'] = final_df['LIST_G_COMMENT_RESV_NAME_ID'].str.slice(0, 255)
                 final_df.to_csv(f"{folder_name}{propertyCode}_Arrival.csv", index=False)
 
                 arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Arrival.csv", encoding="utf-8"))
