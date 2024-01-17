@@ -190,6 +190,15 @@ def IDeaSG3_Rms(row):
     pullDateId = row['pullDateId']
     propertyCode = row['propertyCode']
     try:
+        
+        file_paths = [
+            f"{folder_name}{propertyCode}_Occupancy.csv",
+            f'{folder_name}{propertyCode}_Occupancy.xlsx'
+        ]
+        for file_path in file_paths:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
         label_array = [f"{propertyCode} Occupancy"]
         folder_name = "./reports/"
         messages_array = []
