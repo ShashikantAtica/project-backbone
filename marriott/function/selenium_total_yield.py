@@ -138,7 +138,6 @@ def get_total_yield_report_url(payload):
             pivoted_df = df.T
             pivoted_df = pivoted_df.dropna(axis=1, how='all')
             pivoted_df.iloc[0, 0] = "Date"
-            pivoted_df.dropna(subset=['Date'], inplace=True)
             pivoted_df.insert(0, column="propertyCode", value=payload['propertyCode'])
             pivoted_df.insert(1, column="pullDateId", value=payload['pullDateId'])
             pivoted_df.insert(2, column="createdAt", value=createdAt)
@@ -153,6 +152,7 @@ def get_total_yield_report_url(payload):
             final_df = pivoted_df.iloc[1:]
             final_df.reset_index(drop=True, inplace=True)
             final_df.loc[:, 'Date'] = pd.to_datetime(final_df['Date'].replace('\n', ' '), format='%a %b %d').dt.strftime(f'{arrow.now().format("YYYY")}-%m-%d')
+            final_df.dropna(subset=['Date'], inplace=True)
             final_df.insert(6, column="uniqueKey", value=final_df["propertyCode"].astype(str) + "_" + final_df['Date'].astype(str)) 
             final_df.to_csv(os.path.join(f'{folder_name}{external_property_code}_Total_Yield.csv'), index=False)
 
