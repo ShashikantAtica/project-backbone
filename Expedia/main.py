@@ -273,7 +273,7 @@ def Expedia(row):
         
         driver.quit()
 
-        excel_file_path = filename
+        excel_file_path = os.path.join(save_dir, filename)
         null_row_posi= 100
 
 
@@ -391,12 +391,13 @@ if __name__ == '__main__':
     #     print("Fetched successfully")
 
     results_as_dict = [
-    {"propertyCode": "US000001", "hotelId": 18748},
-    {"propertyCode": "US000009", "hotelId": 882709},
-    {"propertyCode": "US000018", "hotelId": 117294},
-    {"propertyCode": "US000019", "hotelId": 2292810},
-    {"propertyCode": "US000020", "hotelId": 212873},
-    {"propertyCode": "USNJ230104", "hotelId": 24346}
+        {"propertyCode": "US000001", "hotelId": 18748}
+    # {"propertyCode": "US000001", "hotelId": 18748},
+    # {"propertyCode": "US000009", "hotelId": 882709},
+    # {"propertyCode": "US000018", "hotelId": 117294},
+    # {"propertyCode": "US000019", "hotelId": 2292810},
+    # {"propertyCode": "US000020", "hotelId": 212873},
+    # {"propertyCode": "USNJ230104", "hotelId": 24346}
     ]
 
     if results_as_dict is not None and len(results_as_dict) > 0:
