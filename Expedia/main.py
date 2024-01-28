@@ -297,7 +297,7 @@ def Expedia(row):
         df.iloc[null_row_posi+4, 0]="occupancy_forecast_perc"
 
         transposed_df = df.transpose()
-        csv_file_path = 'temp.csv'
+        csv_file_path = os.path.join(save_dir, 'temp.csv')
         transposed_df.to_csv(csv_file_path, index=False, header=False)
 
         createdAt = "'" + str(arrow.now()) + "'"
@@ -308,8 +308,9 @@ def Expedia(row):
         read = read.drop('NULLWALA', axis=1)
         read.dropna(inplace=True, how="all")
         read.dropna(subset=['date'], inplace=True)
-        base_date = pd.Timestamp('1899-12-30')  # Excel's base date
-        read['date'] = pd.to_datetime(base_date + pd.to_timedelta(read['date'], unit='D'))
+        # base_date = pd.Timestamp('1899-12-30')  # Excel's base date
+        # read['date'] = pd.to_datetime(base_date + pd.to_timedelta(read['date'], unit='D'))
+        read['date'] = pd.to_datetime(read['date'], format="%m/%d/%y", errors='coerce')
         read['occupancy_forecast_perc'] = read['occupancy_forecast_perc'] * 100
         read['occupancy_forecast_perc'] = read['occupancy_forecast_perc'].round(2)
         read['current_occupancy_perc'] = read['current_occupancy_perc'] * 100
