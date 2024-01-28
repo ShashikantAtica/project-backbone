@@ -85,21 +85,17 @@ def bulk_insert_expedia_revplus(propertyCode, revplus_list, lowest_date, highest
 
         end_date = "'" + str(highest_date) + "'"
         print("Highest Date :: ", end_date)
-        print('testa1', propertyCode, "@")
         db_propertyCode = "'" + str(propertyCode) + "'"
-        print('testa2')
 
         # Delete existing data from date range of report
         conn = db_config.get_db_connection()
         conn.execute(text(f'DELETE FROM expedia_revplus where "date" between {start_date} and {end_date} and "property_code" = {db_propertyCode};'))
         conn.commit()
         conn.close()
-        print('testa3')
         # Add new data of revplus
         conn = db_config.get_db_connection()
-        print('testa4')
         conn.execute(db_models.expedia_revplus_model.insert(), revplus_list)
-        print('testa5')
+        conn.commit()
         conn.close()
         print("Data imported")
     except Exception as e:
@@ -126,9 +122,8 @@ def Expedia(row):
     driver = None
     
     try:
-        username = "AticaGlobal2975" #None
-        password = "Atica@123" #None
-        print("test1")
+        username = None
+        password = None
         try:
             print(f"Getting Secret for {propertyCode}")
             json_dict = get_secret_from_api(propertyCode, platform)
@@ -148,14 +143,13 @@ def Expedia(row):
 
         folder_name = f"./reports/{propertyCode}/"
         filename = f"{propertyCode}_Revplus.xlsx"
-        # save_dir = os.path.abspath(f'./reports/{propertyCode}/')
         save_dir =  os.path.abspath(folder_name)
+
         # Create the directory if it doesn't exist
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         delete_files_in_directory(save_dir)
 
-        print("test2")
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
@@ -170,18 +164,14 @@ def Expedia(row):
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True,
             "download.default_filename": filename
-            # "plugins.always_open_pdf_externally": True
         })
-        print("test3")
         service = Service('../chromedriver.exe')
         driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
-        print("test4")
 
         print(f"{propertyCode} Script start for Choice Cancellation List")
         login_url = "https://www.expediapartnercentral.com/Account/Logon"
         driver.get(login_url)
-        print("test5")
         otpUpdateEpoch = 1
         current_time_epoch = int(time.time())
 
@@ -196,42 +186,30 @@ def Expedia(row):
         except NoSuchElementException:
             password_field = driver.find_element(By.ID, "passwordControl")
         password_field.send_keys(password)
-        print("test6")
 
         driver.find_element(By.ID, 'signInButton').click()
         time.sleep(10)
 
         #otp on email only
         element_otp = None
-        print("test6.1")
         element_otp = driver.find_element(By.ID, "passcode")
-        print("test6.2")
         if element_otp is not None:
 
-            print("test6.3")
             data_test_id_value = element_otp.get_attribute("data-testid")
             if data_test_id_value == "SmsPasscode-verification":
-                print("test6.4")
                 email_me_link = driver.find_element(By.LINK_TEXT, "Email me")
-                print("test6.5")
                 email_me_link.click()
                 time.sleep(5)
-
-            
-            # otp = input("Enter the OTP: ")
             otp = None
 
             #while loop to try 10times to get latest otp bases on otpUpdateEpoch
             max_iterations = 10
             current_iteration = 0
-
+            
             while current_iteration < max_iterations and current_time_epoch > otpUpdateEpoch:
-                print("test6.6")
                 try:
                     print(f"Getting OTP for {propertyCode}")
                     json_dict = get_otp_from_api(propertyCode, platform)
-                    print("test6.7")
-                    print("res ::")
                     otp = json_dict['otp']
                     otpUpdateEpoch = json_dict['otp_epoch']
                 except Exception:
@@ -249,7 +227,6 @@ def Expedia(row):
                 print(msg)
                 update_into_pulldate_expedia(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
                 return 0
-            print("test7")
             
             
             try:
@@ -258,7 +235,6 @@ def Expedia(row):
                 otp_field = driver.find_element(By.CLASS_NAME, "fds-field-input.replay-conceal")
             
             otp_field.send_keys(otp)
-            print("test8")
 
 
             button_locator = (By.CLASS_NAME, 'fds-button.fds-button-action')
@@ -267,13 +243,11 @@ def Expedia(row):
             #Find the button and click it
             action_button = driver.find_element(*button_locator)
             action_button.click()
-            print("test9")
 
             time.sleep(10)
 
         report_url = f"https://apps.expediapartnercentral.com/lodging/revplus/api/priceGridExport?htid={htid_value}&los=1&adults=2&tpid=1&countryCode=USA&roomTypeId=0&fetchMembersOnlyRates=false&fullyRefundableOnly=false&breakfastIncludedOnly=false&fetchMobileRates=false&fetchModTiers=&isSubMarket=false&useMockData=false&numOfDays=90"
         driver.get(report_url)
-        print("test11")
         time.sleep(10)
 
         for file_name_i in os.listdir(save_dir):
@@ -407,13 +381,12 @@ if __name__ == '__main__':
     #     print("Fetched successfully")
 
     results_as_dict = [
-        {"propertyCode": "US000001", "hotelId": 18748}
-    # {"propertyCode": "US000001", "hotelId": 18748},
-    # {"propertyCode": "US000009", "hotelId": 882709},
-    # {"propertyCode": "US000018", "hotelId": 117294},
-    # {"propertyCode": "US000019", "hotelId": 2292810},
-    # {"propertyCode": "US000020", "hotelId": 212873},
-    # {"propertyCode": "USNJ230104", "hotelId": 24346}
+    {"propertyCode": "US000001", "hotelId": 18748},
+    {"propertyCode": "US000009", "hotelId": 882709},
+    {"propertyCode": "US000018", "hotelId": 117294},
+    {"propertyCode": "US000019", "hotelId": 2292810},
+    {"propertyCode": "US000020", "hotelId": 212873},
+    {"propertyCode": "USNJ230104", "hotelId": 24346}
     ]
 
     if results_as_dict is not None and len(results_as_dict) > 0:
