@@ -105,10 +105,10 @@ def delete_files_in_directory(directory):
     except Exception as e:
         print(f"Error deleting files: {e}")
 
-def Expedia():
-    pullDateId = "1234" #row['pullDateId']
-    propertyCode = "USASP001" #row['propertyCode']
-    htid_value = "xxx" #row['propertyCode']
+def Expedia(row):
+    pullDateId = row['pullDateId'] #"1234" 
+    propertyCode = row['propertyCode'] #"USASP001" 
+    htid_value = row['hotelId']
     platform = "expedia"
     
     try:
