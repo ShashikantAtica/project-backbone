@@ -84,6 +84,23 @@ def get_secret_from_api(propertyId, platform):
     del response_data['info']['password']
     return response_data['info']
 
+def get_otp_from_api(propertyId, platform):
+    x_token = os.environ['OTP_API_X_TOKEN']
+    url = f"https://api.aticastays.com/api/v1/us-system-auth/get-login-otp?propertyId={propertyId}&platform={platform}"
+
+    headers = {
+        'X-Token': x_token
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        return None
+    response_data = response.json()
+    response_data['info']['otp'] = response_data['info']['otpText']
+    del response_data['info']['otpText']
+    response_data['info']['otp_epoch'] = response_data['info']['otpUpdateEpoch']
+    del response_data['info']['otpUpdateEpoch']
+    return response_data['info']
 
 if __name__ == '__main__':
     print("Google Secret Manager")
