@@ -42,7 +42,7 @@ def insert_into_pulldate_expedia(PROPERTY_CODE, PULLED_DATE):
         result = conn.execute(text(query_string))
         conn.commit()
         LAST_PULL_DATE_ID = result.fetchone()
-        print(LAST_PULL_DATE_ID)
+        print("LAST_PULL_DATE_ID:", LAST_PULL_DATE_ID)
         conn.close()
         print("Added successfully!!!")
     except Exception as e:
@@ -169,6 +169,8 @@ def Expedia(row):
         login_url = "https://www.expediapartnercentral.com/Account/Logon"
         driver.get(login_url)
         print("test5")
+        otpUpdateEpoch = 1
+        current_time_epoch = int(time.time())
 
         try:
             username_field = driver.find_element(By.NAME, "username")
@@ -188,29 +190,34 @@ def Expedia(row):
 
         #otp on email only
         element_otp = None
+        print("test6.1")
         element_otp = driver.find_element(By.ID, "passcode")
+        print("test6.2")
         if element_otp is not None:
 
+            print("test6.3")
             data_test_id_value = element_otp.get_attribute("data-testid")
             if data_test_id_value == "SmsPasscode-verification":
+                print("test6.4")
                 email_me_link = driver.find_element(By.LINK_TEXT, "Email me")
+                print("test6.5")
                 email_me_link.click()
                 time.sleep(5)
 
             
             # otp = input("Enter the OTP: ")
             otp = None
-            otpUpdateEpoch = None
-            current_time_epoch = int(time.time())
 
             #while loop to try 10times to get latest otp bases on otpUpdateEpoch
             max_iterations = 10
             current_iteration = 0
 
-            while current_iteration < max_iterations and current_time_epoch > otpUpdateEpoch:
+            while current_iteration < max_iterations and current_time_epoch < otpUpdateEpoch:
+                print("test6.6")
                 try:
                     print(f"Getting OTP for {propertyCode}")
                     json_dict = get_otp_from_api(propertyCode, platform)
+                    print("test6.7")
                     print("res ::")
                     otp = json_dict['otp']
                     otpUpdateEpoch = json_dict['otp_epoch']
