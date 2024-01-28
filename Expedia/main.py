@@ -77,23 +77,36 @@ def update_into_pulldate_expedia(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 def bulk_insert_expedia_revplus(propertyCode, revplus_list, lowest_date, highest_date):
-    start_date = "'" + str(lowest_date) + "'"
-    print("Lowest Date :: ", start_date)
+    print("Data importing...")
+    error_temp = ""
+    try:
+        start_date = "'" + str(lowest_date) + "'"
+        print("Lowest Date :: ", start_date)
 
-    end_date = "'" + str(highest_date) + "'"
-    print("Highest Date :: ", end_date)
-    db_propertyCode = "'" + propertyCode + "'"
+        end_date = "'" + str(highest_date) + "'"
+        print("Highest Date :: ", end_date)
+        print('testa1', propertyCode, "@")
+        db_propertyCode = "'" + str(propertyCode) + "'"
+        print('testa2')
 
-    # Delete existing data from date range of report
-    conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM expedia_revplus where "date" between {start_date} and {end_date} and "property_code" = {db_propertyCode};'))
-    conn.commit()
-    conn.close()
-
-    # Add new data of revplus
-    conn = db_config.get_db_connection()
-    conn.execute(db_models.choice_cancellation_model.insert(), revplus_list)
-    conn.close()
+        # Delete existing data from date range of report
+        conn = db_config.get_db_connection()
+        conn.execute(text(f'DELETE FROM expedia_revplus where "date" between {start_date} and {end_date} and "property_code" = {db_propertyCode};'))
+        conn.commit()
+        conn.close()
+        print('testa3')
+        # Add new data of revplus
+        conn = db_config.get_db_connection()
+        print('testa4')
+        conn.execute(db_models.expedia_revplus_model.insert(), revplus_list)
+        print('testa5')
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
 
 def delete_files_in_directory(directory):
     try:
