@@ -86,7 +86,7 @@ def bulk_insert_expedia_revplus(propertyCode, revplus_list, lowest_date, highest
 
     # Delete existing data from date range of report
     conn = db_config.get_db_connection()
-    conn.execute(text(f'DELETE FROM expedia_revplus where "date" between {start_date} and {end_date} and "propertyCode" = {db_propertyCode};'))
+    conn.execute(text(f'DELETE FROM expedia_revplus where "date" between {start_date} and {end_date} and "property_code" = {db_propertyCode};'))
     conn.commit()
     conn.close()
 
