@@ -310,7 +310,7 @@ def Expedia(row):
         read.dropna(subset=['date'], inplace=True)
         # base_date = pd.Timestamp('1899-12-30')  # Excel's base date
         # read['date'] = pd.to_datetime(base_date + pd.to_timedelta(read['date'], unit='D'))
-        read['date'] = pd.to_datetime(read['date'], format="%m/%d/%y", errors='coerce')
+        read['date'] = pd.to_datetime(read['date'],  format='mixed', errors='coerce')
         read['occupancy_forecast_perc'] = read['occupancy_forecast_perc'] * 100
         read['occupancy_forecast_perc'] = read['occupancy_forecast_perc'].round(2)
         read['current_occupancy_perc'] = read['current_occupancy_perc'] * 100
