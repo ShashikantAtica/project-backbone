@@ -297,7 +297,7 @@ def Expedia(row):
         df.iloc[null_row_posi+4, 0]="occupancy_forecast_perc"
 
         transposed_df = df.transpose()
-        csv_file_path = os.path.join(save_dir, 'temp.csv')
+        csv_file_path = f"./reports/{propertyCode}/temp.csv"
         transposed_df.to_csv(csv_file_path, index=False, header=False)
 
         createdAt = "'" + str(arrow.now()) + "'"
@@ -324,9 +324,9 @@ def Expedia(row):
         read.insert(6, column="unique_key", value=read["property_code"].astype(str) + "_" + read['date'].astype(str))
         date_set = set(read['date'])
         date_set.discard(pd.NaT)
-        read.to_csv('Revplus_final.csv', index=False)
+        revplus_file_path = f"./reports/{propertyCode}/Revplus_final.csv"
+        read.to_csv(revplus_file_path, index=False)
 
-        revplus_file_path = 'Revplus_final.csv'
         check_Revplus_file = os.path.isfile(revplus_file_path)
         errorMessage=""
 
