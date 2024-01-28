@@ -77,10 +77,10 @@ def update_into_pulldate_expedia(LAST_PULL_DATE_ID, ERROR_NOTE, IS_ERROR):
         print(error_message)
 
 def bulk_insert_expedia_revplus(propertyCode, revplus_list, lowest_date, highest_date):
-    start_date = "'" + lowest_date + "'"
+    start_date = "'" + str(lowest_date) + "'"
     print("Lowest Date :: ", start_date)
 
-    end_date = "'" + highest_date + "'"
+    end_date = "'" + str(highest_date) + "'"
     print("Highest Date :: ", end_date)
     db_propertyCode = "'" + propertyCode + "'"
 
