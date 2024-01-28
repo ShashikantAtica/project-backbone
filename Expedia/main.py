@@ -212,7 +212,7 @@ def Expedia(row):
             max_iterations = 10
             current_iteration = 0
 
-            while current_iteration < max_iterations and current_time_epoch < otpUpdateEpoch:
+            while current_iteration < max_iterations and current_time_epoch > otpUpdateEpoch:
                 print("test6.6")
                 try:
                     print(f"Getting OTP for {propertyCode}")
