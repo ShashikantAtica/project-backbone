@@ -110,6 +110,7 @@ def Expedia(row):
     propertyCode = row['propertyCode'] #"USASP001" 
     htid_value = row['hotelId']
     platform = "expedia"
+    driver = None
     
     try:
         username = "AticaGlobal2975" #None
@@ -141,7 +142,6 @@ def Expedia(row):
             os.makedirs(save_dir)
         delete_files_in_directory(save_dir)
 
-        driver = None
         print("test2")
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
@@ -354,6 +354,8 @@ def Expedia(row):
 
     except Exception as e:
             print(e)
+            if driver:
+                driver.quit()
             update_into_pulldate_expedia(pullDateId, ERROR_NOTE=f"Failed to pull report due to {e}", IS_ERROR=True)
 
 
