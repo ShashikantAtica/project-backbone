@@ -211,9 +211,12 @@ def Expedia(row):
             #otp on email only
             data_test_id_value = element_otp.get_attribute("data-testid")
             if data_test_id_value == "SmsPasscode-verification":
-                email_me_link = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//div[contains(@class,'fds-list-item-content')]/div/a[text()='Email me']"))
+                dropdown_toggle = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'span[data-testid="fallbacks-toggle"]'))
                 )
+                dropdown_toggle.click()
+                time.sleep(5)
+                email_me_link = driver.find_element(By.XPATH, "//a[text()='Email me']")
                 email_me_link.click()
                 time.sleep(5)
             otp = None
