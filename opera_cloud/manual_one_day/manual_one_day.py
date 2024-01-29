@@ -442,9 +442,9 @@ def OperaCloud_Pms(row, reporttype, localfilepath):
                 df.insert(4, column="createdAtEpoch", value=createdAtEpoch)
                 df.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
                 df.insert(6, column="uniqueKey", value=df["propertyCode"].astype(str) + "_" + df["RESV_NAME_ID"].astype(str))
-                df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'])
-                df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'])
-                df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'])
+                df['DEPARTURE'] = pd.to_datetime(df['DEPARTURE'], format="mixed", errors="coerce").dt.strftime("%Y-%m-%d")
+                df['INSERT_DATE'] = pd.to_datetime(df['INSERT_DATE'], format="mixed", errors="coerce").dt.strftime("%Y-%m-%d")
+                df['ARRIVAL'] = pd.to_datetime(df['ARRIVAL'], format="mixed", errors="coerce").dt.strftime("%Y-%m-%d")
                 df.to_csv(f"{attachment_format}/{propertyCode}_Reservations.csv", index=False)
 
                 res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservations.csv", encoding="utf-8"))
