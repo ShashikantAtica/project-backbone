@@ -190,11 +190,22 @@ def Expedia(row):
         driver.find_element(By.ID, 'signInButton').click()
         time.sleep(10)
 
-        #otp on email only
+        #secure setup skip
+        xpath = '//button[@data-testid="enrollment-recommended-action-button-secondary"]'
+        # Find the button using the XPath
+        button = None
+        button = driver.find_element(By.XPATH, xpath)
+        # Click on the button
+        print("test1")
+        if button is not None:
+            button.click()
+        print("test2")
+
         element_otp = None
         element_otp = driver.find_element(By.ID, "passcode")
         if element_otp is not None:
 
+            #otp on email only
             data_test_id_value = element_otp.get_attribute("data-testid")
             if data_test_id_value == "SmsPasscode-verification":
                 email_me_link = driver.find_element(By.LINK_TEXT, "Email me")
@@ -384,10 +395,10 @@ if __name__ == '__main__':
 
     results_as_dict = [
     # {"propertyCode": "US000001", "hotelId": 18748},
-    {"propertyCode": "US000009", "hotelId": 882709},
+    # {"propertyCode": "US000009", "hotelId": 882709},
     # {"propertyCode": "US000018", "hotelId": 117294},
     # {"propertyCode": "US000019", "hotelId": 2292810},
-    {"propertyCode": "US000020", "hotelId": 212873},
+    # {"propertyCode": "US000020", "hotelId": 212873},
     # {"propertyCode": "USNJ230104", "hotelId": 24346},
     # {"propertyCode": "USOH230101", "hotelId": 794575},
     # {"propertyCode": "USMO230201", "hotelId": 917057},
@@ -399,7 +410,7 @@ if __name__ == '__main__':
     # {"propertyCode": "USMO230701", "hotelId": 21314174},
     # {"propertyCode": "USMO230702", "hotelId": 20392605},
     # {"propertyCode": "USMN230801", "hotelId": 580253},
-    # {"propertyCode": "USIL230801", "hotelId": 696344},
+    {"propertyCode": "USIL230801", "hotelId": 696344},
     # {"propertyCode": "USPA231101", "hotelId": 2553577},
     # {"propertyCode": "USPA231103", "hotelId": 11996},
     # {"propertyCode": "USFL231201", "hotelId": 898694},
@@ -416,7 +427,7 @@ if __name__ == '__main__':
     # {"propertyCode": "USCA231002", "hotelId": 126548},
     # {"propertyCode": "USCA231003", "hotelId": 8388},
     # {"propertyCode": "USPA231002", "hotelId": 6953},
-    {"propertyCode": "USNJ231001", "hotelId": 423044},
+    # {"propertyCode": "USNJ231001", "hotelId": 423044},
     # {"propertyCode": "USNJ231101", "hotelId": 22670},
     # {"propertyCode": "USPA231201", "hotelId": 9731},
     # {"propertyCode": "USWI231201", "hotelId": 2211},
@@ -425,7 +436,7 @@ if __name__ == '__main__':
     # {"propertyCode": "USCA230801", "hotelId": 21978777},
     # {"propertyCode": "USCA231001", "hotelId": 129287},
     # {"propertyCode": "USFL231101", "hotelId": 11476932},
-    {"propertyCode": "USTX231201", "hotelId": 977298},
+    # {"propertyCode": "USTX231201", "hotelId": 977298},
     # {"propertyCode": "USNJ230201", "hotelId": 12571},
     # {"propertyCode": "USFL230801", "hotelId": 913910},
     # {"propertyCode": "USFL230802", "hotelId": 66794112},
