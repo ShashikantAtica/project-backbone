@@ -196,10 +196,9 @@ def Expedia(row):
         button = None
         button = driver.find_element(By.XPATH, xpath)
         # Click on the button
-        print("test1")
         if button is not None:
             button.click()
-        print("test2")
+            time.sleep(5)
 
         element_otp = None
         element_otp = driver.find_element(By.ID, "passcode")
@@ -423,7 +422,7 @@ if __name__ == '__main__':
     # {"propertyCode": "USCA230501", "hotelId": 42003},
     # {"propertyCode": "USIA230601", "hotelId": 6063},
     # {"propertyCode": "USTX230602", "hotelId": 40397},
-    # {"propertyCode": "USTX230801", "hotelId": 695751},
+    {"propertyCode": "USTX230801", "hotelId": 695751},
     # {"propertyCode": "USCA231002", "hotelId": 126548},
     # {"propertyCode": "USCA231003", "hotelId": 8388},
     # {"propertyCode": "USPA231002", "hotelId": 6953},
