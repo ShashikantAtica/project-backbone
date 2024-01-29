@@ -211,7 +211,9 @@ def Expedia(row):
             #otp on email only
             data_test_id_value = element_otp.get_attribute("data-testid")
             if data_test_id_value == "SmsPasscode-verification":
-                email_me_link = driver.find_element(By.LINK_TEXT, "Email me")
+                email_me_link = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//div[contains(@class,'fds-list-item-content')]/div/a[text()='Email me']"))
+                )
                 email_me_link.click()
                 time.sleep(5)
             otp = None
@@ -373,7 +375,7 @@ def Expedia(row):
 if __name__ == '__main__':
     
     print(f"Expedia Revplus SCRIPT IS STARTING...")
-    
+
     results_as_dict = None
     try:
         print(f"Getting properties for Expedia Revplus")
