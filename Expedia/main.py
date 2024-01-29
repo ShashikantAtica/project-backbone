@@ -152,7 +152,7 @@ def Expedia(row):
         delete_files_in_directory(save_dir)
 
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
