@@ -190,15 +190,18 @@ def Expedia(row):
         driver.find_element(By.ID, 'signInButton').click()
         time.sleep(10)
 
-        #secure setup skip
-        xpath = '//button[@data-testid="enrollment-recommended-action-button-secondary"]'
-        # Find the button using the XPath
-        button = None
-        button = driver.find_element(By.XPATH, xpath)
-        # Click on the button
-        if button is not None:
-            button.click()
-            time.sleep(5)
+        try:
+            #secure setup skip
+            xpath = '//button[@data-testid="enrollment-recommended-action-button-secondary"]'
+            # Find the button using the XPath
+            button = None
+            button = driver.find_element(By.XPATH, xpath)
+            # Click on the button
+            if button is not None:
+                button.click()
+                time.sleep(5)
+        except:
+            pass
 
         element_otp = None
         element_otp = driver.find_element(By.ID, "passcode")
