@@ -12,6 +12,7 @@ import arrow
 import pandas as pd
 from utils.secrets.SecretManager import get_secret_from_api
 from utils.secrets.SecretManager import get_otp_from_api
+from utils.secrets.SecretManager import get_expedia_properties_from_api
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -372,78 +373,13 @@ def Expedia(row):
 if __name__ == '__main__':
     
     print(f"Expedia Revplus SCRIPT IS STARTING...")
-
-    propertycode = None
-
-    result = None
-    # if propertycode is None:
-    #     print("All properties run")
-    #     conn = db_config.get_db_connection()
-    #     res = conn.execute(text(f"""SELECT * FROM tbl_properties_expedia WHERE "pmsName" = '{PMS_NAME}';"""))
-    #     result = res.fetchall()
-    #     columns = res.keys()
-    #     results_as_dict = [dict(zip(columns, row)) for row in result]
-    #     conn.close()
-    #     print("Fetched successfully")
-    # else:
-    #     print(f"{propertycode} property run")
-    #     conn = db_config.get_db_connection()
-    #     res = conn.execute(text(f"""SELECT * FROM tbl_properties_expedia WHERE "pmsName" = '{PMS_NAME}' and "propertyCode" = '{propertycode}';"""))
-    #     result = res.fetchall()
-    #     columns = res.keys()
-    #     results_as_dict = [dict(zip(columns, row)) for row in result]
-    #     conn.close()
-    #     print("Fetched successfully")
-
-    results_as_dict = [
-    {"propertyCode": "US000001", "hotelId": 18748},
-    {"propertyCode": "US000009", "hotelId": 882709},
-    {"propertyCode": "US000018", "hotelId": 117294},
-    {"propertyCode": "US000019", "hotelId": 2292810},
-    {"propertyCode": "US000020", "hotelId": 212873},
-    {"propertyCode": "USNJ230104", "hotelId": 24346},
-    {"propertyCode": "USOH230101", "hotelId": 794575},
-    {"propertyCode": "USMO230201", "hotelId": 917057},
-    {"propertyCode": "USOH230202", "hotelId": 3036587},
-    {"propertyCode": "USOH230201", "hotelId": 34372},
-    {"propertyCode": "USTX230301", "hotelId": 64468506},
-    {"propertyCode": "USIL230501", "hotelId": 42019},
-    {"propertyCode": "USFL230701", "hotelId": 22452},
-    {"propertyCode": "USMO230701", "hotelId": 21314174},
-    {"propertyCode": "USMO230702", "hotelId": 20392605},
-    {"propertyCode": "USMN230801", "hotelId": 580253},
-    {"propertyCode": "USIL230801", "hotelId": 696344},
-    {"propertyCode": "USPA231101", "hotelId": 2553577},
-    {"propertyCode": "USPA231103", "hotelId": 11996},
-    {"propertyCode": "USFL231201", "hotelId": 898694},
-    {"propertyCode": "USMD231201", "hotelId": 22676},
-    {"propertyCode": "USPA240101", "hotelId": 56685},
-    {"propertyCode": "USFL240102", "hotelId": 35534254},
-    {"propertyCode": "US000003", "hotelId": 2005040},
-    {"propertyCode": "US000004", "hotelId": 41538},
-    {"propertyCode": "USKY230201", "hotelId": 2351505},
-    {"propertyCode": "USCA230501", "hotelId": 42003},
-    {"propertyCode": "USIA230601", "hotelId": 6063},
-    {"propertyCode": "USTX230602", "hotelId": 40397},
-    {"propertyCode": "USTX230801", "hotelId": 695751},
-    {"propertyCode": "USCA231002", "hotelId": 126548},
-    {"propertyCode": "USCA231003", "hotelId": 8388},
-    {"propertyCode": "USPA231002", "hotelId": 6953},
-    {"propertyCode": "USNJ231001", "hotelId": 423044},
-    {"propertyCode": "USNJ231101", "hotelId": 22670},
-    {"propertyCode": "USPA231201", "hotelId": 9731},
-    {"propertyCode": "USWI231201", "hotelId": 2211},
-    {"propertyCode": "USGA230701", "hotelId": 9835},
-    {"propertyCode": "USIA230901", "hotelId": 20893},
-    {"propertyCode": "USCA230801", "hotelId": 21978777},
-    {"propertyCode": "USCA231001", "hotelId": 129287},
-    {"propertyCode": "USFL231101", "hotelId": 11476932},
-    {"propertyCode": "USTX231201", "hotelId": 977298},
-    {"propertyCode": "USNJ230201", "hotelId": 12571},
-    {"propertyCode": "USFL230801", "hotelId": 913910},
-    {"propertyCode": "USFL230802", "hotelId": 66794112},
-    {"propertyCode": "USFL230901", "hotelId": 20177562},
-    ]
+    
+    results_as_dict = None
+    try:
+        print(f"Getting properties for Expedia Revplus")
+        results_as_dict = get_expedia_properties_from_api()
+    except Exception:
+        print("Failed to get properties for Expedia Revplus due to bad Json!!!")
 
     if results_as_dict is not None and len(results_as_dict) > 0:
         print(f"Total Properties :: {len(results_as_dict)}")
