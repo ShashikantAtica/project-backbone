@@ -10,6 +10,7 @@ import os
 import time
 import arrow
 import pandas as pd
+from pathlib import Path
 from utils.secrets.SecretManager import get_secret_from_api
 from utils.secrets.SecretManager import get_otp_from_api
 from utils.secrets.SecretManager import get_expedia_properties_from_api
@@ -268,8 +269,20 @@ def Expedia(row):
         report_url = f"https://apps.expediapartnercentral.com/lodging/revplus/api/priceGridExport?htid={htid_value}&los=1&adults=2&tpid=1&countryCode=USA&roomTypeId=0&fetchMembersOnlyRates=false&fullyRefundableOnly=false&breakfastIncludedOnly=false&fetchMobileRates=false&fetchModTiers=&isSubMarket=false&useMockData=false&numOfDays=365"
         driver.get(report_url)
 
-        while(len(os.listdir(save_dir))==0):
+        timeout_seconds = 40
+        save_path = Path(save_dir)
+        start_time = time.time()
+
+        while time.time() - start_time < timeout_seconds:
+            xlsx_files = list(save_path.glob('*.xlsx'))
+
+            if xlsx_files:
+                print(f"File {xlsx_files[0]} downloaded successfully.")
+                break
+
             time.sleep(5)
+        else:
+            print("Timeout: No .xlsx file downloaded within the specified time.")
 
         for file_name_i in os.listdir(save_dir):
             file_path = os.path.join(save_dir, file_name_i)
