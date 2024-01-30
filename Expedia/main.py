@@ -267,7 +267,9 @@ def Expedia(row):
 
         report_url = f"https://apps.expediapartnercentral.com/lodging/revplus/api/priceGridExport?htid={htid_value}&los=1&adults=2&tpid=1&countryCode=USA&roomTypeId=0&fetchMembersOnlyRates=false&fullyRefundableOnly=false&breakfastIncludedOnly=false&fetchMobileRates=false&fetchModTiers=&isSubMarket=false&useMockData=false&numOfDays=365"
         driver.get(report_url)
-        time.sleep(30)
+
+        while(len(os.listdir(save_dir))==0):
+            time.sleep(5)
 
         for file_name_i in os.listdir(save_dir):
             file_path = os.path.join(save_dir, file_name_i)
