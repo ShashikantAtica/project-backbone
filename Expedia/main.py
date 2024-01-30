@@ -223,7 +223,7 @@ def Expedia(row):
             otp = None
 
             #while loop to try 10times to get latest otp bases on otpUpdateEpoch
-            max_iterations = 10
+            max_iterations = 20
             current_iteration = 0
             
             while current_iteration < max_iterations and current_time_epoch > otpUpdateEpoch:
@@ -238,7 +238,7 @@ def Expedia(row):
                     update_into_pulldate_expedia(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
                     return 0
 
-                time.sleep(20)
+                time.sleep(10)
                 current_iteration += 1
                 
 
