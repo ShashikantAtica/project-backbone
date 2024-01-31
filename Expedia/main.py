@@ -171,7 +171,7 @@ def Expedia(row):
         driver = webdriver.Chrome(options=chrome_options, service=service)
         driver.maximize_window()
 
-        print(f"{propertyCode} Script start for Choice Cancellation List")
+        print(f"{propertyCode} Script start for Expedia Revplus")
         login_url = "https://www.expediapartnercentral.com/Account/Logon"
         driver.get(login_url)
         otpUpdateEpoch = 1
