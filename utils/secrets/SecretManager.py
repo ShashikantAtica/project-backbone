@@ -67,7 +67,7 @@ def add_secret_version(secret_id, secret):
 
 
 def get_secret_from_api(propertyId, platform):
-    x_token = os.environ['API_X_TOKEN']
+    x_token = os.environ['JAVA_API_X_TOKEN']
     url = f"https://api.aticastays.com/api/v1/bit-warden/get-login-details?propertyId={propertyId}&platform={platform}&requesterEmail=hari.softqubes+backbone@aticaglobal.com"
 
     headers = {
@@ -76,6 +76,7 @@ def get_secret_from_api(propertyId, platform):
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
+        print(f"Error: API call failed with status code {response.status_code}")
         return None
     response_data = response.json()
     response_data['info']['u'] = response_data['info']['username']
@@ -84,6 +85,53 @@ def get_secret_from_api(propertyId, platform):
     del response_data['info']['password']
     return response_data['info']
 
+def get_otp_from_api(propertyId, platform):
+    x_token = os.environ['JAVA_API_X_TOKEN']
+    url = f"https://api.aticastays.com/api/v1/us-system-auth/get-login-otp?propertyId={propertyId}&platform={platform}"
+
+    headers = {
+        'X-Token': x_token
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error: API call failed with status code {response.status_code}")
+        return None
+    response_data = response.json()
+    response_data['info']['otp'] = response_data['info']['otpText']
+    del response_data['info']['otpText']
+    response_data['info']['otp_epoch'] = response_data['info']['otpUpdateEpoch']
+    del response_data['info']['otpUpdateEpoch']
+    return response_data['info']
+
+def get_expedia_properties_from_api():
+    x_token = os.environ['JAVA_API_X_TOKEN']
+    url = f"https://api.aticastays.com/api/v1/us-supply-properties/get-expedia-scraping-properties"
+
+    headers = {
+        'X-Token': x_token
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error: API call failed with status code {response.status_code}")
+        return None
+    response_data = response.json()
+    if 'info' in response_data:
+        expedia_properties = []
+
+        # Iterate through each property information in 'info'
+        for property_info in response_data['info']:
+            property_id = property_info.get('propertyId', '')
+            expedia_hotel_id = property_info.get('otaInfo', {}).get('expediaHotelId', '')
+
+            # Append property_id and expedia_hotel_id to the list
+            if property_id and expedia_hotel_id:
+                expedia_properties.append({"propertyCode": property_id, "hotelId": expedia_hotel_id})
+
+        return expedia_properties
+    else:
+        return None
 
 if __name__ == '__main__':
     print("Google Secret Manager")
