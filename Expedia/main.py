@@ -133,13 +133,13 @@ def Expedia(row):
             username = json_dict['u']
             password = json_dict['p']
         except Exception:
-            msg = f"[{propertyCode}] secret fetch failed due to bad json"
+            msg = f"[{propertyCode}] API Fetch Failed!"
             print(msg)
             update_into_pulldate_expedia(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
             return 0
 
         if username is None or password is None:
-            msg = f"[{propertyCode}] username and password is wrong!!!"
+            msg = f"[{propertyCode}] username and password not found!!!"
             print(msg)
             update_into_pulldate_expedia(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
 
@@ -233,7 +233,7 @@ def Expedia(row):
                     otp = json_dict['otp']
                     otpUpdateEpoch = json_dict['otp_epoch']
                 except Exception:
-                    msg = f"[{propertyCode}] OTP fetch failed due to bad json"
+                    msg = f"[{propertyCode}] OTP Fetch Failed!!!"
                     print(msg)
                     update_into_pulldate_expedia(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
                     return 0
@@ -399,7 +399,7 @@ if __name__ == '__main__':
         print(f"Getting properties for Expedia Revplus")
         results_as_dict = get_expedia_properties_from_api()
     except Exception:
-        print("Failed to get properties for Expedia Revplus due to bad Json!!!")
+        print("Expedia Revplus Properties Fetch Failed!!!")
 
     if results_as_dict is not None and len(results_as_dict) > 0:
         print(f"Total Properties :: {len(results_as_dict)}")

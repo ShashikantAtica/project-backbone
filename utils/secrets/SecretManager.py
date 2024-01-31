@@ -67,7 +67,7 @@ def add_secret_version(secret_id, secret):
 
 
 def get_secret_from_api(propertyId, platform):
-    x_token = os.environ['API_X_TOKEN']
+    x_token = os.environ['JAVA_API_X_TOKEN']
     url = f"https://api.aticastays.com/api/v1/bit-warden/get-login-details?propertyId={propertyId}&platform={platform}&requesterEmail=hari.softqubes+backbone@aticaglobal.com"
 
     headers = {
@@ -76,6 +76,7 @@ def get_secret_from_api(propertyId, platform):
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
+        print(f"Error: API call failed with status code {response.status_code}")
         return None
     response_data = response.json()
     response_data['info']['u'] = response_data['info']['username']
@@ -85,7 +86,7 @@ def get_secret_from_api(propertyId, platform):
     return response_data['info']
 
 def get_otp_from_api(propertyId, platform):
-    x_token = os.environ['OTP_API_X_TOKEN']
+    x_token = os.environ['JAVA_API_X_TOKEN']
     url = f"https://api.aticastays.com/api/v1/us-system-auth/get-login-otp?propertyId={propertyId}&platform={platform}"
 
     headers = {
@@ -94,6 +95,7 @@ def get_otp_from_api(propertyId, platform):
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
+        print(f"Error: API call failed with status code {response.status_code}")
         return None
     response_data = response.json()
     response_data['info']['otp'] = response_data['info']['otpText']
@@ -103,7 +105,7 @@ def get_otp_from_api(propertyId, platform):
     return response_data['info']
 
 def get_expedia_properties_from_api():
-    x_token = os.environ['EXPEDIA_API_X_TOKEN']
+    x_token = os.environ['JAVA_API_X_TOKEN']
     url = f"https://api.aticastays.com/api/v1/us-supply-properties/get-expedia-scraping-properties"
 
     headers = {
@@ -112,6 +114,7 @@ def get_expedia_properties_from_api():
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
+        print(f"Error: API call failed with status code {response.status_code}")
         return None
     response_data = response.json()
     if 'info' in response_data:

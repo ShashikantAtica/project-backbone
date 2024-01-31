@@ -1264,14 +1264,14 @@ ideasg3_occ_model = Table(
 
 expedia_revplus_model = Table(
     'expedia_revplus', meta,
-    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('id', Integer, autoincrement=True),
     Column('property_code', String(20)),
     Column('pull_date_id', String(255)),
     Column('created_at', TIMESTAMP(timezone=True)),
     Column('updated_at', TIMESTAMP(timezone=True)),
     Column('created_at_epoch', BIGINT),
     Column('updated_at_epoch', BIGINT),
-    Column('unique_key', String(255)),
+    Column('unique_key', String(255), primary_key=True),
     Column('date', String(255)),
     Column('property_price', String(255)),
     Column('compset_avg', String(255)), 
