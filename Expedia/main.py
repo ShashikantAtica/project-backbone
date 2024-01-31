@@ -305,15 +305,17 @@ def Expedia(row):
         print(null_row_posi)
 
         df = pd.read_excel(excel_file_path, header=None, skiprows=8)
+        original_compsetnames = []
         df.iloc[0, 0]="date"
         df.iloc[1, 0]="property_price"
-        df.iloc[2, 0]="compset_avg"
+        df.iloc[2, 0]="compset_avg_price"
         for x in range(3, null_row_posi):
-            tempstr="compset_" + str(x-2)
+            tempstr="compset" + str(x-2) + "_price"
+            original_compsetnames.append(df.iloc[x,0])
             df.iloc[x,0]=tempstr
         df.iloc[null_row_posi, 0]="NULLWALA"
         df.iloc[null_row_posi+1, 0]="search_demand"
-        df.iloc[null_row_posi+2, 0]="previous_year"
+        df.iloc[null_row_posi+2, 0]="search_demand_ly"
         df.iloc[null_row_posi+3, 0]="current_occupancy_perc"
         df.iloc[null_row_posi+4, 0]="occupancy_forecast_perc"
 
@@ -345,6 +347,10 @@ def Expedia(row):
         read.insert(4, column="created_at_epoch", value=createdAtEpoch)
         read.insert(5, column="updated_at_epoch", value=updatedAtEpoch)
         read.insert(6, column="unique_key", value=read["property_code"].astype(str) + "_" + read['date'].astype(str))
+        for x in range(0, len(original_compsetnames)):
+            col_name = "compset" + str(x+1) + "_name"
+            read.insert(x+7, column=col_name, value=original_compsetnames[x])
+
         date_set = set(read['date'])
         date_set.discard(pd.NaT)
         revplus_file_path = f"./reports/{propertyCode}/Revplus_final.csv"
