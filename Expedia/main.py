@@ -133,7 +133,7 @@ def Expedia(row):
             username = json_dict['u']
             password = json_dict['p']
         except Exception:
-            msg = f"[{propertyCode}] API Fetch Failed!"
+            msg = f"[{propertyCode}] Login API Fetch Failed!"
             print(msg)
             update_into_pulldate_expedia(pullDateId, ERROR_NOTE=msg, IS_ERROR=True)
             return 0
@@ -230,8 +230,9 @@ def Expedia(row):
                 try:
                     print(f"Getting OTP for {propertyCode}")
                     json_dict = get_otp_from_api(propertyCode, platform)
-                    otp = json_dict['otp']
                     otpUpdateEpoch = json_dict['otp_epoch']
+                    if otpUpdateEpoch > current_time_epoch:
+                        otp = json_dict['otp']
                 except Exception:
                     msg = f"[{propertyCode}] OTP Fetch Failed!!!"
                     print(msg)
@@ -340,6 +341,8 @@ def Expedia(row):
         read['occupancy_forecast_perc'] = read['occupancy_forecast_perc'].round(2)
         read['current_occupancy_perc'] = read['current_occupancy_perc'] * 100
         read['current_occupancy_perc'] = read['current_occupancy_perc'].round(2)
+        read['search_demand_ly'] = read['search_demand_ly'].replace('X', '')
+        read['search_demand'] = read['search_demand'].replace('X', '')
         read.insert(0, column="property_code", value=propertyCode)
         read.insert(1, column="pull_date_id", value=pullDateId)
         read.insert(2, column="created_at", value=createdAt)
