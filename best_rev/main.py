@@ -80,6 +80,7 @@ def BestRev_Pms(row):
         propertyCode = row['propertyCode']
         external_property_code = row['external_property_code']
         platform = "RMS"
+        LAST_PULL_DATE_ID=pullDateId
 
         save_dir = os.path.abspath('reports/')
         folder_name = "./reports/"

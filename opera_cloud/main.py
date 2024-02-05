@@ -639,9 +639,14 @@ def OperaCloud_Pms(row):
                 res_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Reservations.csv", encoding="utf-8"))
                 res_result = list(res_result)
                 
-            except Exception:
+            
+            except Exception as e:
                 res_result = []
                 print("Reservation Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " RES Parsing Failed: " + error_temp
 
             print("RES RESULT")
             # print(res_result) #This can be uncommented to test/see the result of parsed data
@@ -843,10 +848,13 @@ def OperaCloud_Pms(row):
                 else:
                     occ_result = []
                     print("Occupancy Data not available")
-            except Exception:
-
+            except Exception as e:
                 occ_result = []
                 print("Occupancy Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " OCC Parsing Failed: " + error_temp
             
             print("OCC RESULT")
             # print(occ_result) #This can be uncommented to test/see the result of parsed data
@@ -905,9 +913,13 @@ def OperaCloud_Pms(row):
 
                 arrival_result = csv.DictReader(open(f"{folder_name}{propertyCode}_Arrival.csv", encoding="utf-8"))
                 arrival_result = list(arrival_result)
-            except Exception:
+            except Exception as e:
                 arrival_result = []
                 print("Arrival Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " ARR Parsing Failed: " + error_temp
 
 
             print("ARRIVAL RESULT")
@@ -987,6 +999,7 @@ def OperaCloud_Pms(row):
                                     "MULTI_OCC_PER": MULTI_OCC_PER})
                         
                 df = pd.DataFrame(rows, columns=cols)
+                df.dropna(subset=["BUSINESS_DATE"], inplace=True)
                 df.insert(0, column="propertyCode", value=propertyCode)
                 df.insert(1, column="pullDateId", value=pullDateId)
                 df.insert(2, column="createdAt", value=createdAt)
@@ -1001,9 +1014,13 @@ def OperaCloud_Pms(row):
                 df.to_csv(f"{folder_name}{propertyCode}_RBRC.csv", index=False)
                 rbrc_result = csv.DictReader(open(f"{folder_name}{propertyCode}_RBRC.csv", encoding="utf-8"))
                 rbrc_result = list(rbrc_result)
-            except Exception:
+            except Exception as e:
                 rbrc_result = []
-                print("Reservation Data not available")
+                print("RBRC Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " RBRC Parsing Failed: " + error_temp
             
             
             # End RBRC Report
