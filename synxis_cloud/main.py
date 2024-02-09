@@ -361,6 +361,42 @@ def bulk_insert_synxis_cloud_monthly_summary(mon_list, propertyCode, min_date, m
         error_temp=error_message[:250]
     return error_temp
 
+def bulk_insert_synxis_cloud_res_activity(res_act_list, propertyCode):
+    print("Data importing...")
+    error_temp = ""
+    try:
+        conn = db_config.get_db_connection()
+        stmt = insert(db_models.synxis_cloud_res_activity_model).values(res_act_list)
+        conn.commit()
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['uniqueKey'],
+            set_={
+                'pullDateId': stmt.excluded.pullDateId,
+                'updatedAt': stmt.excluded.updatedAt,
+                'updatedAtEpoch': stmt.excluded.updatedAtEpoch,
+                'name': stmt.excluded.name,
+                'account_id': stmt.excluded.account_id,
+                'status': stmt.excluded.status,
+                'secondary_status': stmt.excluded.secondary_status,
+                'arrival': stmt.excluded.arrival,
+                'departure': stmt.excluded.departure,
+                'rate': stmt.excluded.rate,
+                'create_user': stmt.excluded.create_user,
+                'create_date': stmt.excluded.create_date,
+                'cancel_date': stmt.excluded.cancel_date,
+            }
+        )
+        # Execute the insert statement
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+        print("Data imported")
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        error_temp=error_message[:250]
+    return error_temp
+
 
 def prep_service():
     creds = None
@@ -441,7 +477,7 @@ def Synxis_Cloud_Pms(row):
 
     try:
 
-        label_array = [f"{propertyCode} Reservation", f"{propertyCode} Forecast", f"{propertyCode} Revenue", f"{propertyCode} Monthly"]
+        label_array = [f"{propertyCode} Reservation", f"{propertyCode} ReservationActivity", f"{propertyCode} Forecast", f"{propertyCode} Revenue", f"{propertyCode} Monthly"]
         attachment_format = "./reports"
         messages_array = []
         saved_messages_ids = []
@@ -449,6 +485,7 @@ def Synxis_Cloud_Pms(row):
 
         file_paths = [
             f'{attachment_format}/{propertyCode}_Reservation.csv',
+            f'{attachment_format}/{propertyCode}_ReservationActivity.csv',
             f'{attachment_format}/{propertyCode}_Forecast.csv',
             f'{attachment_format}/{propertyCode}_Revenue.csv',
             f'{attachment_format}/{propertyCode}_Monthly.csv'
@@ -559,11 +596,13 @@ def Synxis_Cloud_Pms(row):
 
         # Modification of res report
         reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation.csv'
+        reservation_activity_file_path = f'{attachment_format}/{propertyCode}_ReservationActivity.csv'
         forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast.csv'
         revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue.csv'
         monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly.csv'
 
         check_reservation_file = os.path.isfile(reservation_file_path)
+        check_reservation_activity_file = os.path.isfile(reservation_activity_file_path)
         check_forecast_file = os.path.isfile(forecast_file_path)
         check_revenue_file = os.path.isfile(revenue_file_path)
         check_monthly_file = os.path.isfile(monthly_file_path)
@@ -582,6 +621,13 @@ def Synxis_Cloud_Pms(row):
                 errorMessage = errorMessage + f"No new messages for {res_labelname} label, "
             else:
                 errorMessage = errorMessage + " Reservation file - N/A"
+
+        if not check_reservation_activity_file:
+            res_act_labelname=f"{propertyCode} ReservationActivity"
+            if res_act_labelname in track_label_nomsg_set:
+                errorMessage = errorMessage + f"No new messages for {res_act_labelname} label, "
+            else:
+                errorMessage = errorMessage + " Reservation Activity file - N/A"
 
         if not check_forecast_file:
             for_labelname=f"{propertyCode} Forecast"
@@ -653,9 +699,13 @@ def Synxis_Cloud_Pms(row):
             
                 res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
                 res_result = list(res_result)
-            except Exception:
+            except Exception as e:
                 res_result = []
                 print("Reservation Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " RES Parsing Failed: " + error_temp
 
 
             if len(res_result) > 0:
@@ -667,6 +717,55 @@ def Synxis_Cloud_Pms(row):
                     errorMessage = errorMessage + " RES Failed: " + error_temp
             else:
                 errorMessage = errorMessage + "Reservation File Was Blank, "
+
+        if check_reservation_activity_file:
+
+            fileCount=fileCount+1
+
+            try:
+                # Reservation Activity Data Clean and Insert
+                read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+                read.dropna(subset=['Account_ID'], inplace=True)
+                read['Arrival'] = pd.to_datetime(read['Arrival'], format='mixed', errors='coerce')
+                read['Departure'] = pd.to_datetime(read['Departure'], format='mixed', errors='coerce')
+                read['Create_Date'] = pd.to_datetime(read['Create_Date'], format='mixed', errors='coerce')
+                read['Cancel_Date'] = pd.to_datetime(read['Cancel_Date'], format='mixed', errors='coerce')
+                read.insert(0, column="propertyCode", value=propertyCode) 
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read['Rate'] = read['Rate'].apply(str).str.replace(',', '').astype(float)
+                # read['Total_Child_Occupancy_For_Unknown_Age_Group'] = read['Total_Child_Occupancy_For_Unknown_Age_Group'].fillna(0).astype(int)
+                #This eleminated the very last row with all empty columns where MIGHT be Confirm No. was empty
+                read = read[read['Account_ID'].str.len() >= 1]
+                read.insert(6, column="uniqueKey", value=read['propertyCode'].astype(str) + "_" + read['Account_ID'].astype(str))
+
+                headers_list =["propertyCode","pullDateId","createdAt","updatedAt","createdAtEpoch","updatedAtEpoch","uniqueKey",
+                            "name","account_id","status","secondary_status","arrival","departure","rate","create_user","create_date","cancel_date"]
+                read.to_csv(f"{attachment_format}/{propertyCode}_ReservationActivity.csv", index=False, header=headers_list)
+            
+                res_act_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_ReservationActivity.csv", encoding="utf-8"))
+                res_act_result = list(res_act_result)
+            except Exception as e:
+                res_act_result = []
+                print("Reservation Activity Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " RES ACTIVITY Parsing Failed: " + error_temp
+
+
+            if len(res_act_result) > 0:
+                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result, propertyCode)
+                if(error_temp == ""):
+                    print("RES ACT DONE")   
+                else:
+                    print("RES ACT FAILED")
+                    errorMessage = errorMessage + " RES ACT Failed: " + error_temp
+            else:
+                errorMessage = errorMessage + "Reservation Activity File Was Blank, "
 
         if check_forecast_file:
 
@@ -691,9 +790,13 @@ def Synxis_Cloud_Pms(row):
 
                 fore_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Forecast.csv", encoding="utf-8"))
                 fore_result = list(fore_result)
-            except Exception:
+            except Exception as e:
                 fore_result = []
                 print("Forecast Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " FORECAST Parsing Failed: " + error_temp
 
 
             if len(fore_result) > 0:
@@ -736,9 +839,13 @@ def Synxis_Cloud_Pms(row):
                 read.to_csv(f"{attachment_format}/{propertyCode}_Revenue.csv", index=False)
                 rev_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Revenue.csv", encoding="utf-8"))
                 rev_result = list(rev_result)
-            except Exception:
+            except Exception as e:
                 rev_result = []
                 print("Revenue Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " REVENUE Parsing Failed: " + error_temp
 
 
             if len(rev_result) > 0:
@@ -776,9 +883,13 @@ def Synxis_Cloud_Pms(row):
 
                 monthly_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Monthly.csv", encoding="utf-8"))
                 monthly_result = list(monthly_result)
-            except Exception:
+            except Exception as e:
                 monthly_result = []
                 print("Monthly Summary Data not available")
+                error_message = str(e)
+                print(error_message)
+                error_temp=error_message[:250]
+                errorMessage = errorMessage + " Monthly Parsing Failed: " + error_temp
 
             
             if len(monthly_result) > 0:
@@ -791,7 +902,7 @@ def Synxis_Cloud_Pms(row):
             else:
                 errorMessage = errorMessage + "Monthly File Was Blank, "
 
-        if len(track_label_nomsg_set) != 4:
+        if len(track_label_nomsg_set) != 5:
         # Apply archive label to saved messages
             label_apply_body = {
                 "addLabelIds": archive_label["id"],
@@ -808,7 +919,7 @@ def Synxis_Cloud_Pms(row):
             else:
                 print("No messages to save")
 
-        if fileCount == 4:
+        if fileCount == 5:
             if errorMessage == "":
                 update_into_pulldate(pullDateId, ERROR_NOTE="Successfully Finished", IS_ERROR=False) 
             else:
@@ -816,7 +927,7 @@ def Synxis_Cloud_Pms(row):
                 update_into_pulldate(pullDateId, ERROR_NOTE=errorMessage, IS_ERROR=True)
         else:
             if fileCount == 0:
-                if len(track_label_nomsg_set) == 4:
+                if len(track_label_nomsg_set) == 5:
                     errorMessage = "No new messages for all label"
                 else:
                     errorMessage = "All File Not Found"

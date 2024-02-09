@@ -822,6 +822,29 @@ synxis_cloud_monthly_summary_model = Table(
     Column('Total', String(255)),
 )
 
+synxis_cloud_res_activity_model = Table(
+    'synxis_cloud_res_activity', meta,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('propertyCode', String(20)),
+    Column('pullDateId', String(255)),
+    Column('createdAt', TIMESTAMP(timezone=True)),
+    Column('updatedAt', TIMESTAMP(timezone=True)),
+    Column('createdAtEpoch', BIGINT),
+    Column('updatedAtEpoch', BIGINT),
+    Column('uniqueKey', String(255)),
+    Column('name', String(255)),
+    Column('account_id', String(255)),
+    Column('status', String(255)),
+    Column('secondary_status', String(255)),
+    Column('arrival', String(255)),
+    Column('departure', String(255)),
+    Column('rate', String(255)),
+    Column('create_user', String(255)),
+    Column('create_date', String(255)),
+    Column('cancel_date', String(255)),
+
+)
+
 marriott_reservation_model = Table(
     'marriott_reservation', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
