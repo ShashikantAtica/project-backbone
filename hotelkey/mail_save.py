@@ -410,94 +410,106 @@ def Hotelkey_Pms(row):
             else:
                 errorMessage = errorMessage + " Occupancy file - N/A"
 
-        if check_reservation_file:
-            
-            fileCount = fileCount + 1
-            # Reservation Data Clean and Insert
-            read = pd.read_csv(reservation_file_path, skipfooter=1, engine='python')
-            read = read[(read['Status'] == 'Book')]
-            values = ['', 'Book', 'Total']
-            read = read[read['Arrival\nDate'].isin(values) == False]
-            read = read[read['Depart\nDate'].isin(values) == False]
-            read = read[read['Creation Date'].isin(values) == False]
-            read['Arrival\nDate'] = pd.to_datetime(read['Arrival\nDate'], format="mixed", errors='coerce')
-            read['Depart\nDate'] = pd.to_datetime(read['Depart\nDate'], format="mixed", errors='coerce')
-            read['Creation Date'] = pd.to_datetime(read['Creation Date'], format="mixed", errors='coerce')
-            read.dropna(subset=["Res #"], inplace=True)
-            read.insert(0, column="propertyCode", value=propertyCode)
-            read.insert(1, column="pullDateId", value=pullDateId)
-            read.insert(2, column="createdAt", value=createdAt)
-            read.insert(3, column="updatedAt", value=updatedAt)
-            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            read.insert(6, column="uniqueKey", value=read["Res #"].astype(str))
-            header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
-                    'Group', 'RateCode', 'Product', 'AssignedProduct', 'Rate', 'TaxInc', 'ProjectedRevenue', 'TotalWithoutTax', 'PayMth', 'PaymentsTaken',
-                    'DepositsScheduled', 'BalanceDue', 'CreationDate', 'CreationUser', 'CP', 'CPName', 'Blank']
-            read.columns = header
-            read['Nts'] = read['Nts'].fillna(0).astype(int)
-            read['Adl'] = read['Adl'].fillna(0).astype(int)
-            read['PaymentsTaken'] = read['PaymentsTaken'].fillna(0).astype(int)
-            read['DepositsScheduled'] = read['DepositsScheduled'].fillna(0).astype(int)
-            read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
+        try:
+            if check_reservation_file:
+                
+                fileCount = fileCount + 1
+                # Reservation Data Clean and Insert
+                read = pd.read_csv(reservation_file_path, skipfooter=1, engine='python')
+                read = read[(read['Status'] == 'Book')]
+                values = ['', 'Book', 'Total']
+                read = read[read['Arrival\nDate'].isin(values) == False]
+                read = read[read['Depart\nDate'].isin(values) == False]
+                read = read[read['Creation Date'].isin(values) == False]
+                read['Arrival\nDate'] = pd.to_datetime(read['Arrival\nDate'], format="mixed", errors='coerce')
+                read['Depart\nDate'] = pd.to_datetime(read['Depart\nDate'], format="mixed", errors='coerce')
+                read['Creation Date'] = pd.to_datetime(read['Creation Date'], format="mixed", errors='coerce')
+                read.dropna(subset=["Res #"], inplace=True)
+                read.insert(0, column="propertyCode", value=propertyCode)
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read.insert(6, column="uniqueKey", value=read["Res #"].astype(str))
+                header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Property', 'Status', 'Channel', 'Res', 'GuestName', 'ArrivalDate', 'DepartDate', 'Nts', 'Adl', 'MarketSegment',
+                        'Group', 'RateCode', 'Product', 'AssignedProduct', 'Rate', 'TaxInc', 'ProjectedRevenue', 'TotalWithoutTax', 'PayMth', 'PaymentsTaken',
+                        'DepositsScheduled', 'BalanceDue', 'CreationDate', 'CreationUser', 'CP', 'CPName', 'Blank']
+                read.columns = header
+                read['Nts'] = read['Nts'].fillna(0).astype(int)
+                read['Adl'] = read['Adl'].fillna(0).astype(int)
+                read['PaymentsTaken'] = read['PaymentsTaken'].fillna(0).astype(int)
+                read['DepositsScheduled'] = read['DepositsScheduled'].fillna(0).astype(int)
+                read.to_csv(f"{attachment_format}/{propertyCode}_Reservation.csv", index=False)
 
-            res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
-            res_result = list(res_result)
-            if len(res_result) > 0:
-                error_temp = bulk_insert_hotelkey_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
-                if(error_temp == ""):
-                    print("RES DONE")   
+                res_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Reservation.csv", encoding="utf-8"))
+                res_result = list(res_result)
+                if len(res_result) > 0:
+                    error_temp = bulk_insert_hotelkey_res(res_result, propertyCode=propertyCode, res_before=row['res_before'], res_after=row['res_after'])
+                    if(error_temp == ""):
+                        print("RES DONE")   
+                    else:
+                        print("RES FAILED")
+                        errorMessage = errorMessage + " RES Failed: " + error_temp
                 else:
-                    print("RES FAILED")
-                    errorMessage = errorMessage + " RES Failed: " + error_temp
-            else:
-                errorMessage = errorMessage + "Reservation File Was Blank, "
+                    errorMessage = errorMessage + "Reservation File Was Blank, "
+        except Exception as e:
+            error_message = str(e)
+            print(error_message)
+            error_temp=error_message[:250]
+            errorMessage = errorMessage + " RES Parsing Failed: " + error_temp
 
-        if check_occupancy_file:
+        try:
+            if check_occupancy_file:
 
-            fileCount = fileCount + 1
-            # Forecast Data Clean and Insert
-            read = pd.read_csv(occupancy_file_path)
-            read['Date'] = pd.to_datetime(read['Date'])
-            read.dropna(subset=['Date'], inplace=True)
-            read.insert(0, column="propertyCode", value=propertyCode)
-            read.insert(1, column="pullDateId", value=pullDateId)
-            read.insert(2, column="createdAt", value=createdAt)
-            read.insert(3, column="updatedAt", value=updatedAt)
-            read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
-            read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
-            read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str)) 
-            header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
-                    'SD', 'OccOTB', 'OccPYClose', 'OccPYVar', 'ADROTB', 'ADRPYClose', 'ADRPYVar', 'DiscPer', 'Price1', 'LT1', 'Per1', 'RM1', 'Price2', 'LT2', 'Per2',
-                    'RM2', 'Price3', 'LT3', 'Per3', 'RM3', 'Price4', 'LT4', 'Per4', 'RM4']
-            read.columns = header
-            read['DiscPer'] = read['DiscPer'].fillna(0).astype(int)
-            read['LT1'] = read['LT1'].fillna(0).astype(int)
-            read['Per1'] = read['Per1'].fillna(0).astype(int)
-            read['RM1'] = read['RM1'].fillna(0).astype(int)
-            read['LT2'] = read['LT2'].fillna(0).astype(int)
-            read['Per2'] = read['Per2'].fillna(0).astype(int)
-            read['RM2'] = read['RM2'].fillna(0).astype(int)
-            read['LT3'] = read['LT3'].fillna(0).astype(int)
-            read['Per3'] = read['Per3'].fillna(0).astype(int)
-            read['RM3'] = read['RM3'].fillna(0).astype(int)
-            read['LT4'] = read['LT4'].fillna(0).astype(int)
-            read['Per4'] = read['Per4'].fillna(0).astype(int)
-            read['RM4'] = read['RM4'].fillna(0).astype(int)
-            read.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
+                fileCount = fileCount + 1
+                # Forecast Data Clean and Insert
+                read = pd.read_csv(occupancy_file_path)
+                read['Date'] = pd.to_datetime(read['Date'])
+                read.dropna(subset=['Date'], inplace=True)
+                read.insert(0, column="propertyCode", value=propertyCode)
+                read.insert(1, column="pullDateId", value=pullDateId)
+                read.insert(2, column="createdAt", value=createdAt)
+                read.insert(3, column="updatedAt", value=updatedAt)
+                read.insert(4, column="createdAtEpoch", value=createdAtEpoch)
+                read.insert(5, column="updatedAtEpoch", value=updatedAtEpoch)
+                read.insert(6, column="uniqueKey", value=read["propertyCode"].astype(str) + "_" + read['Date'].astype(str)) 
+                header = ['propertyCode', 'pullDateId', 'createdAt', 'updatedAt', 'createdAtEpoch', 'updatedAtEpoch', 'uniqueKey', 'Date', 'Property', 'PFRZ', 'FRZ', 'TOD', 'DOW', 'GTD', 'LOS', 'CXL', 'OO', 'Hold', 'Yieldable', 'Sold', 'BLK',
+                        'SD', 'OccOTB', 'OccPYClose', 'OccPYVar', 'ADROTB', 'ADRPYClose', 'ADRPYVar', 'DiscPer', 'Price1', 'LT1', 'Per1', 'RM1', 'Price2', 'LT2', 'Per2',
+                        'RM2', 'Price3', 'LT3', 'Per3', 'RM3', 'Price4', 'LT4', 'Per4', 'RM4']
+                read.columns = header
+                read['DiscPer'] = read['DiscPer'].fillna(0).astype(int)
+                read['LT1'] = read['LT1'].fillna(0).astype(int)
+                read['Per1'] = read['Per1'].fillna(0).astype(int)
+                read['RM1'] = read['RM1'].fillna(0).astype(int)
+                read['LT2'] = read['LT2'].fillna(0).astype(int)
+                read['Per2'] = read['Per2'].fillna(0).astype(int)
+                read['RM2'] = read['RM2'].fillna(0).astype(int)
+                read['LT3'] = read['LT3'].fillna(0).astype(int)
+                read['Per3'] = read['Per3'].fillna(0).astype(int)
+                read['RM3'] = read['RM3'].fillna(0).astype(int)
+                read['LT4'] = read['LT4'].fillna(0).astype(int)
+                read['Per4'] = read['Per4'].fillna(0).astype(int)
+                read['RM4'] = read['RM4'].fillna(0).astype(int)
+                read.to_csv(f"{attachment_format}/{propertyCode}_Occupancy.csv", index=False)
 
-            occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
-            occ_result = list(occ_result)
+                occ_result = csv.DictReader(open(f"{attachment_format}/{propertyCode}_Occupancy.csv", encoding="utf-8"))
+                occ_result = list(occ_result)
 
-            if len(res_result) > 0:
-                error_temp = bulk_insert_hotelkey_occ(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
-                if(error_temp == ""): 
-                    print("OCC DONE")
+                if len(res_result) > 0:
+                    error_temp = bulk_insert_hotelkey_occ(occ_result, propertyCode=propertyCode, occ_before=row['occ_before'], occ_after=row['occ_after'])
+                    if(error_temp == ""): 
+                        print("OCC DONE")
+                    else:
+                        print("OCC FAILED")
+                        errorMessage = errorMessage + " OCC Failed: " + error_temp
                 else:
-                    print("OCC FAILED")
-                    errorMessage = errorMessage + " OCC Failed: " + error_temp
-            else:
-                errorMessage = errorMessage + "Occupancy File Was Blank, "
+                    errorMessage = errorMessage + "Occupancy File Was Blank, "
+        except Exception as e:
+            error_message = str(e)
+            print(error_message)
+            error_temp=error_message[:250]
+            errorMessage = errorMessage + " OCC Parsing Failed: " + error_temp
 
         if len(track_label_nomsg_set) != 2:
         # Apply archive label to saved messages
