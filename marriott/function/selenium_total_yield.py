@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from pandas.errors import SettingWithCopyWarning
 from bs4 import BeautifulSoup as bs
 import re
 import time
@@ -13,6 +14,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
+import warnings
+
+warnings.simplefilter(action='ignore', category=SettingWithCopyWarning)
 
 
 def get_total_yield_report_url(payload):
@@ -130,8 +134,8 @@ def get_total_yield_report_url(payload):
 
             createdAt = "'" + str(arrow.now()) + "'"
             updatedAt = "'" + str(arrow.now()) + "'"
-            createdAtEpoch =  int(arrow.utcnow().timestamp())
-            updatedAtEpoch =  int(arrow.utcnow().timestamp())
+            createdAtEpoch = int(arrow.utcnow().timestamp())
+            updatedAtEpoch = int(arrow.utcnow().timestamp())
 
             print("Total Yield Report Modification")
             df = pd.read_excel(filepath, header=None, skiprows=5)
@@ -151,15 +155,16 @@ def get_total_yield_report_url(payload):
             pivoted_df.columns = headers
             final_df = pivoted_df.iloc[1:]
             final_df.reset_index(drop=True, inplace=True)
-            final_df.loc[:, 'Date'] = pd.to_datetime(final_df['Date'].replace('\n', ' '), format='%a %b %d').dt.strftime(f'{arrow.now().format("YYYY")}-%m-%d')
+            final_df.loc[:, 'Date'] = pd.to_datetime(final_df['Date'].replace('\n', ' '), format='%a %b %d', errors='coerce')
+            final_df['Date'] = pd.to_datetime(final_df['Date']).dt.strftime(f'{arrow.now().format("YYYY")}-%m-%d')
             final_df.dropna(subset=['Date'], inplace=True)
-            final_df.insert(6, column="uniqueKey", value=final_df["propertyCode"].astype(str) + "_" + final_df['Date'].astype(str)) 
+            final_df.insert(6, column="uniqueKey", value=final_df["propertyCode"].astype(str) + "_" + final_df['Date'].astype(str))
             final_df.to_csv(os.path.join(f'{folder_name}{external_property_code}_Total_Yield.csv'), index=False)
 
             print("Total Yield Report Modified Successfully")
             if os.path.exists(filepath):
                 os.remove(filepath)
         return "Success"
-            #  Total Yield End
+        #  Total Yield End
     except Exception as e:
         return e
