@@ -28,7 +28,10 @@ from sqlalchemy.dialects.postgresql import insert
 def insert_into_tblproperties(property_object):
     print("Data importing...")
     conn = db_config.get_db_connection()
-    conn.execute(db_models.tbl_properties_model.insert(), property_object)
+    stmt = insert(db_models.tbl_properties_model).values(property_object)
+    stmt = stmt.on_conflict_do_nothing(index_elements=['uniqueKey'])
+    # Execute the insert statement
+    conn.execute(stmt)
     conn.commit()
     conn.close()
     print("Imported successfully!!!")
@@ -1452,6 +1455,7 @@ if __name__ == '__main__':
         propertycode = args.propertycode
         propertyname = args.propertyname
         externalpropertycode = args.externalpropertycode
+        propertyname = propertyname.replace("@", "&")
         propertyname = propertyname.replace("#", " ")
         print(f"propertycode :: {propertycode}")
         print(f"propertyname :: {propertyname}")
@@ -1463,6 +1467,7 @@ if __name__ == '__main__':
     propertyName = propertyname
     propertyCode = propertycode
     externalPropertyCode = externalpropertycode
+    uniqueKey = pmsName + "_" + propertyCode
 
     property_object = {
     "propertyName": propertyName,
@@ -1477,7 +1482,8 @@ if __name__ == '__main__':
     "occBefore": occBefore,
     "createdAt": createdAt,
     "updatedAt": updatedAt,
-    "marriott_json": marriott_json
+    "marriott_json": marriott_json,
+    "uniqueKey": uniqueKey
     }
 
 
