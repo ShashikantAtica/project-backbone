@@ -1357,7 +1357,8 @@ tbl_properties_model = Table(
     Column('occBefore', Integer),
     Column('createdAt', TIMESTAMP(timezone=True)),
     Column('updatedAt', TIMESTAMP(timezone=True)),
-    Column('marriott_json', Text())
+    Column('marriott_json', Text()),
+    Column('uniqueKey', String(255))
 )
 
 # meta.create_all(engine)
