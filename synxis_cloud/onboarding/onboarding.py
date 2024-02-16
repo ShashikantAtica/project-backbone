@@ -275,7 +275,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
 
             if len(res_act_result) > 0:
-                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result, propertyCode)
+                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result)
                 if(error_temp == ""):
                     print("RES ACT DONE")   
                 else:

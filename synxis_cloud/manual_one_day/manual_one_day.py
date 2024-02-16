@@ -346,7 +346,7 @@ def bulk_insert_synxis_cloud_monthly_summary(mon_list):
         error_temp=error_message[:250]
     return error_temp
 
-def bulk_insert_synxis_cloud_res_activity(res_act_list, propertyCode):
+def bulk_insert_synxis_cloud_res_activity(res_act_list):
     print("Data importing...")
     error_temp = ""
     try:
@@ -514,7 +514,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
 
             if len(res_act_result) > 0:
-                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result, propertyCode)
+                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result)
                 if(error_temp == ""):
                     print("RES ACT DONE")   
                 else:
