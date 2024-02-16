@@ -724,7 +724,7 @@ def Synxis_Cloud_Pms(row):
 
             try:
                 # Reservation Activity Data Clean and Insert
-                read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+                read = pd.read_csv(reservation_activity_file_path, skipfooter=3, engine='python')
                 read.dropna(subset=['Account_ID'], inplace=True)
                 read['Arrival'] = pd.to_datetime(read['Arrival'], format='mixed', errors='coerce')
                 read['Departure'] = pd.to_datetime(read['Departure'], format='mixed', errors='coerce')

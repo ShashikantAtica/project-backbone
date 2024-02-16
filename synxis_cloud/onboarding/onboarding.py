@@ -325,7 +325,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
             try:
                 # Revenue Recap Data Clean and Insert
-                date_df = pd.read_csv(revenue_file_path, skiprows=1, engine='python')
+                date_df = pd.read_csv(reservation_activity_file_path, skiprows=1, engine='python')
                 date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
                 read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
                 read.insert(0, column="propertyCode", value=propertyCode)

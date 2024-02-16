@@ -427,7 +427,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
             try:
                 # Reservation Data Clean and Insert
-                read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+                read = pd.read_csv(reservation_activity_file_path, skipfooter=3, engine='python')
                 read.dropna(subset=['Confirm_No'], inplace=True)
                 read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
                 read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed')

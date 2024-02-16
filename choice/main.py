@@ -1457,6 +1457,7 @@ if __name__ == '__main__':
                 Choice_Pms(row)
             else:
                 print("LAST_PULL_DATE_ID is NULL")
+            time.sleep(10)
     else:
         print(f"Property not available in database!!!")
     print(f"[{PMS_NAME}] SCRIPT STOP!!!")
