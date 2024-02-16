@@ -152,7 +152,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
     try:
         reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.csv' 
-        reservation_activity_file_path = f'{attachment_format}/{propertyCode}_ReservationActivity.csv'
+        reservation_activity_file_path = f'{attachment_format}/{propertyCode}_ReservationActivity_Onboarding.csv'
         forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
         revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
         monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly_Onboarding.csv'
