@@ -401,7 +401,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
         if(reporttype == 'Reservation'):
             reservation_file_path = localfilepath
         elif(reporttype == 'ReservationActivity'):
-            forecast_file_path = localfilepath
+            reservation_activity_file_path = localfilepath
         elif(reporttype == 'Forecast'):
             forecast_file_path = localfilepath
         elif(reporttype == 'Revenue'):

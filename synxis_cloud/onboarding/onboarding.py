@@ -162,7 +162,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
         if(reporttype == 'Reservation'):
             reservation_file_path = localfilepath
         elif(reporttype == 'ReservationActivity'):
-            forecast_file_path = localfilepath
+            reservation_activity_file_path = localfilepath
         elif(reporttype == 'Forecast'):
             forecast_file_path = localfilepath
         elif(reporttype == 'Revenue'):
@@ -248,7 +248,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
         if check_reservation_activity_file:
             # Reservation Activity Data Clean and Insert
-            read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+            read = pd.read_csv(reservation_activity_file_path, skipfooter=3, engine='python')
             read.dropna(subset=['Account_ID'], inplace=True)
             read['Arrival'] = pd.to_datetime(read['Arrival'], format='mixed', errors='coerce')
             read['Departure'] = pd.to_datetime(read['Departure'], format='mixed', errors='coerce')
@@ -325,7 +325,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
             try:
                 # Revenue Recap Data Clean and Insert
-                date_df = pd.read_csv(reservation_activity_file_path, skiprows=1, engine='python')
+                date_df = pd.read_csv(check_revenue_file, skiprows=1, engine='python')
                 date = date_df.columns.str.extract(r'(\d{2}\s\w{3}\s\d{4})').values[0][0]
                 read = pd.read_csv(revenue_file_path, skiprows=3, skipfooter=3, engine='python')
                 read.insert(0, column="propertyCode", value=propertyCode)
