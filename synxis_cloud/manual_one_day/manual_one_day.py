@@ -346,7 +346,7 @@ def bulk_insert_synxis_cloud_monthly_summary(mon_list):
         error_temp=error_message[:250]
     return error_temp
 
-def bulk_insert_synxis_cloud_res_activity(res_act_list, propertyCode):
+def bulk_insert_synxis_cloud_res_activity(res_act_list):
     print("Data importing...")
     error_temp = ""
     try:
@@ -391,7 +391,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
     try:
         reservation_file_path = f'{attachment_format}/{propertyCode}_Reservation_Onboarding.csv' 
-        reservation_activity_file_path = f'{attachment_format}/{propertyCode}_ReservationActivity.csv'
+        reservation_activity_file_path = f'{attachment_format}/{propertyCode}_ReservationActivity_Onboarding.csv'
         forecast_file_path = f'{attachment_format}/{propertyCode}_Forecast_Onboarding.csv'
         revenue_file_path = f'{attachment_format}/{propertyCode}_Revenue_Onboarding.csv'
         monthly_file_path = f'{attachment_format}/{propertyCode}_Monthly_Onboarding.csv'
@@ -401,7 +401,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
         if(reporttype == 'Reservation'):
             reservation_file_path = localfilepath
         elif(reporttype == 'ReservationActivity'):
-            forecast_file_path = localfilepath
+            reservation_activity_file_path = localfilepath
         elif(reporttype == 'Forecast'):
             forecast_file_path = localfilepath
         elif(reporttype == 'Revenue'):
@@ -427,7 +427,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
             try:
                 # Reservation Data Clean and Insert
-                read = pd.read_csv(reservation_file_path, skipfooter=3, engine='python')
+                read = pd.read_csv(reservation_activity_file_path, skipfooter=3, engine='python')
                 read.dropna(subset=['Confirm_No'], inplace=True)
                 read['Status_Dt'] = pd.to_datetime(read['Status_Dt'], format='mixed')
                 read['Arrival_Dt'] = pd.to_datetime(read['Arrival_Dt'], format='mixed')
@@ -514,7 +514,7 @@ def SynxisCloud_Pms(row, reporttype, localfilepath):
 
 
             if len(res_act_result) > 0:
-                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result, propertyCode)
+                error_temp = bulk_insert_synxis_cloud_res_activity(res_act_result)
                 if(error_temp == ""):
                     print("RES ACT DONE")   
                 else:
