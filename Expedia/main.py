@@ -15,12 +15,13 @@ from utils.secrets.SecretManager import get_secret_from_api
 from utils.secrets.SecretManager import get_otp_from_api
 from utils.secrets.SecretManager import get_expedia_properties_from_api
 
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from urllib.parse import urlparse, parse_qs
@@ -152,6 +153,12 @@ def Expedia(row):
             os.makedirs(save_dir)
         delete_files_in_directory(save_dir)
 
+        proxy_ip = "ip.nimbleway.com"
+        proxy_port = "7000"  
+        proxy_username = "account-atica_tc6z86-pipeline-nimbleip"  
+        proxy_password = "2e0dkxNq9328"  
+        proxy_server = f"{proxy_username}:{proxy_password}@{proxy_ip}:{proxy_port}"
+
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--hide-scrollbars')
@@ -160,6 +167,7 @@ def Expedia(row):
         chrome_options.add_argument("--log-level=3")
         chrome_options.add_argument("--window-size=1280,1000")
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        chrome_options.add_argument(f"--proxy-server={proxy_server}")
         chrome_options.add_experimental_option("prefs", {
             "download.default_directory": save_dir,
             "download.prompt_for_download": False,
